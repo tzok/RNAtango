@@ -1,0 +1,308 @@
+openapi: 3.0.3
+info:
+  title: RNAtango
+  description: This is the RNAtango server based on the OpenAPI 3.0 specification.
+  contact:
+    email: tomasz.zok@cs.put.poznan.pl
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+  version: 1.0.0
+servers:
+  - url: https://rnatango.cs.put.poznan.pl/api
+paths:
+  /single:
+    post:
+      summary: Analyze a single file
+      description: Perform analysis of a single file specifying a set of chain names and nucleotide ranges. The result contains tabular data with torsion angles.
+      operationId: postSingle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SingleInput'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleOutput'
+  /one-many:
+    post:
+      summary: Compare in 1-vs-many mode
+      description: Compare structures in a mode where one of them is the reference and other are predicted models.
+      operationId: postOneMany
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OneManyInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OneManyOutput'
+  /many-many:
+    post:
+      summary: Compare in many-vs-many mode
+      description: Compare each structure against each other.
+      operationId: postManyMany
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManyManyInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManyManyOutput'
+components:
+  schemas:
+    SingleInput:
+      type: object
+      properties:
+        file:
+          $ref: '#/components/schemas/File'
+        selections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Selection'
+          minItems: 1
+      required:
+        - file
+        - selections
+    File:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 1ehz.pdb
+        content:
+          type: string
+          example: >
+            ATOM      1  OP3   G A   1      50.193  51.190  50.534  1.00 99.85           O 
+      required:
+        - name
+        - content
+    Selection:
+      type: object
+      properties:
+        chain:
+          $ref: '#/components/schemas/Chain'
+        nucleotideRange:
+          $ref: '#/components/schemas/NucleotideRange'
+      required:
+        - chain
+        - nucleotideRange
+    Chain:
+      type: string
+      example: A
+    NucleotideRange:
+      type: object
+      properties:
+        fromInclusive:
+          type: integer
+          example: 0
+        toInclusive:
+          type: integer
+          example: 10
+      required:
+        - fromInclusive
+        - toInclusive
+    SingleOutput:
+      type: array
+      items:
+        $ref: '#/components/schemas/TorsionAnglesInChain'
+    TorsionAnglesInChain:
+      type: object
+      properties:
+        chain:
+          $ref: '#/components/schemas/Chain'
+        residues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Residue'
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAnglesInResidue'
+      required:
+        - chain
+        - residues
+        - values
+    Residue:
+      type: object
+      properties:
+        name:
+          type: string
+          example: G
+        number:
+          type: integer
+          example: 1
+        icode:
+          type: string
+          default: null
+          example: null
+      required:
+        - name
+        - number
+    TorsionAnglesInResidue:
+      description: An array of torsion angle values in degrees for one residue given in order alpha, beta, gamma, delta, epsilon, zeta, chi, eta, theta, eta', theta'.
+      type: array
+      items:
+        type: number
+        format: double
+      minItems: 11
+      maxItems: 11
+      example: [null, -128.05, 67.79, 82.86, -67.45, -178.39, 53.83, 83.38, -74.46, 169.69, 59.48]
+    OneManyInput:
+      type: object
+      properties:
+        reference:
+          $ref: '#/components/schemas/File'
+        models:
+          type: array
+          items: 
+            $ref: '#/components/schemas/File'
+          minItems: 1
+        angles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Angle'
+          example: ["ALPHA", "BETA", "GAMMA", "DELTA", "EPSILON", "ZETA", "CHI"]
+          minItems: 1
+        threshold:          
+          $ref: '#/components/schemas/Threshold'
+      required:
+        - reference
+        - models
+        - angles
+        - threshold
+    Angle:
+      type: string
+      enum: 
+        - ALPHA
+        - BETA
+        - GAMMA
+        - DELTA
+        - EPSILON
+        - ZETA
+        - CHI
+        - ETA
+        - THETA
+        - ETA_PRIM
+        - THETA_PRIM
+    Threshold:
+      description: LCS-TA threshold value in degrees
+      type: number
+      format: double
+      example: 15.0
+      minimum: 0.0
+      maximum: 180.0
+    OneManyOutput:
+      type: array
+      items:
+        $ref: '#/components/schemas/TorsionAngleDifferences'
+    TorsionAngleDifferences:
+      type: object
+      properties:
+        model:
+          type: string
+          example: 1ehz.pdb
+        differences:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAngleDifferencesInChain'
+        modelMCQ:
+          $ref: '#/components/schemas/MCQ'
+    TorsionAngleDifferencesInChain:
+      type: object
+      properties:
+        chain:
+          $ref: '#/components/schemas/Chain'
+        residues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Residue'
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAnglesInResidue'
+        residueMCQs:
+          type: array
+          items:
+            $ref: '#/components/schemas/MCQ'
+        chainMCQ:
+          $ref: '#/components/schemas/MCQ'
+        chainLCS:
+          $ref: '#/components/schemas/LCS'
+      required:
+        - chain
+        - residues
+        - values
+        - mcq
+    MCQ:
+      description: Mean of Circular Quantites (MCQ) in degrees
+      type: number
+      format: double
+      example: 36.4
+      minimum: 0.0
+      maximum: 180.0
+    LCS:
+      description: Longest Continuous Segment (LCS)
+      type: object
+      properties:
+        nucleotideRange:
+          $ref: '#/components/schemas/NucleotideRange'
+        rangeMCQ:
+          $ref: '#/components/schemas/MCQ'
+      required:
+        - nucleotideRange
+        - rangeMCQ
+    ManyManyInput:
+      type: object
+      properties:
+        files:
+          type: array
+          items: 
+            $ref: '#/components/schemas/File'
+          minItems: 2
+        angles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Angle'
+          example: ["ALPHA", "BETA", "GAMMA", "DELTA", "EPSILON", "ZETA", "CHI"]
+          minItems: 1
+        threshold:
+          $ref: '#/components/schemas/Threshold'
+      required:
+        - files
+        - angles
+        - threshold
+    ManyManyOutput:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+          example: ["1ehz.pdb", "1evv.pdb"]
+        matrixMCQ:
+          $ref: '#/components/schemas/Matrix'
+        matrixLCS:
+          $ref: '#/components/schemas/Matrix'
+    Matrix:
+      type: array
+      items:
+        type: array
+        items:
+          type: number
+          format: double
+      example: [[0, 1.3], [1.3, 0]]
