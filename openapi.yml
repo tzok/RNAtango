@@ -11,6 +11,27 @@ info:
 servers:
   - url: https://rnatango.cs.put.poznan.pl/api
 paths:
+  /upload/structure:
+    post:
+      summary: Save and analyze structure file
+      description: Save cif/pdb structure file in server database. Then returns hash_id connected to the structure. Also analyze structure for RNA/DNA chains.
+      operationId: postStructureFile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StructureFileInput'
+        required: true
+      responses:
+        '202':
+          description: Your request has been accepted and is being processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructureFileOutput'
+        '400':
+          description: Error during processing structure file
+          
   /single:
     post:
       summary: Analyze a single file
@@ -188,11 +209,12 @@ components:
     TaskId:
       type: string
       example: 9ca7c1c2-31e8-11ee-be56-0242ac120002
+   
     SingleInput:
       type: object
       properties:
-        file:
-          $ref: '#/components/schemas/File'
+        fileId:
+          $ref: '#/components/schemas/FileId'
         selections:
           type: array
           items:
@@ -201,19 +223,42 @@ components:
       required:
         - file
         - selections
+    
     File:
       type: object
       properties:
-        name:
+        filename: 
           type: string
-          example: 1ehz.pdb
+          example: '4v9q.pdb'
         content:
           type: string
-          example: >
-            ATOM      1  OP3   G A   1      50.193  51.190  50.534  1.00 99.85           O 
+          format: base64
+          example: b'QVRPTSAgICAgIDEgIE9QMyAgIEcgQSAgIDEgICAgICA1MC4xOTMgIDUxLjE5MCAgNTAuNTM0ICAxLjAwIDk5Ljg1ICAgICAgICAgICBPCg=='
+
+    StructureFileInput:
+      type: object
+      properties:
+        file:
+          $ref: '#/components/schemas/File'
       required:
-        - name
-        - content
+        - file
+    FileId:
+      type: string
+      example: 9ca7c1c2-31e8-11ee-be56-0242ac120002
+    
+    StructureFileOutput:
+      type: object
+      properties:
+        fileId:
+           $ref: '#/components/schemas/FileId'
+        structure:
+          type: object
+          properties:
+            1:
+              type: array
+              items:
+                type: string
+              example: "AAAATTATTACCATT"
     Selection:
       type: object
       properties:
@@ -296,11 +341,11 @@ components:
       type: object
       properties:
         reference:
-          $ref: '#/components/schemas/File'
+          $ref: '#/components/schemas/FileId'
         models:
           type: array
           items: 
-            $ref: '#/components/schemas/File'
+            $ref: '#/components/schemas/FileId'
           minItems: 1
         angles:
           type: array
@@ -402,7 +447,7 @@ components:
         files:
           type: array
           items: 
-            $ref: '#/components/schemas/File'
+            $ref: '#/components/schemas/FileId'
           minItems: 2
         angles:
           type: array
