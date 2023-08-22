@@ -7,15 +7,15 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
-  version: 1.0.0
+  version: 1.0.1
 servers:
   - url: https://rnatango.cs.put.poznan.pl/api
 paths:
-  /upload/structure:
+  /upload:
     post:
       summary: Save and analyze structure file
       description: Save cif/pdb structure file in server database. Then returns hash_id connected to the structure. Also analyze structure for RNA/DNA chains.
-      operationId: postStructureFile
+      operationId: postUpload
       requestBody:
         content:
           application/json:
@@ -31,7 +31,6 @@ paths:
                 $ref: '#/components/schemas/StructureFileOutput'
         '400':
           description: Error during processing structure file
-          
   /single:
     post:
       summary: Analyze a single file
@@ -49,10 +48,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  taskId:
-                    $ref: '#/components/schemas/TaskId'
+                $ref: '#/components/schemas/TaskIdResponse'
   /single/{taskId}:
     get:
       summary: Check status of single file analysis
@@ -68,12 +64,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    $ref: '#/components/schemas/Status'
-                  resultUrl:
-                    type: string
+                $ref: '#/components/schemas/StatusResponse'
   /single/{taskId}/result:
     get:
       summary: Get the result of single file analysis
@@ -106,10 +97,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  taskId:
-                    $ref: '#/components/schemas/TaskId'
+                $ref: '#/components/schemas/TaskIdResponse'
   /one-many/{taskId}:
     get:
       summary: Check status of one-vs-many analysis
@@ -125,12 +113,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    $ref: '#/components/schemas/Status'
-                  resultUrl:
-                    type: string
+                $ref: '#/components/schemas/StatusResponse'
   /one-many/{taskId}/result:
     get:
       summary: Get the result of one-vs-many analysis
@@ -163,10 +146,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  taskId:
-                    $ref: '#/components/schemas/TaskId'
+                $ref: '#/components/schemas/TaskIdResponse'
   /many-many/{taskId}:
     get:
       summary: Check status of many-vs-many analysis
@@ -182,12 +162,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    $ref: '#/components/schemas/Status'
-                  resultUrl:
-                    type: string
+                $ref: '#/components/schemas/StatusResponse'
   /many-many/{taskId}/result:
     get:
       summary: Get the result of many-vs-many analysis
@@ -208,70 +183,34 @@ components:
   schemas:
     TaskId:
       type: string
-      example: 9ca7c1c2-31e8-11ee-be56-0242ac120002
-   
-    SingleInput:
+      example: 9ca7c1c2-31e8-11ee-be56-0242ac120002    
+    TaskIdResponse:
       type: object
       properties:
-        fileId:
-          $ref: '#/components/schemas/FileId'
-        selections:
-          type: array
-          items:
-            $ref: '#/components/schemas/Selection'
-          minItems: 1
+        taskId:
+          $ref: '#/components/schemas/TaskId'
       required:
-        - file
-        - selections
-    
-    File:
+        - taskId
+    Status:
+      type: string
+      enum:
+        - WAITING
+        - PROCESSING
+        - SUCCESS
+        - FAILED
+    StatusResponse:
       type: object
       properties:
-        filename: 
+        status:
+          $ref: '#/components/schemas/Status'
+        resultUrl:
           type: string
-          example: '4v9q.pdb'
-        content:
-          type: string
-          format: base64
-          example: b'QVRPTSAgICAgIDEgIE9QMyAgIEcgQSAgIDEgICAgICA1MC4xOTMgIDUxLjE5MCAgNTAuNTM0ICAxLjAwIDk5Ljg1ICAgICAgICAgICBPCg=='
-
-    StructureFileInput:
-      type: object
-      properties:
-        file:
-          $ref: '#/components/schemas/File'
       required:
-        - file
+        - status
+        - resultUrl
     FileId:
       type: string
       example: 9ca7c1c2-31e8-11ee-be56-0242ac120002
-    
-    StructureFileOutput:
-      type: object
-      properties:
-        fileId:
-           $ref: '#/components/schemas/FileId'
-        structure:
-          type: object
-          properties:
-            1:
-              type: array
-              items:
-                type: string
-              example: "AAAATTATTACCATT"
-    Selection:
-      type: object
-      properties:
-        chain:
-          $ref: '#/components/schemas/Chain'
-        nucleotideRange:
-          $ref: '#/components/schemas/NucleotideRange'
-      required:
-        - chain
-        - nucleotideRange
-    Chain:
-      type: string
-      example: A
     NucleotideRange:
       type: object
       properties:
@@ -284,34 +223,74 @@ components:
       required:
         - fromInclusive
         - toInclusive
-    Status:
-      type: string
-      enum:
-        - WAITING
-        - PROCESSING
-        - SUCCESS
-        - FAILED
-    SingleOutput:
-      type: array
-      items:
-        $ref: '#/components/schemas/TorsionAnglesInChain'
-    TorsionAnglesInChain:
+    Selection:
       type: object
       properties:
-        chain:
-          $ref: '#/components/schemas/Chain'
-        residues:
-          type: array
-          items:
-            $ref: '#/components/schemas/Residue'
-        values:
-          type: array
-          items:
-            $ref: '#/components/schemas/TorsionAnglesInResidue'
+        chainName:
+          type: string
+          example: A
+        nucleotideRange:
+          $ref: '#/components/schemas/NucleotideRange'
       required:
         - chain
-        - residues
-        - values
+        - nucleotideRange
+    SingleInput:
+      type: object
+      properties:
+        fileId:
+          $ref: '#/components/schemas/FileId'
+        selections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Selection'
+          minItems: 1
+      required:
+        - fileId
+        - selections
+    File:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: 4v9q.pdb
+        content:
+          type: string
+          format: base64
+          example: b'QVRPTSAgICAgIDEgIE9QMyAgIEcgQSAgIDEgICAgICA1MC4xOTMgIDUxLjE5MCAgNTAuNTM0ICAxLjAwIDk5Ljg1ICAgICAgICAgICBPCg=='
+      required:
+        - filename
+        - content
+    StructureFileInput:
+      type: object
+      properties:
+        file:
+          $ref: '#/components/schemas/File'
+      required:
+        - file
+    Chain:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 1
+        sequence:
+          type: string
+          example: AAAATTATTACCATT
+      required:
+        - name
+        - sequence
+    StructureFileOutput:
+      type: object
+      properties:
+        fileId:
+          $ref: '#/components/schemas/FileId'
+        chains:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chain'
+      required:
+        - fileId
+        - chains
     Residue:
       type: object
       properties:
@@ -336,33 +315,47 @@ components:
         format: double
       minItems: 11
       maxItems: 11
-      example: [null, -128.05, 67.79, 82.86, -67.45, -178.39, 53.83, 83.38, -74.46, 169.69, 59.48]
-    OneManyInput:
+      example:
+        - null
+        - -128.05
+        - 67.79
+        - 82.86
+        - -67.45
+        - -178.39
+        - 53.83
+        - 83.38
+        - -74.46
+        - 169.69
+        - 59.48
+    TorsionAnglesInChain:
       type: object
       properties:
-        reference:
-          $ref: '#/components/schemas/FileId'
-        models:
-          type: array
-          items: 
-            $ref: '#/components/schemas/FileId'
-          minItems: 1
-        angles:
+        chain:
+          $ref: '#/components/schemas/Chain'
+        residues:
           type: array
           items:
-            $ref: '#/components/schemas/Angle'
-          example: ["ALPHA", "BETA", "GAMMA", "DELTA", "EPSILON", "ZETA", "CHI"]
-          minItems: 1
-        threshold:          
-          $ref: '#/components/schemas/Threshold'
+            $ref: '#/components/schemas/Residue'
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAnglesInResidue'
       required:
-        - reference
-        - models
-        - angles
-        - threshold
+        - chain
+        - residues
+        - values
+    SingleOutput:
+      type: object
+      properties:
+        torsionAngles:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAnglesInChain'
+      required:
+        - torsionAngles
     Angle:
       type: string
-      enum: 
+      enum:
         - ALPHA
         - BETA
         - GAMMA
@@ -378,25 +371,57 @@ components:
       description: LCS-TA threshold value in degrees
       type: number
       format: double
-      example: 15.0
-      minimum: 0.0
-      maximum: 180.0
-    OneManyOutput:
-      type: array
-      items:
-        $ref: '#/components/schemas/TorsionAngleDifferences'
-    TorsionAngleDifferences:
+      example: 15
+      minimum: 0
+      maximum: 180
+    OneManyInput:
       type: object
       properties:
-        model:
-          type: string
-          example: 1ehz.pdb
-        differences:
+        reference:
+          $ref: '#/components/schemas/FileId'
+        models:
           type: array
           items:
-            $ref: '#/components/schemas/TorsionAngleDifferencesInChain'
-        modelMCQ:
+            $ref: '#/components/schemas/FileId'
+          minItems: 1
+        angles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Angle'
+          example:
+            - ALPHA
+            - BETA
+            - GAMMA
+            - DELTA
+            - EPSILON
+            - ZETA
+            - CHI
+          minItems: 1
+        threshold:
+          $ref: '#/components/schemas/Threshold'
+      required:
+        - reference
+        - models
+        - angles
+        - threshold
+    MCQ:
+      description: Mean of Circular Quantites (MCQ) in degrees
+      type: number
+      format: double
+      example: 36.4
+      minimum: 0
+      maximum: 180
+    LCS:
+      description: Longest Continuous Segment (LCS)
+      type: object
+      properties:
+        nucleotideRange:
+          $ref: '#/components/schemas/NucleotideRange'
+        rangeMCQ:
           $ref: '#/components/schemas/MCQ'
+      required:
+        - nucleotideRange
+        - rangeMCQ
     TorsionAngleDifferencesInChain:
       type: object
       properties:
@@ -422,38 +447,54 @@ components:
         - chain
         - residues
         - values
-        - mcq
-    MCQ:
-      description: Mean of Circular Quantites (MCQ) in degrees
-      type: number
-      format: double
-      example: 36.4
-      minimum: 0.0
-      maximum: 180.0
-    LCS:
-      description: Longest Continuous Segment (LCS)
+        - residueMCQs
+        - chainMCQ
+        - chainLCS
+    TorsionAngleDifferences:
       type: object
       properties:
-        nucleotideRange:
-          $ref: '#/components/schemas/NucleotideRange'
-        rangeMCQ:
+        model:
+          type: string
+          example: 1ehz.pdb
+        differences:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAngleDifferencesInChain'
+        modelMCQ:
           $ref: '#/components/schemas/MCQ'
       required:
-        - nucleotideRange
-        - rangeMCQ
+        - model
+        - differences
+        - modelMCQ
+    OneManyOutput:
+      type: object
+      properties:
+        differences:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAngleDifferences'
+      required:
+        - differences
     ManyManyInput:
       type: object
       properties:
         files:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/FileId'
           minItems: 2
         angles:
           type: array
           items:
             $ref: '#/components/schemas/Angle'
-          example: ["ALPHA", "BETA", "GAMMA", "DELTA", "EPSILON", "ZETA", "CHI"]
+          example:
+            - ALPHA
+            - BETA
+            - GAMMA
+            - DELTA
+            - EPSILON
+            - ZETA
+            - CHI
           minItems: 1
         threshold:
           $ref: '#/components/schemas/Threshold'
@@ -461,18 +502,6 @@ components:
         - files
         - angles
         - threshold
-    ManyManyOutput:
-      type: object
-      properties:
-        names:
-          type: array
-          items:
-            type: string
-          example: ["1ehz.pdb", "1evv.pdb"]
-        matrixMCQ:
-          $ref: '#/components/schemas/Matrix'
-        matrixLCS:
-          $ref: '#/components/schemas/Matrix'
     Matrix:
       type: object
       properties:
@@ -493,3 +522,24 @@ components:
               [2, 3],
               [4, 5, 6]
             ]
+      required:
+        - size
+        - values
+    ManyManyOutput:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+          example:
+            - 1ehz.pdb
+            - 1evv.pdb
+        matrixMCQ:
+          $ref: '#/components/schemas/Matrix'
+        matrixLCS:
+          $ref: '#/components/schemas/Matrix'
+      required:
+        - names
+        - matrixMCQ
+        - matrixLCS
