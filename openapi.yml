@@ -7,10 +7,29 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
-  version: 1.0.1
+  version: 1.0.2
 servers:
   - url: https://rnatango.cs.put.poznan.pl/api
 paths:
+  /pdb:
+    post:
+      summary: Check structure in PDB repository
+      description: Analyze structure from the PDB server. Then returns results connected to RNA/DNA structure.
+      operationId: postPdb
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StructurePdbInput'
+      responses:
+        '200':
+          description: Request has been successfully handled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructureFileOutput'
+        '400':
+          description: Error during processing of the structure file
   /upload:
     post:
       summary: Save and analyze structure file
@@ -23,46 +42,14 @@ paths:
               $ref: '#/components/schemas/StructureFileInput'
         required: true
       responses:
-        '202':
+        '200':
           description: Your request has been accepted and is being processed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskIdResponse'
+                $ref: '#/components/schemas/StructureFileOutput'
         '400':
           description: Error during processing structure file
-  /upload/{taskId}:
-    get:
-      summary: Check status of file upload
-      parameters:
-        - in: path
-          name: taskId
-          required: true
-          schema:
-            $ref: '#/components/schemas/TaskId'
-      responses:
-        '200':
-          description: The current status of the file upload
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatusResponse'
-  /upload/{taskId}/result:
-    get:
-      summary: Get the result of file upload
-      parameters:
-        - in: path
-          name: taskId
-          required: true
-          schema:
-            $ref: '#/components/schemas/TaskId'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StructureFileOutput'
   /single:
     post:
       summary: Analyze a single file
@@ -76,7 +63,7 @@ paths:
         required: true
       responses:
         '202':
-          description: Your request has been accepted and is being processed
+          description: Your request has been accepted
           content:
             application/json:
               schema:
@@ -97,6 +84,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
+        '404':
+          description: Request does not exist
   /single/{taskId}/result:
     get:
       summary: Get the result of single file analysis
@@ -113,6 +102,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SingleOutput'
+        '404':
+          description: Request does not exist
   /one-many:
     post:
       summary: Compare in one-vs-many mode
@@ -146,6 +137,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
+        '404':
+          description: Request does not exist
   /one-many/{taskId}/result:
     get:
       summary: Get the result of one-vs-many analysis
@@ -162,6 +155,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OneManyOutput'
+        '404':
+          description: Request does not exist
   /many-many:
     post:
       summary: Compare in many-vs-many mode
@@ -195,6 +190,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
+        '404':
+          description: Request does not exist
   /many-many/{taskId}/result:
     get:
       summary: Get the result of many-vs-many analysis
@@ -211,11 +208,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ManyManyOutput'
+        '404':
+          description: Request does not exist
 components:
   schemas:
     TaskId:
       type: string
-      example: 9ca7c1c2-31e8-11ee-be56-0242ac120002    
+      example: 9ca7c1c2-31e8-11ee-be56-0242ac120002
     TaskIdResponse:
       type: object
       properties:
@@ -292,6 +291,14 @@ components:
       required:
         - filename
         - content
+    StructurePdbInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 4V9Q
+      required:
+        - name
     StructureFileInput:
       type: object
       properties:
