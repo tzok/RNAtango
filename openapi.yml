@@ -28,9 +28,41 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StructureFileOutput'
+                $ref: '#/components/schemas/TaskIdResponse'
         '400':
           description: Error during processing structure file
+  /upload/{taskId}:
+    get:
+      summary: Check status of file upload
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskId'
+      responses:
+        '200':
+          description: The current status of the file upload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /upload/{taskId}/result:
+    get:
+      summary: Get the result of file upload
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskId'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructureFileOutput'
   /single:
     post:
       summary: Analyze a single file
