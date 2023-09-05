@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 public interface StructureFileOutput {
-  String fileId();
+  String fileHashId();
 
-  List<Chain> chains();
+  List<Model> models();
 }

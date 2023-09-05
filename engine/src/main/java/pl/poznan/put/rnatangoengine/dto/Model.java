@@ -4,8 +4,8 @@ import java.util.List;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public interface SingleInput {
-  String fileHashId();
+public interface Model {
+  String name();
 
-  List<Selection> selections();
+  List<Chain> chains();
 }
