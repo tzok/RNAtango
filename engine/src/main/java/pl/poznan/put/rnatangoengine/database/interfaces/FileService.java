@@ -3,7 +3,7 @@ package pl.poznan.put.rnatangoengine.database.interfaces;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 
-public interface IFileService {
+public interface FileService {
   FileEntity getById(Long id);
 
   FileEntity getByHashId(UUID hashId);

@@ -22,9 +22,9 @@ public class SingleResultEntity {
   @JoinColumn(name = "fileId", referencedColumnName = "id")
   private FileEntity structureFile;
 
-  List<Selection> selections;
+  private List<Selection> selections;
 
-  Status status;
+  private Status status;
 
   private List<TorsionAnglesInChain> torsionAngles;
 

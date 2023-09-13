@@ -15,9 +15,6 @@ import pl.poznan.put.rnatangoengine.dto.Model;
 public class FileEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
-
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID hashId;
 
@@ -37,10 +34,6 @@ public class FileEntity {
     this.filename = filename;
     this.content = content;
     this.models = models;
-  }
-
-  public Long getId() {
-    return id;
   }
 
   public UUID getHashId() {

@@ -4,15 +4,15 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
-import pl.poznan.put.rnatangoengine.database.interfaces.IFileService;
+import pl.poznan.put.rnatangoengine.database.interfaces.FileService;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 
 @Service
-public class FileService implements IFileService {
+public class DefaultFileService implements FileService {
   private final FileRepository repository;
 
   @Autowired
-  public FileService(FileRepository repository) {
+  public DefaultFileService(FileRepository repository) {
     this.repository = repository;
   }
 
