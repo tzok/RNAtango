@@ -19,8 +19,7 @@ public class SingleResultEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID hashId;
 
-  @JoinColumn(name = "fileId", referencedColumnName = "id")
-  private FileEntity structureFile;
+  private String structureFileContent;
 
   private List<Selection> selections;
 
@@ -36,10 +35,10 @@ public class SingleResultEntity {
     return hashId;
   }
 
-  public SingleResultEntity(List<Selection> selections, FileEntity file) {
+  public SingleResultEntity(List<Selection> selections, String structureFileContent) {
     this.status = Status.WAITING;
     this.torsionAngles = new ArrayList<TorsionAnglesInChain>();
-    this.structureFile = file;
+    this.structureFileContent = structureFileContent;
     this.selections = selections;
   }
 
@@ -53,5 +52,9 @@ public class SingleResultEntity {
 
   public void setStatus(Status status) {
     this.status = status;
+  }
+
+  public Status getStatus() {
+    return this.status;
   }
 }

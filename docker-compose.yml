@@ -1,0 +1,56 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    depends_on:
+      - db
+      - rabbit
+    restart: always
+    networks:
+      - web_network
+      - db_network
+      - rabbit_network
+
+  # nginx:
+  #   build:
+  #     context: ./nginx
+  #   restart: always
+  #   ports:
+  #     - 80:8080
+  #     - 443:443
+  #   depends_on:
+  #     - web
+  #   volumes:
+  #     - ./static:/opt/webtetrado/static
+  #     - ./media:/opt/webtetrado/media
+  #     - ./ssl:/etc/letsencrypt/
+  #     - ./nginx/conf/:/etc/nginx/conf.d/
+  #     - ./logs/nginx:/logs
+  #   networks:
+  #     - web_network
+
+  rabbit:
+    image: rabbitmq:3.11-alpine
+    restart: always
+    networks:
+      - db_network
+      - rabbit_network
+  db:
+    image: postgres:latest
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    networks:
+      - db_network
+volumes:
+  workdir:
+  pgdata:
+networks:
+  web_network:
+    driver: bridge
+  db_network:
+    driver: bridge
+  rabbit_network:
+    driver: bridge
