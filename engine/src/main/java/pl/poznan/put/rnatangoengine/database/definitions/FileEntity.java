@@ -9,9 +9,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.List;
 import java.util.UUID;
-import pl.poznan.put.rnatangoengine.database.converters.ModelListConverter;
+import pl.poznan.put.pdb.analysis.CifModel;
+import pl.poznan.put.rnatangoengine.database.converters.CifModelListConverter;
 import pl.poznan.put.rnatangoengine.dto.File;
-import pl.poznan.put.rnatangoengine.dto.Model;
 
 @Entity
 @Table(name = "files")
@@ -25,20 +25,20 @@ public class FileEntity {
 
   private String content;
 
-  @Convert(converter = ModelListConverter.class)
-  @Column(name = "models", nullable = false)
-  List<Model> models;
+  @Convert(converter = CifModelListConverter.class)
+  @Column(name = "cifModels", nullable = false)
+  private List<CifModel> cifModels;
 
-  public FileEntity(File file, List<Model> models) {
+  public FileEntity(File file, List<CifModel> cifModels) {
     this.filename = file.filename();
     this.content = file.content();
-    this.models = models;
+    this.cifModels = cifModels;
   }
 
-  public FileEntity(String filename, String content, List<Model> models) {
+  public FileEntity(String filename, String content, List<CifModel> cifModels) {
     this.filename = filename;
     this.content = content;
-    this.models = models;
+    this.cifModels = cifModels;
   }
 
   public UUID getHashId() {

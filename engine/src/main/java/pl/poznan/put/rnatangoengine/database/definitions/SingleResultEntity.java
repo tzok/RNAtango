@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import pl.poznan.put.rnatangoengine.database.converters.SelectionListConverter;
+import pl.poznan.put.rnatangoengine.database.converters.SelectionConverter;
 import pl.poznan.put.rnatangoengine.database.converters.TorsionAnglesInChainListConverter;
 import pl.poznan.put.rnatangoengine.dto.Selection;
 import pl.poznan.put.rnatangoengine.dto.Status;
@@ -23,9 +23,9 @@ public class SingleResultEntity {
 
   private String structureFileContent;
 
-  @Convert(converter = SelectionListConverter.class)
-  @Column(name = "selections", nullable = false)
-  private List<Selection> selections;
+  @Convert(converter = SelectionConverter.class)
+  @Column(name = "selection", nullable = false)
+  private Selection selection;
 
   private Status status;
 
@@ -41,11 +41,11 @@ public class SingleResultEntity {
     return hashId;
   }
 
-  public SingleResultEntity(List<Selection> selections, String structureFileContent) {
+  public SingleResultEntity(Selection selection, String structureFileContent) {
     this.status = Status.WAITING;
     this.torsionAngles = new ArrayList<TorsionAnglesInChain>();
     this.structureFileContent = structureFileContent;
-    this.selections = selections;
+    this.selection = selection;
   }
 
   public List<TorsionAnglesInChain> getTorsionAngles() {
@@ -62,5 +62,13 @@ public class SingleResultEntity {
 
   public Status getStatus() {
     return this.status;
+  }
+
+  public String getStructureFileContent() {
+    return this.structureFileContent;
+  }
+
+  public void setStructureFileContent(String structureFileContent) {
+    this.structureFileContent = structureFileContent;
   }
 }

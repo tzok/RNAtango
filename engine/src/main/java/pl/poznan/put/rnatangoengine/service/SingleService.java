@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import pl.poznan.put.rnatangoengine.database.definitions.SingleResultEntity;
+import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SingleRepository;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTaskIdResponse;
@@ -19,6 +20,8 @@ import pl.poznan.put.rnatangoengine.logic.Structure;
 @Service
 public class SingleService {
   @Autowired SingleRepository singleRepository;
+  @Autowired FileRepository fileRepository;
+
   QueueService queueService;
 
   public TaskIdResponse single(SingleInput singleInput) {
@@ -27,9 +30,10 @@ public class SingleService {
       SingleResultEntity _singleResultEntity =
           singleRepository.saveAndFlush(
               new SingleResultEntity(
-                  singleInput.selections(), structure.getStructureFileContent()));
+                  singleInput.selection(), structure.filter(singleInput.selection())));
 
       queueService.send(_singleResultEntity.getHashId().toString(), TaskType.Single);
+      fileRepository.deleteByHashId(UUID.fromString(singleInput.fileHashId()));
       return ImmutableTaskIdResponse.builder()
           .taskId(_singleResultEntity.getHashId().toString())
           .build();
