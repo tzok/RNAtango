@@ -9,5 +9,5 @@ public interface TorsionAnglesInChain {
 
   List<Residue> residues();
 
-  List<List<Double>> values();
+  List<List<AngleValue>> values();
 }

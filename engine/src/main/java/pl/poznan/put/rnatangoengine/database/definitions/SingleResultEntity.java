@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import pl.poznan.put.rnatangoengine.database.converters.SelectionListConverter;
+import pl.poznan.put.rnatangoengine.database.converters.TorsionAnglesInChainListConverter;
 import pl.poznan.put.rnatangoengine.dto.Selection;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.TorsionAnglesInChain;
@@ -21,10 +23,14 @@ public class SingleResultEntity {
 
   private String structureFileContent;
 
+  @Convert(converter = SelectionListConverter.class)
+  @Column(name = "selections", nullable = false)
   private List<Selection> selections;
 
   private Status status;
 
+  @Convert(converter = TorsionAnglesInChainListConverter.class)
+  @Column(name = "torsionAnglesInChain", nullable = false)
   private List<TorsionAnglesInChain> torsionAngles;
 
   public Long getId() {

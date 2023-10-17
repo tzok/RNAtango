@@ -1,5 +1,7 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -7,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.List;
 import java.util.UUID;
+import pl.poznan.put.rnatangoengine.database.converters.ModelListConverter;
 import pl.poznan.put.rnatangoengine.dto.File;
 import pl.poznan.put.rnatangoengine.dto.Model;
 
@@ -22,6 +25,8 @@ public class FileEntity {
 
   private String content;
 
+  @Convert(converter = ModelListConverter.class)
+  @Column(name = "models", nullable = false)
   List<Model> models;
 
   public FileEntity(File file, List<Model> models) {
