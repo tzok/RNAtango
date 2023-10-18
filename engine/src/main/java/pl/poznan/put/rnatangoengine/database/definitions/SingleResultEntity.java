@@ -12,14 +12,13 @@ import pl.poznan.put.rnatangoengine.dto.TorsionAnglesInChain;
 
 @Entity
 @Table(name = "singleResults")
-public class SingleResultEntity {
-
+public class SingleResultEntity extends TaskEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
+  protected Long id;
 
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID hashId;
+  protected UUID hashId;
 
   private String structureFileContent;
 
@@ -27,11 +26,16 @@ public class SingleResultEntity {
   @Column(name = "selection", nullable = false)
   private Selection selection;
 
-  private Status status;
-
   @Convert(converter = TorsionAnglesInChainListConverter.class)
   @Column(name = "torsionAnglesInChain", nullable = false)
   private List<TorsionAnglesInChain> torsionAngles;
+
+  public SingleResultEntity(Selection selection, String structureFileContent) {
+    this.status = Status.WAITING;
+    this.torsionAngles = new ArrayList<TorsionAnglesInChain>();
+    this.structureFileContent = structureFileContent;
+    this.selection = selection;
+  }
 
   public Long getId() {
     return id;
@@ -41,27 +45,12 @@ public class SingleResultEntity {
     return hashId;
   }
 
-  public SingleResultEntity(Selection selection, String structureFileContent) {
-    this.status = Status.WAITING;
-    this.torsionAngles = new ArrayList<TorsionAnglesInChain>();
-    this.structureFileContent = structureFileContent;
-    this.selection = selection;
-  }
-
   public List<TorsionAnglesInChain> getTorsionAngles() {
     return torsionAngles;
   }
 
   public void setTorsionAngles(List<TorsionAnglesInChain> torsionAngles) {
     this.torsionAngles = torsionAngles;
-  }
-
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  public Status getStatus() {
-    return this.status;
   }
 
   public String getStructureFileContent() {
