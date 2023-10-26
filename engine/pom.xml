@@ -71,6 +71,21 @@
 			<scope>system</scope>
 			<systemPath>/opt/mcq4structures/mcq-core/target/mcq-core-1.8.2.jar</systemPath>
     	</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
+			<version>6.0.13</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+			<version>6.0.13</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

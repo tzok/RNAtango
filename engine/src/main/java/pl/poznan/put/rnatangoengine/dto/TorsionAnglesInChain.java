@@ -8,6 +8,4 @@ public interface TorsionAnglesInChain {
   Chain chain();
 
   List<Residue> residues();
-
-  List<List<AngleValue>> values();
 }

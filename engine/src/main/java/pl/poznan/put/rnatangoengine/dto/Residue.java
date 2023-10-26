@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.dto;
 
+import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -10,4 +11,6 @@ public interface Residue {
   int number();
 
   Optional<String> icode();
+
+  List<AngleValue> torsionAngles();
 }

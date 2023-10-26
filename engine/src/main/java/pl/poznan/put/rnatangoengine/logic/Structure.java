@@ -21,6 +21,7 @@ import pl.poznan.put.pdb.PdbAtomLine;
 import pl.poznan.put.pdb.analysis.CifModel;
 import pl.poznan.put.pdb.analysis.CifParser;
 import pl.poznan.put.pdb.analysis.ImmutableDefaultCifModel;
+import pl.poznan.put.pdb.analysis.MoleculeType;
 import pl.poznan.put.pdb.analysis.PdbChain;
 import pl.poznan.put.pdb.analysis.PdbModel;
 import pl.poznan.put.pdb.analysis.PdbParser;
@@ -132,16 +133,16 @@ public class Structure {
     final List<CifModel> fileModels = this.structureModels;
 
     for (CifModel cifModel : fileModels) {
-      // CifModel pdbModelFiltered = (CifModel) cifModel.filteredNewInstance(MoleculeType.RNA);
+      CifModel pdbModelFiltered = (CifModel) cifModel.filteredNewInstance(MoleculeType.RNA);
       List<Chain> chains = new ArrayList<Chain>();
-      for (PdbChain chain : cifModel.chains()) {
+      for (PdbChain chain : pdbModelFiltered.chains()) {
         chains.add(
             ImmutableChain.builder().name(chain.identifier()).sequence(chain.sequence()).build());
       }
       if (chains.size() > 0) {
         models.add(
             ImmutableModel.builder()
-                .name(String.valueOf(cifModel.modelNumber()))
+                .name(String.valueOf(pdbModelFiltered.modelNumber()))
                 .chains(chains)
                 .build());
       }

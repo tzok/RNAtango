@@ -1,12 +1,6 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.UUID;
 import pl.poznan.put.pdb.analysis.CifModel;

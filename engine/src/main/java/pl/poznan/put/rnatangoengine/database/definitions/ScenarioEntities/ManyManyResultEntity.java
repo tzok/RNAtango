@@ -1,11 +1,11 @@
-package pl.poznan.put.rnatangoengine.database.definitions;
+package pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities;
 
 import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "oneManyResults")
-public class OneManyResultEntity {
+@Table(name = "manyManyResults")
+public class ManyManyResultEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -13,4 +13,6 @@ public class OneManyResultEntity {
 
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID hashId;
+
+  public ManyManyResultEntity() {}
 }
