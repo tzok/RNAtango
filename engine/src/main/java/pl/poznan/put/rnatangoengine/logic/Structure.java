@@ -26,6 +26,7 @@ import pl.poznan.put.pdb.analysis.PdbChain;
 import pl.poznan.put.pdb.analysis.PdbModel;
 import pl.poznan.put.pdb.analysis.PdbParser;
 import pl.poznan.put.pdb.analysis.PdbResidue;
+import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 import pl.poznan.put.rnatangoengine.database.service.DefaultFileService;
 import pl.poznan.put.rnatangoengine.dto.Chain;
 import pl.poznan.put.rnatangoengine.dto.ImmutableChain;
@@ -40,21 +41,34 @@ public class Structure {
   String structureFileContent;
   List<CifModel> structureModels;
 
+  enum Format {
+    Cif,
+    Pdb
+  }
+
   /**
    * @param structureCode
    * @throws Exception
    */
   public Structure(String structureCode) throws Exception {
     if (structureCode.length() == 4) {
-      getFromRCSB(structureCode);
+      this.structureFileContent = getFromRCSB(structureCode);
+      parseStructureFile(Format.Cif);
     } else if (structureCode.startsWith("example_")) {
-      getFromLocalExamples(structureCode.replace("example_", ""));
+      this.structureFileContent = getFromLocalExamples(structureCode.replace("example_", ""));
+      parseStructureFile(Format.Cif); // FIXME: to check
     } else if (structureCode.length() > 4) {
-      structureFileContent =
-          defaultFileService.getByHashId(UUID.fromString(structureCode)).getContent();
+      FileEntity file = defaultFileService.getByHashId(UUID.fromString(structureCode));
+      this.structureFileContent = file.getContent();
+      List<String> filenameElements = List.of(file.getFilename().split("."));
+      if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("cif")) {
+        parseStructureFile(Format.Cif);
+      }
+      if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("pdb")) {
+        parseStructureFile(Format.Pdb);
+      }
     } else {
-
-      throw new FileNotFoundException("Could not find structure file");
+      throw new FileNotFoundException("Structure file could not be found");
     }
   }
 
@@ -65,48 +79,62 @@ public class Structure {
    */
   public Structure(String structureFileContent, String filename) throws IOException {
     structureModels.clear();
+    this.structureFileContent = structureFileContent;
     List<String> filenameElements = List.of(filename.split("."));
     if (filenameElements.size() > 0) {
       if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("cif")) {
-        final CifParser parser = new CifParser();
-        this.structureModels = parser.parse(structureFileContent);
+        parseStructureFile(Format.Cif);
         return;
       }
       if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("pdb")) {
-        final PdbParser pdbParser = new PdbParser();
-        final CifParser cifParser = new CifParser();
-        for (PdbModel pdbModel : pdbParser.parse(structureFileContent)) {
-          structureModels.addAll(cifParser.parse(pdbModel.toCif()));
-        }
+        parseStructureFile(Format.Pdb);
         return;
       }
       throw new IOException("Cannot parse structure file");
     }
   }
 
+  private void parseStructureFile(Format format) throws IOException {
+    switch (format) {
+      case Cif:
+        final CifParser parser = new CifParser();
+        this.structureModels = parser.parse(structureFileContent);
+        break;
+
+      case Pdb:
+        final PdbParser pdbParser = new PdbParser();
+        final CifParser cifParser = new CifParser();
+        for (PdbModel pdbModel : pdbParser.parse(structureFileContent)) {
+          this.structureModels.addAll(cifParser.parse(pdbModel.toCif()));
+        }
+        break;
+      default:
+        throw new IOException("Cannot parse structure file");
+    }
+  }
+
   /**
    * @param exampleName
    */
-  private void getFromLocalExamples(String exampleName) throws IllegalArgumentException {
+  private String getFromLocalExamples(String exampleName) throws IllegalArgumentException {
 
     ClassLoader classLoader = getClass().getClassLoader();
     InputStream inputStream = classLoader.getResourceAsStream("exampleStructure/" + exampleName);
 
-    // the stream holding the file content
     if (inputStream == null) {
       throw new IllegalArgumentException("example not found! " + exampleName);
     } else {
       InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
       BufferedReader reader = new BufferedReader(streamReader);
-      structureFileContent = reader.lines().collect(Collectors.joining());
+      return reader.lines().collect(Collectors.joining());
     }
   }
 
   /**
-   * @param rcsbName
+   * @param rcsbName - pdb id from Protein Data Bank
    * @throws Exception
    */
-  private void getFromRCSB(String rcsbName) throws Exception {
+  private String getFromRCSB(String rcsbName) throws Exception {
     try {
       URI uri = new URI("https://files.rcsb.org/download/" + rcsbName + ".cif");
       URL url = uri.toURL();
@@ -118,21 +146,20 @@ public class Structure {
       DataOutputStream out = new DataOutputStream(con.getOutputStream());
       out.flush();
       out.close();
-      structureFileContent = out.toString();
+      return out.toString();
     } catch (Exception e) {
       throw new Exception("Could not get structure from rcsb");
     }
   }
 
   /**
-   * @return
+   * @return List<Model> list of structure models
    * @throws IOException
    */
   public List<Model> getModels() throws IOException {
-    List<Model> models = new ArrayList<Model>();
-    final List<CifModel> fileModels = this.structureModels;
 
-    for (CifModel cifModel : fileModels) {
+    List<Model> models = new ArrayList<Model>();
+    for (CifModel cifModel : this.structureModels) {
       CifModel pdbModelFiltered = (CifModel) cifModel.filteredNewInstance(MoleculeType.RNA);
       List<Chain> chains = new ArrayList<Chain>();
       for (PdbChain chain : pdbModelFiltered.chains()) {

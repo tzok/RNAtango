@@ -27,8 +27,7 @@ public class UploadService {
 
       Structure structure = new Structure(file.content(), file.filename());
 
-      FileEntity _fileEntity =
-          fileRepository.saveAndFlush(new FileEntity(file, structure.getCifModels()));
+      FileEntity _fileEntity = fileRepository.saveAndFlush(new FileEntity(file));
 
       return ImmutableStructureFileOutput.builder()
           .fileHashId(_fileEntity.getHashId().toString())

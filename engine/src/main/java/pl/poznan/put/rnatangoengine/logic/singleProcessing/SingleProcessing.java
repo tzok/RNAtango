@@ -1,5 +1,8 @@
 package pl.poznan.put.rnatangoengine.logic.singleProcessing;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,16 +32,27 @@ public class SingleProcessing {
 
   public void startTask() {
     SingleResultEntity singleResultEntity = singleRepository.getByHashId(taskHashId);
+
     if (!singleResultEntity.getStatus().equals(Status.WAITING)) {
       return;
     }
+
     singleResultEntity.setStatus(Status.PROCESSING);
     List<ChainTorsionAngleEntity> structureSingleProcessingTorsionAngles =
         new ArrayList<ChainTorsionAngleEntity>();
     ExportAngleNameToAngle exportAngleNameToAngle = new ExportAngleNameToAngle();
+
     try {
+      File tempFile = File.createTempFile("structure", ".cif");
+
+      BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile.getAbsolutePath()));
+      writer.write(singleResultEntity.getStructureFileContent());
+      writer.close();
+
       PdbModel model =
-          StructureManager.loadStructure(singleResultEntity.getStructureFileContent()).get(0);
+          StructureManager.loadStructure(tempFile)
+              .get(Integer.valueOf(singleResultEntity.getSelection().getModelName()));
+
       for (final PdbChain chain : model.chains()) {
         ChainTorsionAngleEntity chainTorsionAngleEntity =
             new ChainTorsionAngleEntity(chain.identifier(), chain.sequence());
@@ -72,6 +86,7 @@ public class SingleProcessing {
       chainTorsionAngleRepository.saveAll(structureSingleProcessingTorsionAngles);
       singleResultEntity.getChainTorsionAngles().addAll(structureSingleProcessingTorsionAngles);
       singleResultEntity.setStatus(Status.SUCCESS);
+      tempFile.deleteOnExit();
 
     } catch (IOException e) {
       singleResultEntity.setStatus(Status.FAILED);

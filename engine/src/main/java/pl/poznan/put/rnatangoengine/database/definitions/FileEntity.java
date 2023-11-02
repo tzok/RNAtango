@@ -1,10 +1,7 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
-import java.util.List;
 import java.util.UUID;
-import pl.poznan.put.pdb.analysis.CifModel;
-import pl.poznan.put.rnatangoengine.database.converters.CifModelListConverter;
 import pl.poznan.put.rnatangoengine.dto.File;
 
 @Entity
@@ -19,20 +16,14 @@ public class FileEntity {
 
   private String content;
 
-  @Convert(converter = CifModelListConverter.class)
-  @Column(name = "cifModels", nullable = false)
-  private List<CifModel> cifModels;
-
-  public FileEntity(File file, List<CifModel> cifModels) {
+  public FileEntity(File file) {
     this.filename = file.filename();
     this.content = file.content();
-    this.cifModels = cifModels;
   }
 
-  public FileEntity(String filename, String content, List<CifModel> cifModels) {
+  public FileEntity(String filename, String content) {
     this.filename = filename;
     this.content = content;
-    this.cifModels = cifModels;
   }
 
   public UUID getHashId() {

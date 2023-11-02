@@ -56,6 +56,10 @@ public class SelectionEntity {
         .build();
   }
 
+  public String getModelName() {
+    return modelName;
+  }
+
   public Long getId() {
     return id;
   }
