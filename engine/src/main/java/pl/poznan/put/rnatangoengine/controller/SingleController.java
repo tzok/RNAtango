@@ -33,4 +33,5 @@ public class SingleController {
   public SingleOutput singleResult(@PathVariable String taskId) {
     return singleService.singleResult(taskId);
   }
+
 }
