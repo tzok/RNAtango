@@ -29,17 +29,15 @@ public class SelectionEntity {
 
   public SelectionEntity(Selection selection) {
     this.modelName = selection.modelName();
-    if (selection.chains().isPresent()) {
-      selectionChains.addAll(
-          selection.chains().get().stream()
-              .map(
-                  (selectionChain) ->
-                      new SelectionChainEntity(
-                          selectionChain.name(),
-                          selectionChain.nucleotideRange().fromInclusive(),
-                          selectionChain.nucleotideRange().toInclusive()))
-              .collect(Collectors.toList()));
-    }
+    selectionChains.addAll(
+        selection.chains().stream()
+            .map(
+                (selectionChain) ->
+                    new SelectionChainEntity(
+                        selectionChain.name(),
+                        selectionChain.nucleotideRange().fromInclusive(),
+                        selectionChain.nucleotideRange().toInclusive()))
+            .collect(Collectors.toList()));
   }
 
   public List<SelectionChainEntity> getSelectionChains() {

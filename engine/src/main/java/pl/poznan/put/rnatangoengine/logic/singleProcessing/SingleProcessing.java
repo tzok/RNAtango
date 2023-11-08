@@ -51,7 +51,7 @@ public class SingleProcessing {
 
       PdbModel model =
           StructureManager.loadStructure(tempFile)
-              .get(Integer.valueOf(singleResultEntity.getSelection().getModelName()));
+              .get(Integer.valueOf(singleResultEntity.getSelections().get(0).getModelName()));
 
       for (final PdbChain chain : model.chains()) {
         ChainTorsionAngleEntity chainTorsionAngleEntity =

@@ -9,7 +9,7 @@ import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 
 @Service
 public class DefaultFileService implements FileService {
-  private final FileRepository repository;
+  @Autowired private final FileRepository repository;
 
   @Autowired
   public DefaultFileService(FileRepository repository) {

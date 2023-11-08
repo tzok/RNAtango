@@ -9,7 +9,7 @@ import pl.poznan.put.rnatangoengine.database.repository.SingleResultRepository;
 
 @Service
 public class DefaultSingleResultService implements SingleResultService {
-  private final SingleResultRepository repository;
+  @Autowired private final SingleResultRepository repository;
 
   @Autowired
   public DefaultSingleResultService(SingleResultRepository repository) {

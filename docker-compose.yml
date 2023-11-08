@@ -6,11 +6,15 @@ services:
       - db
       - rabbit
     restart: "no"
+    entrypoint: bash /opt/rnatango/docker-entrypoint.sh
+    ports:
+      - 80:8080
     networks:
       - web_network
       - db_network
       - rabbit_network
-
+    volumes:
+      - .:/opt/rnatango
   # nginx:
   #   build:
   #     context: ./nginx
@@ -28,7 +32,19 @@ services:
   #     - ./logs/nginx:/logs
   #   networks:
   #     - web_network
-
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    #restart: always
+    ports:
+     - "5050:5050"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@rnatango.pl
+      PGADMIN_DEFAULT_PASSWORD: zaq1@WSXcde3
+      PGADMIN_LISTEN_PORT: 5050
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - db_network
   rabbit:
     image: rabbitmq:3.11-alpine
     restart: always
@@ -47,6 +63,7 @@ services:
 volumes:
   workdir:
   pgdata:
+  pgadmin-data:
 networks:
   web_network:
     driver: bridge

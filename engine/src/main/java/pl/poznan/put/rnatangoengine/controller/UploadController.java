@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.poznan.put.rnatangoengine.dto.StructureFileInput;
+import org.springframework.web.multipart.MultipartFile;
 import pl.poznan.put.rnatangoengine.dto.StructureFileOutput;
 import pl.poznan.put.rnatangoengine.service.UploadService;
 
@@ -17,9 +17,11 @@ public class UploadController {
     this.uploadService = uploadService;
   }
 
-  @PostMapping("/upload")
-  public StructureFileOutput upload(@RequestBody StructureFileInput structureFileInput) {
-    return uploadService.upload(structureFileInput);
+  @PostMapping(
+      path = "/upload",
+      consumes = {"multipart/form-data"})
+  public ResponseEntity<StructureFileOutput> upload(@RequestParam("file") MultipartFile file) {
+    return new ResponseEntity<>(uploadService.upload(file), HttpStatus.OK);
   }
 
   @PostMapping("/upload/remove/{fileId}")

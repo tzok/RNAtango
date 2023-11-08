@@ -28,6 +28,7 @@ public class PdbService {
         out.flush();
         out.close();
         Structure structure = new Structure(out.toString(), structurePdbInput.name() + ".cif");
+        structure.process();
         return ImmutableStructureFileOutput.builder().addAllModels(structure.getModels()).build();
       } catch (Exception e) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "structure does not exist");

@@ -20,9 +20,12 @@ public class SingleResultEntity extends TaskEntity {
 
   private String structureFileContent;
 
-  @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name = "selection", referencedColumnName = "id")
-  private SelectionEntity selection;
+  @ManyToMany(cascade = CascadeType.ALL)
+  @JoinTable(
+      name = "result_selection",
+      joinColumns = @JoinColumn(name = "selection_id"),
+      inverseJoinColumns = @JoinColumn(name = "result_id"))
+  private List<SelectionEntity> selections;
 
   @ManyToMany(cascade = CascadeType.ALL)
   @JoinTable(
@@ -36,10 +39,10 @@ public class SingleResultEntity extends TaskEntity {
     this.structureFileContent = structureFileContent;
   }
 
-  public SingleResultEntity(SelectionEntity selectionEntity, String structureFileContent) {
+  public SingleResultEntity(List<SelectionEntity> selectionEntities, String structureFileContent) {
     this.status = Status.WAITING;
     this.structureFileContent = structureFileContent;
-    this.selection = selectionEntity;
+    this.selections = selectionEntities;
   }
 
   public Long getId() {
@@ -54,8 +57,8 @@ public class SingleResultEntity extends TaskEntity {
     return this.chainTorsionAngleEntities;
   }
 
-  public SelectionEntity getSelection() {
-    return this.selection;
+  public List<SelectionEntity> getSelections() {
+    return this.selections;
   }
 
   public String getStructureFileContent() {

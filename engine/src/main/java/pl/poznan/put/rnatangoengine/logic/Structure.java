@@ -36,10 +36,11 @@ import pl.poznan.put.rnatangoengine.dto.Selection;
 import pl.poznan.put.rnatangoengine.dto.SelectionChain;
 
 public class Structure {
-  @Autowired DefaultFileService defaultFileService;
-
+  @Autowired private DefaultFileService defaultFileService;
   String structureFileContent;
   List<CifModel> structureModels;
+  String structureCode;
+  String filename;
 
   enum Format {
     Cif,
@@ -50,26 +51,9 @@ public class Structure {
    * @param structureCode
    * @throws Exception
    */
-  public Structure(String structureCode) throws Exception {
-    if (structureCode.length() == 4) {
-      this.structureFileContent = getFromRCSB(structureCode);
-      parseStructureFile(Format.Cif);
-    } else if (structureCode.startsWith("example_")) {
-      this.structureFileContent = getFromLocalExamples(structureCode.replace("example_", ""));
-      parseStructureFile(Format.Cif); // FIXME: to check
-    } else if (structureCode.length() > 4) {
-      FileEntity file = defaultFileService.getByHashId(UUID.fromString(structureCode));
-      this.structureFileContent = file.getContent();
-      List<String> filenameElements = List.of(file.getFilename().split("."));
-      if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("cif")) {
-        parseStructureFile(Format.Cif);
-      }
-      if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("pdb")) {
-        parseStructureFile(Format.Pdb);
-      }
-    } else {
-      throw new FileNotFoundException("Structure file could not be found");
-    }
+  public Structure(String structureCode) {
+    this.structureModels = new ArrayList<CifModel>();
+    this.structureCode = structureCode;
   }
 
   /**
@@ -77,18 +61,46 @@ public class Structure {
    * @param filename
    * @throws IOException
    */
-  public Structure(String structureFileContent, String filename) throws IOException {
-    structureModels.clear();
+  public Structure(String structureFileContent, String filename) {
+    this.structureModels = new ArrayList<CifModel>();
+
     this.structureFileContent = structureFileContent;
-    List<String> filenameElements = List.of(filename.split("."));
-    if (filenameElements.size() > 0) {
-      if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("cif")) {
+    this.filename = filename;
+  }
+
+  public void process() throws IOException {
+    if (!structureCode.isEmpty()) {
+      if (structureCode.length() == 4) {
+        this.structureFileContent = getFromRCSB(structureCode);
         parseStructureFile(Format.Cif);
-        return;
+      } else if (structureCode.startsWith("example_")) {
+        this.structureFileContent = getFromLocalExamples(structureCode.replace("example_", ""));
+        parseStructureFile(Format.Cif); // FIXME: to check
+      } else if (structureCode.length() > 4) {
+        FileEntity file = defaultFileService.getByHashId(UUID.fromString(structureCode));
+        this.structureFileContent = file.getContent().toString();
+        List<String> filenameElements = List.of(file.getFilename().split("."));
+        if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("cif")) {
+          parseStructureFile(Format.Cif);
+        }
+        if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("pdb")) {
+          parseStructureFile(Format.Pdb);
+        }
+      } else {
+        throw new FileNotFoundException("Structure file could not be found");
       }
-      if (filenameElements.get(filenameElements.size() - 1).toLowerCase().equals("pdb")) {
-        parseStructureFile(Format.Pdb);
-        return;
+    }
+    if (!this.structureFileContent.isEmpty() && !this.filename.isEmpty()) {
+      String[] filenameElements = filename.split("\\.");
+      if (filenameElements.length > 0) {
+        if (filenameElements[filenameElements.length - 1].toLowerCase().equals("cif")) {
+          parseStructureFile(Format.Cif);
+          return;
+        }
+        if (filenameElements[filenameElements.length - 1].toLowerCase().equals("pdb")) {
+          parseStructureFile(Format.Pdb);
+          return;
+        }
       }
       throw new IOException("Cannot parse structure file");
     }
@@ -134,7 +146,7 @@ public class Structure {
    * @param rcsbName - pdb id from Protein Data Bank
    * @throws Exception
    */
-  private String getFromRCSB(String rcsbName) throws Exception {
+  private String getFromRCSB(String rcsbName) throws IOException {
     try {
       URI uri = new URI("https://files.rcsb.org/download/" + rcsbName + ".cif");
       URL url = uri.toURL();
@@ -148,7 +160,7 @@ public class Structure {
       out.close();
       return out.toString();
     } catch (Exception e) {
-      throw new Exception("Could not get structure from rcsb");
+      throw new IOException("Could not get structure from rcsb");
     }
   }
 
@@ -189,30 +201,32 @@ public class Structure {
    * @param selections
    * @throws IOException
    */
-  public String filter(Selection selection) throws IOException {
+  public String filter(List<Selection> selections) throws IOException {
     CifModel pdbModelFiltered =
-        (CifModel) structureModels.get(Integer.parseInt(selection.modelName()));
+        (CifModel) structureModels.get(Integer.parseInt(selections.get(0).modelName()));
 
     List<PdbAtomLine> resultAtoms = new ArrayList<PdbAtomLine>();
-    if (selection.chains().isEmpty()) {
-      this.structureFileContent = pdbModelFiltered.toCif();
-      return this.structureFileContent;
-    }
+    for (Selection selection : selections) {
 
-    for (PdbChain chain : pdbModelFiltered.chains()) {
-      for (SelectionChain selectionChain : selection.chains().get()) {
+      if (selection.chains().isEmpty()) {
+        this.structureFileContent = pdbModelFiltered.toCif();
+        return this.structureFileContent;
+      }
 
-        if (chain.identifier().equals(selectionChain.name())) {
-          for (PdbResidue residue : chain.residues()) {
-            if (residue.residueNumber() >= selectionChain.nucleotideRange().fromInclusive()
-                && residue.residueNumber() <= selectionChain.nucleotideRange().toInclusive()) {
-              resultAtoms.addAll(residue.atoms());
+      for (PdbChain chain : pdbModelFiltered.chains()) {
+        for (SelectionChain selectionChain : selection.chains()) {
+
+          if (chain.identifier().equals(selectionChain.name())) {
+            for (PdbResidue residue : chain.residues()) {
+              if (residue.residueNumber() >= selectionChain.nucleotideRange().fromInclusive()
+                  && residue.residueNumber() <= selectionChain.nucleotideRange().toInclusive()) {
+                resultAtoms.addAll(residue.atoms());
+              }
             }
           }
         }
       }
     }
-
     this.structureFileContent =
         ImmutableDefaultCifModel.of(
                 pdbModelFiltered.header(),

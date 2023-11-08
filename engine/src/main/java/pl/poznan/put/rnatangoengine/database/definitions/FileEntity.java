@@ -2,7 +2,6 @@ package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
 import java.util.UUID;
-import pl.poznan.put.rnatangoengine.dto.File;
 
 @Entity
 @Table(name = "files")
@@ -14,14 +13,11 @@ public class FileEntity {
 
   private String filename;
 
-  private String content;
+  @Lob private byte[] content;
 
-  public FileEntity(File file) {
-    this.filename = file.filename();
-    this.content = file.content();
-  }
+  public FileEntity() {}
 
-  public FileEntity(String filename, String content) {
+  public FileEntity(String filename, byte[] content) {
     this.filename = filename;
     this.content = content;
   }
@@ -30,7 +26,7 @@ public class FileEntity {
     return hashId;
   }
 
-  public String getContent() {
+  public byte[] getContent() {
     return content;
   }
 

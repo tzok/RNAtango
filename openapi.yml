@@ -7,7 +7,7 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
-  version: 1.0.2
+  version: '1'
 servers:
   - url: https://rnatango.cs.put.poznan.pl/api
 paths:
@@ -37,9 +37,13 @@ paths:
       operationId: postUpload
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/StructureFileInput'
+              type: object
+              properties: # Request
+                file:
+                  type: string
+                  format: base64
         required: true
       responses:
         '200':
@@ -254,14 +258,24 @@ components:
       required:
         - fromInclusive
         - toInclusive
+    SelectedChain:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "A"
+        nucleotideRange:
+          $ref: '#/components/schemas/NucleotideRange'
     Selection:
       type: object
       properties:
-        chainName:
+        modelName:
           type: string
-          example: A
-        nucleotideRange:
-          $ref: '#/components/schemas/NucleotideRange'
+          example: 1
+        chains:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectedChain'
       required:
         - chain
         - nucleotideRange
@@ -343,29 +357,38 @@ components:
           type: string
           default: null
           example: null
+        torsionAngles:
+          type: array
+          items:
+            $ref: '#/components/schemas/TorsionAngleInResidue'
       required:
         - name
         - number
-    TorsionAnglesInResidue:
+    TorsionAngleInResidue:
       description: An array of torsion angle values in degrees for one residue given in order alpha, beta, gamma, delta, epsilon, zeta, chi, eta, theta, eta', theta'.
       type: array
       items:
-        type: number
-        format: double
+        type: object
+        properties:
+          angle:
+            $ref: '#/components/schemas/Angle'
+          value:
+            type: number
+            format: double
       minItems: 11
       maxItems: 11
       example:
-        - null
-        - -128.05
-        - 67.79
-        - 82.86
-        - -67.45
-        - -178.39
-        - 53.83
-        - 83.38
-        - -74.46
-        - 169.69
-        - 59.48
+        - {angle: ALPHA,value: null}
+        - {angle: BETA,value: 25}
+        - {angle: GAMMA,value: -14}
+        - {angle: DELTA,value: 45}
+        - {angle: EPSILON,value: 100}
+        - {angle: ZETA,value: 41}
+        - {angle: CHI,value: 47}
+        - {angle: ETA,value: 57}
+        - {angle: THETA,value: 57}
+        - {angle: ETA_PRIM,value: 2}
+        - {angle: THETA_PRIM,value: 44}
     TorsionAnglesInChain:
       type: object
       properties:
@@ -375,14 +398,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Residue'
-        values:
-          type: array
-          items:
-            $ref: '#/components/schemas/TorsionAnglesInResidue'
       required:
         - chain
         - residues
-        - values
     SingleOutput:
       type: object
       properties:
@@ -473,7 +491,7 @@ components:
         values:
           type: array
           items:
-            $ref: '#/components/schemas/TorsionAnglesInResidue'
+            $ref: '#/components/schemas/TorsionAngleInResidue'
         residueMCQs:
           type: array
           items:

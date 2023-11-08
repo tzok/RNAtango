@@ -1,5 +1,7 @@
 package pl.poznan.put.rnatangoengine.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,19 +33,26 @@ public class SingleService {
 
   public TaskIdResponse single(SingleInput singleInput) {
     try {
-      Structure structure = new Structure(singleInput.fileHashId());
-      SelectionEntity _selectionEntity =
-          selectionRepository.save(new SelectionEntity(singleInput.selection()));
+      Structure structure = new Structure(singleInput.fileId());
+      structure.process();
+      List<SelectionEntity> selections = new ArrayList<>();
+      selections.addAll(
+          singleInput.selections().stream()
+              .map((selection) -> new SelectionEntity(selection))
+              .collect(Collectors.toList()));
+      selectionRepository.saveAll(selections);
+
       SingleResultEntity _singleResultEntity =
           singleRepository.saveAndFlush(
-              new SingleResultEntity(_selectionEntity, structure.filter(singleInput.selection())));
+              new SingleResultEntity(selections, structure.filter(singleInput.selections())));
 
       queueService.send(_singleResultEntity.getHashId().toString(), TaskType.Single);
-      fileRepository.deleteByHashId(UUID.fromString(singleInput.fileHashId()));
+      fileRepository.deleteByHashId(UUID.fromString(singleInput.fileId()));
       return ImmutableTaskIdResponse.builder()
           .taskId(_singleResultEntity.getHashId().toString())
           .build();
     } catch (Exception e) {
+      e.printStackTrace();
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "could not set the task");
     }
   }
