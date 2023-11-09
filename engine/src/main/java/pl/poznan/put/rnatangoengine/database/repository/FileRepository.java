@@ -11,13 +11,11 @@ import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 @Repository
 public interface FileRepository extends JpaRepository<FileEntity, Long> {
   @Transactional
-  @Modifying
-  @Query("FROM FileEntity f WHERE f.id = ?1")
+  @Query("select f FROM FileEntity f WHERE f.id = ?1")
   FileEntity getById(Long id);
 
   @Transactional
-  @Modifying
-  @Query("FROM FileEntity f WHERE f.hashId = ?1")
+  @Query("select f FROM FileEntity f WHERE f.hashId = ?1")
   FileEntity getByHashId(UUID hashId);
 
   @Transactional

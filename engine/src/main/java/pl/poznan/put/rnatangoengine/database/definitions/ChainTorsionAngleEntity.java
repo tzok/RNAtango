@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.SingleResultEntity;
@@ -30,9 +31,12 @@ public class ChainTorsionAngleEntity {
       inverseJoinColumns = @JoinColumn(name = "chain_id"))
   List<ResidueTorsionAngleEntity> residuesTorsionAngleEntities;
 
+  public ChainTorsionAngleEntity() {}
+
   public ChainTorsionAngleEntity(String name, String sequence) {
     this.name = name;
     this.sequence = sequence;
+    this.residuesTorsionAngleEntities = new ArrayList<>();
   }
 
   public List<ResidueTorsionAngleEntity> getResiduesTorsionAngles() {

@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -41,6 +42,8 @@ public class ResidueTorsionAngleEntity {
   @ManyToMany(mappedBy = "residuesTorsionAngleEntities")
   List<ChainTorsionAngleEntity> chainsTorsionAngleEntites;
 
+  public ResidueTorsionAngleEntity() {}
+
   public ResidueTorsionAngleEntity(String name, int number, String icode) {
     this.name = name;
     this.number = number;
@@ -50,14 +53,22 @@ public class ResidueTorsionAngleEntity {
   public List<AngleValue> getAllAngleValues() {
     ExportAngleNameToAngle exportAngleNameToAngle = new ExportAngleNameToAngle();
 
-    return MoleculeType.RNA.allAngleTypes().stream()
-        .map(
-            (angleName) ->
-                ImmutableAngleValue.builder()
-                    .value(getAngle(exportAngleNameToAngle.parse(angleName.exportName())))
-                    .angle(exportAngleNameToAngle.parse(angleName.exportName()))
-                    .build())
-        .collect(Collectors.toList());
+    List<AngleValue> angleValues =
+        MoleculeType.RNA.allAngleTypes().stream()
+            .map(
+                (angleName) -> {
+                  if (exportAngleNameToAngle.parse(angleName.exportName()) != null) {
+                    return ImmutableAngleValue.builder()
+                        .value(getAngle(exportAngleNameToAngle.parse(angleName.exportName())))
+                        .angle(exportAngleNameToAngle.parse(angleName.exportName()))
+                        .build();
+                  } else {
+                    return null;
+                  }
+                })
+            .collect(Collectors.toList());
+    angleValues.removeAll(Collections.singleton(null));
+    return angleValues;
   }
 
   public Residue getConvertedToResidueImmutable() {
@@ -82,6 +93,9 @@ public class ResidueTorsionAngleEntity {
   }
 
   public Double getAngle(Angle angle) {
+    if (angle == null) {
+      return null;
+    }
     switch (angle) {
       case ALPHA:
         return this.alpha;
@@ -111,6 +125,9 @@ public class ResidueTorsionAngleEntity {
   }
 
   public void setAngle(Angle angle, Double value) {
+    if (angle == null) {
+      return;
+    }
     switch (angle) {
       case ALPHA:
         this.alpha = value;
@@ -144,6 +161,8 @@ public class ResidueTorsionAngleEntity {
         break;
       case THETA_PRIM:
         this.theta_prim = value;
+        break;
+      default:
         break;
     }
   }

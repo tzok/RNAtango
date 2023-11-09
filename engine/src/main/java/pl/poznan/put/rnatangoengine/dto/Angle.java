@@ -11,5 +11,6 @@ public enum Angle {
   ETA,
   THETA,
   ETA_PRIM,
-  THETA_PRIM
+  THETA_PRIM,
+  PSEUDOPHASE_PUCKER
 }

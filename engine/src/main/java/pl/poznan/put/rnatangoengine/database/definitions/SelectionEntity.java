@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
@@ -29,6 +30,7 @@ public class SelectionEntity {
 
   public SelectionEntity(Selection selection) {
     this.modelName = selection.modelName();
+    this.selectionChains = new ArrayList<>();
     selectionChains.addAll(
         selection.chains().stream()
             .map(

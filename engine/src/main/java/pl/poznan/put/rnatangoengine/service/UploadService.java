@@ -10,15 +10,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStructureFileOutput;
 import pl.poznan.put.rnatangoengine.dto.StructureFileOutput;
-import pl.poznan.put.rnatangoengine.logic.Structure;
+import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
 
 @Service
 public class UploadService {
   @Autowired FileRepository fileRepository;
+  @Autowired StructureProcessingService structureProcessingService;
 
   private String readFileAsString(String filePath) throws IOException {
     StringBuffer fileData = new StringBuffer();
@@ -40,12 +42,12 @@ public class UploadService {
       structureFileInput.transferTo(transferFile);
 
       String fileContent = readFileAsString(tempFile.getAbsolutePath());
-      Structure structure = new Structure(fileContent, structureFileInput.getOriginalFilename());
-      structure.process();
+      Structure structure =
+          structureProcessingService.process(fileContent, structureFileInput.getOriginalFilename());
       FileEntity _fileEntity =
           fileRepository.saveAndFlush(
               new FileEntity(structureFileInput.getOriginalFilename(), fileContent.getBytes()));
-
+      tempFile.deleteOnExit();
       return ImmutableStructureFileOutput.builder()
           .fileHashId(_fileEntity.getHashId().toString())
           .addAllModels(structure.getModels())

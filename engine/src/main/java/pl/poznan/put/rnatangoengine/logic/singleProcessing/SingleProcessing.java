@@ -4,10 +4,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import pl.poznan.put.pdb.analysis.*;
 import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
 import pl.poznan.put.rnatangoengine.database.definitions.ChainTorsionAngleEntity;
@@ -19,18 +21,15 @@ import pl.poznan.put.rnatangoengine.database.repository.SingleResultRepository;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.structure.StructureManager;
 
+@Service
 public class SingleProcessing {
   @Autowired SingleResultRepository singleRepository;
   @Autowired ChainTorsionAngleRepository chainTorsionAngleRepository;
   @Autowired ResidueTorsionAngleRepository residueTorsionAngleRepository;
 
-  private UUID taskHashId;
+  public SingleProcessing() {}
 
-  public SingleProcessing(UUID taskHashId) {
-    this.taskHashId = taskHashId;
-  }
-
-  public void startTask() {
+  public void startTask(UUID taskHashId) {
     SingleResultEntity singleResultEntity = singleRepository.getByHashId(taskHashId);
 
     if (!singleResultEntity.getStatus().equals(Status.WAITING)) {
@@ -38,6 +37,8 @@ public class SingleProcessing {
     }
 
     singleResultEntity.setStatus(Status.PROCESSING);
+    singleRepository.save(singleResultEntity);
+
     List<ChainTorsionAngleEntity> structureSingleProcessingTorsionAngles =
         new ArrayList<ChainTorsionAngleEntity>();
     ExportAngleNameToAngle exportAngleNameToAngle = new ExportAngleNameToAngle();
@@ -46,16 +47,18 @@ public class SingleProcessing {
       File tempFile = File.createTempFile("structure", ".cif");
 
       BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile.getAbsolutePath()));
-      writer.write(singleResultEntity.getStructureFileContent());
+      writer.write(
+          new String(singleResultEntity.getStructureFileContent(), StandardCharsets.UTF_8));
       writer.close();
 
       PdbModel model =
           StructureManager.loadStructure(tempFile)
-              .get(Integer.valueOf(singleResultEntity.getSelections().get(0).getModelName()));
+              .get(Integer.valueOf(singleResultEntity.getSelections().get(0).getModelName()) - 1);
 
       for (final PdbChain chain : model.chains()) {
         ChainTorsionAngleEntity chainTorsionAngleEntity =
             new ChainTorsionAngleEntity(chain.identifier(), chain.sequence());
+        chainTorsionAngleRepository.save(chainTorsionAngleEntity);
         ImmutablePdbCompactFragment fragment = ImmutablePdbCompactFragment.of(chain.residues());
         List<ResidueTorsionAngleEntity> residueAngles = new ArrayList<ResidueTorsionAngleEntity>();
 
@@ -86,11 +89,13 @@ public class SingleProcessing {
       chainTorsionAngleRepository.saveAll(structureSingleProcessingTorsionAngles);
       singleResultEntity.getChainTorsionAngles().addAll(structureSingleProcessingTorsionAngles);
       singleResultEntity.setStatus(Status.SUCCESS);
+      singleRepository.save(singleResultEntity);
       tempFile.deleteOnExit();
 
     } catch (IOException e) {
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());
+      singleRepository.save(singleResultEntity);
     }
   }
 }
