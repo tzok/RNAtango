@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.SingleResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
@@ -23,7 +22,6 @@ import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
-import pl.poznan.put.rnatangoengine.logic.singleProcessing.SingleProcessing;
 
 @Service
 public class SingleService {
@@ -31,27 +29,21 @@ public class SingleService {
   @Autowired SelectionRepository selectionRepository;
   @Autowired FileRepository fileRepository;
   @Autowired StructureProcessingService structureProcessingService;
-  @Autowired SingleProcessing singleProcessing;
-  QueueService queueService;
+  @Autowired QueueService queueService;
 
   public TaskIdResponse single(SingleInput singleInput) {
     try {
-      Structure structure = structureProcessingService.process(singleInput.fileId());
       List<SelectionEntity> selections = new ArrayList<>();
       selections.addAll(
           singleInput.selections().stream()
               .map((selection) -> new SelectionEntity(selection))
               .collect(Collectors.toList()));
       selectionRepository.saveAll(selections);
-
       SingleResultEntity _singleResultEntity =
-          singleRepository.saveAndFlush(
-              new SingleResultEntity(
-                  selections, structure.filterParseCif(singleInput.selections()).getBytes()));
+          singleRepository.saveAndFlush(new SingleResultEntity(selections, singleInput.fileId()));
 
-      // queueService.send(_singleResultEntity.getHashId().toString(), TaskType.Single);
-      fileRepository.deleteByHashId(UUID.fromString(singleInput.fileId()));
-      singleProcessing.startTask(_singleResultEntity.getHashId());
+      queueService.sendSingle(_singleResultEntity.getHashId());
+
       return ImmutableTaskIdResponse.builder()
           .taskId(_singleResultEntity.getHashId().toString())
           .build();
@@ -65,16 +57,18 @@ public class SingleService {
     try {
       SingleResultEntity _singleResultEntity =
           singleRepository.getByHashId(UUID.fromString(taskId));
-      if (_singleResultEntity.getStatus().equals(Status.SUCCESS)) {
+      if (_singleResultEntity.getStatus().equals(Status.FAILED)) {
+        return ImmutableStatusResponse.builder()
+            .status(_singleResultEntity.getStatus())
+            .error(_singleResultEntity.getUserErrorLog())
+            .build();
+      } else if (_singleResultEntity.getStatus().equals(Status.SUCCESS)) {
         return ImmutableStatusResponse.builder()
             .status(_singleResultEntity.getStatus())
             .resultUrl("/single/" + _singleResultEntity.getHashId().toString() + "/result")
             .build();
       } else {
-        return ImmutableStatusResponse.builder()
-            .status(_singleResultEntity.getStatus())
-            .resultUrl("")
-            .build();
+        return ImmutableStatusResponse.builder().status(_singleResultEntity.getStatus()).build();
       }
     } catch (Exception e) {
       e.printStackTrace();

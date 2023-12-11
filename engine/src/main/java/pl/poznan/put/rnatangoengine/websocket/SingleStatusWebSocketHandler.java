@@ -1,24 +1,28 @@
 package pl.poznan.put.rnatangoengine.websocket;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.SingleResultEntity;
 import pl.poznan.put.rnatangoengine.database.repository.SingleResultRepository;
-import pl.poznan.put.rnatangoengine.dto.ImmutableStatusRequestError;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
+import pl.poznan.put.rnatangoengine.dto.Status;
+import pl.poznan.put.rnatangoengine.dto.StatusInput;
 
+@Service
 public class SingleStatusWebSocketHandler extends TextWebSocketHandler {
   @Autowired SingleResultRepository singleRepository;
-  //   private static final Logger LOGGER = LoggerFactory.getLogger(TextWebSocketHandler.class);
+  // private static final Logger LOGGER =
+  // LoggerFactory.getLogger(TextWebSocketHandler.class);
   private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
   @Override
@@ -36,34 +40,42 @@ public class SingleStatusWebSocketHandler extends TextWebSocketHandler {
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
     super.handleTextMessage(session, message);
-    // String hashId = (String) session.getAttributes().get("hashId");
 
     sessions.forEach(
         webSocketSession -> {
           try {
-            HashMap<String, String> incoming =
-                new Gson().fromJson(message.getPayload(), HashMap.class); // TODO: map to immutable
-            String taskHashId = incoming.get("hashId");
+            StatusInput incoming =
+                new ObjectMapper().readValue(message.getPayload(), StatusInput.class);
+            String taskHashId = incoming.hashId();
             try {
               SingleResultEntity _singleResultEntity =
                   singleRepository.getByHashId(UUID.fromString(taskHashId));
-              TextMessage returnMessage =
+              if (_singleResultEntity.getStatus().equals(Status.FAILED)) {
+                webSocketSession.sendMessage(
+                    new TextMessage(
+                        new Gson()
+                            .toJson(
+                                ImmutableStatusResponse.builder()
+                                    .error(_singleResultEntity.getUserErrorLog())
+                                    .build())));
+              } else {
+                webSocketSession.sendMessage(
+                    new TextMessage(
+                        new Gson()
+                            .toJson(
+                                ImmutableStatusResponse.builder()
+                                    .status(_singleResultEntity.getStatus())
+                                    .resultUrl("/single/" + taskHashId + "/result")
+                                    .build())));
+              }
+            } catch (Exception e) {
+              webSocketSession.sendMessage(
                   new TextMessage(
                       new Gson()
                           .toJson(
                               ImmutableStatusResponse.builder()
-                                  .status(_singleResultEntity.getStatus())
-                                  .build()));
-              webSocketSession.sendMessage(returnMessage);
-            } catch (Exception e) {
-              TextMessage returnMessage =
-                  new TextMessage(
-                      new Gson()
-                          .toJson(
-                              ImmutableStatusRequestError.builder()
-                                  .reason("Task does not exist")
-                                  .build()));
-              webSocketSession.sendMessage(returnMessage);
+                                  .error("Task does not exist")
+                                  .build())));
             }
           } catch (Exception e) {
             try {
@@ -71,8 +83,8 @@ public class SingleStatusWebSocketHandler extends TextWebSocketHandler {
                   new TextMessage(
                       new Gson()
                           .toJson(
-                              ImmutableStatusRequestError.builder()
-                                  .reason("Message is not acceptable")
+                              ImmutableStatusResponse.builder()
+                                  .error("Message is not acceptable")
                                   .build()));
               webSocketSession.sendMessage(returnMessage);
               webSocketSession.close(CloseStatus.NOT_ACCEPTABLE);

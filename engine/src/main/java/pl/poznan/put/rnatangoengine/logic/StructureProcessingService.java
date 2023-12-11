@@ -58,6 +58,7 @@ public class StructureProcessingService {
       }
       structureFileContent = new String(file.getContent(), StandardCharsets.UTF_8);
       String[] filenameElements = file.getFilename().split("\\.");
+      fileRepository.deleteByHashId(UUID.fromString(structureCode));
       if (filenameElements[filenameElements.length - 1].toLowerCase().equals("cif")) {
         return parseStructureFile(structureFileContent, Format.Cif);
       }
@@ -146,7 +147,7 @@ public class StructureProcessingService {
       StringBuffer response = new StringBuffer();
 
       while ((inputLine = in.readLine()) != null) {
-        response.append(inputLine);
+        response.append(inputLine + "\n");
       }
       in.close();
 

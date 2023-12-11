@@ -3,11 +3,13 @@ package pl.poznan.put.rnatangoengine.websocket;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+@Service
 public class ManyManyStatusWebSocketHandler extends TextWebSocketHandler {
 
   //   private static final Logger LOGGER = LoggerFactory.getLogger(TextWebSocketHandler.class);

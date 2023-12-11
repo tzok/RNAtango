@@ -7,6 +7,8 @@ services:
       - rabbit
     restart: "no"
     entrypoint: bash /opt/rnatango/docker-entrypoint.sh
+    env_file:
+      - ./.env
     ports:
       - 80:8080
     networks:
@@ -48,6 +50,8 @@ services:
   rabbit:
     image: rabbitmq:3.11-alpine
     restart: always
+    env_file:
+      - ./.env
     networks:
       - db_network
       - rabbit_network

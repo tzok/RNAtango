@@ -8,17 +8,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.pdb.analysis.*;
+import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
 import pl.poznan.put.rnatangoengine.database.definitions.ChainTorsionAngleEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ResidueTorsionAngleEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.SingleResultEntity;
 import pl.poznan.put.rnatangoengine.database.repository.ChainTorsionAngleRepository;
 import pl.poznan.put.rnatangoengine.database.repository.ResidueTorsionAngleRepository;
+import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SingleResultRepository;
 import pl.poznan.put.rnatangoengine.dto.Status;
+import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
 import pl.poznan.put.structure.StructureManager;
 
 @Service
@@ -27,23 +31,38 @@ public class SingleProcessing {
   @Autowired ChainTorsionAngleRepository chainTorsionAngleRepository;
   @Autowired ResidueTorsionAngleRepository residueTorsionAngleRepository;
 
+  @Autowired SelectionRepository selectionRepository;
+  @Autowired StructureProcessingService structureProcessingService;
+
   public SingleProcessing() {}
 
   public void startTask(UUID taskHashId) {
+
+    Structure structure;
     SingleResultEntity singleResultEntity = singleRepository.getByHashId(taskHashId);
 
-    if (!singleResultEntity.getStatus().equals(Status.WAITING)) {
-      return;
-    }
-
-    singleResultEntity.setStatus(Status.PROCESSING);
-    singleRepository.save(singleResultEntity);
-
-    List<ChainTorsionAngleEntity> structureSingleProcessingTorsionAngles =
-        new ArrayList<ChainTorsionAngleEntity>();
-    ExportAngleNameToAngle exportAngleNameToAngle = new ExportAngleNameToAngle();
-
     try {
+      if (!singleResultEntity.getStatus().equals(Status.WAITING)) {
+        return;
+      }
+      singleResultEntity.setStatus(Status.PROCESSING);
+      singleRepository.save(singleResultEntity);
+
+      structure = structureProcessingService.process(singleResultEntity.getFileId());
+      singleResultEntity.setStructureFileContent(
+          structure
+              .filterParseCif(
+                  singleResultEntity.getSelections().stream()
+                      .map((s) -> s.getConvertedToSelectionImmutable())
+                      .collect(Collectors.toList()))
+              .getBytes());
+
+      singleRepository.save(singleResultEntity);
+
+      List<ChainTorsionAngleEntity> structureSingleProcessingTorsionAngles =
+          new ArrayList<ChainTorsionAngleEntity>();
+      ExportAngleNameToAngle exportAngleNameToAngle = new ExportAngleNameToAngle();
+
       File tempFile = File.createTempFile("structure", ".cif");
 
       BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile.getAbsolutePath()));
@@ -69,7 +88,7 @@ public class SingleProcessing {
           ResidueTorsionAngleEntity _residueTorsionAngleEntity =
               residueTorsionAngleRepository.save(
                   new ResidueTorsionAngleEntity(
-                      residue.chainIdentifier(),
+                      residue.modifiedResidueName(),
                       residue.residueNumber(),
                       residue.insertionCode().orElse("")));
 
@@ -78,7 +97,9 @@ public class SingleProcessing {
                   (residueAngle) ->
                       _residueTorsionAngleEntity.setAngle(
                           exportAngleNameToAngle.parse(residueAngle.exportName()),
-                          residueTorsionAngles.value(residueAngle).degrees()));
+                          (residueTorsionAngles.value(residueAngle).isValid()
+                              ? residueTorsionAngles.value(residueAngle).degrees()
+                              : null)));
           residueAngles.add(_residueTorsionAngleEntity);
         }
         residueTorsionAngleRepository.saveAll(residueAngles);
@@ -95,6 +116,14 @@ public class SingleProcessing {
     } catch (IOException e) {
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());
+      singleResultEntity.setUserErrorLog("Error during structure processing");
+
+      singleRepository.save(singleResultEntity);
+    } catch (IllegalArgumentException e) {
+      singleResultEntity.setStatus(Status.FAILED);
+      singleResultEntity.setErrorLog(e.getStackTrace().toString());
+      singleResultEntity.setUserErrorLog("Residues have not got atoms coordinates");
+
       singleRepository.save(singleResultEntity);
     }
   }

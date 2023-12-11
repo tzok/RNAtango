@@ -23,6 +23,8 @@ public class SelectionChainEntity {
   @ManyToMany(mappedBy = "selectionChains")
   List<SelectionEntity> selection;
 
+  public SelectionChainEntity() {}
+
   public SelectionChainEntity(String name, int fromInclusive, int toInclusive) {
     this.name = name;
     this.fromInclusive = fromInclusive;
@@ -47,7 +49,7 @@ public class SelectionChainEntity {
         .nucleotideRange(
             ImmutableNucleotideRange.builder()
                 .fromInclusive(this.fromInclusive)
-                .toInclusive(this.fromInclusive)
+                .toInclusive(this.toInclusive)
                 .build())
         .build();
   }

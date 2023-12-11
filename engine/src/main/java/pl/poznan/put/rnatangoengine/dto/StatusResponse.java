@@ -2,6 +2,7 @@ package pl.poznan.put.rnatangoengine.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -9,7 +10,9 @@ import org.immutables.value.Value;
 @JsonSerialize(as = ImmutableStatusResponse.class)
 @JsonDeserialize(as = ImmutableStatusResponse.class)
 public interface StatusResponse {
-  Status status();
+  Optional<Status> status();
 
-  String resultUrl();
+  Optional<String> resultUrl();
+
+  Optional<String> error();
 }

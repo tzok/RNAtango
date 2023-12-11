@@ -69,19 +69,19 @@ public class Structure {
 
       for (PdbChain chain : pdbModelFiltered.chains()) {
         for (SelectionChain selectionChain : selection.chains()) {
-
           if (chain.identifier().equals(selectionChain.name())) {
+            int residue_pos = 0;
             for (PdbResidue residue : chain.residues()) {
-              if (residue.residueNumber() >= selectionChain.nucleotideRange().fromInclusive()
-                  && residue.residueNumber() <= selectionChain.nucleotideRange().toInclusive()) {
+              if (residue_pos >= selectionChain.nucleotideRange().fromInclusive()
+                  && residue_pos <= selectionChain.nucleotideRange().toInclusive()) {
                 resultAtoms.addAll(residue.atoms());
               }
+              residue_pos++;
             }
           }
         }
       }
     }
-
     return ImmutableDefaultCifModel.of(
             pdbModelFiltered.header(),
             pdbModelFiltered.experimentalData(),

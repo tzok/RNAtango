@@ -1,20 +1,26 @@
 package pl.poznan.put.rnatangoengine.service;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import java.util.UUID;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.core.Queue;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import pl.poznan.put.rnatangoengine.dto.ImmutableTask;
 import pl.poznan.put.rnatangoengine.dto.Task;
 import pl.poznan.put.rnatangoengine.dto.TaskType;
 
+@Service
 public class QueueService {
+  @Autowired private AmqpTemplate rabbitTemplate;
+  @Autowired private Queue queue;
 
-  public void send(String hashId, TaskType taskType) throws Exception {
-    ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("rabbit");
-    Connection connection = factory.newConnection();
-    Channel channel = connection.createChannel();
-    channel.queueDeclare("tasks", false, false, false, null);
-    channel.basicPublish(
-        "", "tasks", false, false, null, new Task(hashId, taskType).toString().getBytes());
+  private static Logger logger = LogManager.getLogger(QueueService.class.toString());
+
+  public void sendSingle(UUID hashId) throws Exception {
+    Task task = ImmutableTask.builder().taskHashId(hashId).type(TaskType.Single).build();
+    rabbitTemplate.convertAndSend(queue.getName(), task);
+    logger.info("Sending Message to the Queue : " + task);
   }
 }

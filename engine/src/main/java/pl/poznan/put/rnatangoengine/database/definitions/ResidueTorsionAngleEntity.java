@@ -39,7 +39,7 @@ public class ResidueTorsionAngleEntity {
   private Double eta_prim;
   private Double theta_prim;
 
-  @ManyToMany(mappedBy = "residuesTorsionAngleEntities")
+  @ManyToMany(mappedBy = "residuesTorsionAngleEntities", fetch = FetchType.EAGER)
   List<ChainTorsionAngleEntity> chainsTorsionAngleEntites;
 
   public ResidueTorsionAngleEntity() {}

@@ -65,6 +65,16 @@
 			<version>5.16.0</version>
 		</dependency>
 		<dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-amqp</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+		<dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-rabbit</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+		<dependency>
 			<groupId>pl.poznan.put.mcq</groupId>
 			<artifactId>mcq-core</artifactId>
 			<version>1.8.2</version>

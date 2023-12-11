@@ -1,9 +1,5 @@
 package pl.poznan.put.rnatangoengine.service;
 
-import java.io.DataOutputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,21 +18,13 @@ public class PdbService {
 
     if (structurePdbInput.name().length() == 4) {
       try {
-        URI uri = new URI("https://files.rcsb.org/download/" + structurePdbInput.name() + ".cif");
-        URL url = uri.toURL();
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-        if (con.getResponseCode() != 200) {
-          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "structure does not exist");
-        }
-        DataOutputStream out = new DataOutputStream(con.getOutputStream());
-        out.flush();
-        out.close();
-        Structure structure =
-            structureProcessingService.process(out.toString(), structurePdbInput.name() + ".cif");
-        return ImmutableStructureFileOutput.builder().addAllModels(structure.getModels()).build();
+        Structure structure = structureProcessingService.process(structurePdbInput.name());
+        return ImmutableStructureFileOutput.builder()
+            .fileHashId(structurePdbInput.name())
+            .addAllModels(structure.getModels())
+            .build();
       } catch (Exception e) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "structure does not exist");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "structure parsing error");
       }
     } else {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "structure does not exist");

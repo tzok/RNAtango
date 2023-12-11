@@ -24,7 +24,7 @@ public class ChainTorsionAngleEntity {
   @ManyToMany(mappedBy = "chainTorsionAngleEntities")
   List<SingleResultEntity> singleResults;
 
-  @ManyToMany(cascade = CascadeType.ALL)
+  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(
       name = "chain_residue_torsion_angle",
       joinColumns = @JoinColumn(name = "residue_torsion_angle_id"),

@@ -17,12 +17,14 @@ public class SelectionEntity {
 
   private String modelName;
 
-  @ManyToMany(cascade = CascadeType.ALL)
+  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(
       name = "selection_selection_chain",
       joinColumns = @JoinColumn(name = "selection_chain_id"),
       inverseJoinColumns = @JoinColumn(name = "selection_id"))
   private List<SelectionChainEntity> selectionChains;
+
+  public SelectionEntity() {}
 
   public SelectionEntity(String modelName) {
     this.modelName = modelName;
