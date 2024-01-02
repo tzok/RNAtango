@@ -20,7 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import pl.poznan.put.pdb.analysis.CifModel;
 import pl.poznan.put.pdb.analysis.CifParser;
-import pl.poznan.put.pdb.analysis.PdbModel;
+import pl.poznan.put.pdb.analysis.ImmutableDefaultCifModel;
+import pl.poznan.put.pdb.analysis.MoleculeType;
 import pl.poznan.put.pdb.analysis.PdbParser;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
@@ -98,11 +99,23 @@ public class StructureProcessingService {
         break;
 
       case Pdb:
-        final PdbParser pdbParser = new PdbParser();
-        final CifParser cifParser = new CifParser();
-        for (PdbModel pdbModel : pdbParser.parse(structureFileContent)) {
-          structureModels.addAll(cifParser.parse(pdbModel.toCif()));
-        }
+        structureModels =
+            new PdbParser()
+                .parse(structureFileContent).stream()
+                    .map(
+                        model ->
+                            ImmutableDefaultCifModel.of(
+                                model.header(),
+                                model.experimentalData(),
+                                model.resolution(),
+                                model.modelNumber(),
+                                model.filteredAtoms(MoleculeType.RNA),
+                                model.modifiedResidues(),
+                                model.filteredMissing(MoleculeType.RNA),
+                                model.title(),
+                                model.chainTerminatedAfter(),
+                                new ArrayList<>()))
+                    .collect(Collectors.toList());
         break;
       default:
         throw new IOException("Cannot parse structure file");

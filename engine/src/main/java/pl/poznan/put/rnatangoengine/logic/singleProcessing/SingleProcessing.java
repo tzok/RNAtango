@@ -102,12 +102,12 @@ public class SingleProcessing {
                               : null)));
           residueAngles.add(_residueTorsionAngleEntity);
         }
-        residueTorsionAngleRepository.saveAll(residueAngles);
+
         chainTorsionAngleEntity.getResiduesTorsionAngles().addAll(residueAngles);
 
         structureSingleProcessingTorsionAngles.add(chainTorsionAngleEntity);
       }
-      chainTorsionAngleRepository.saveAll(structureSingleProcessingTorsionAngles);
+
       singleResultEntity.getChainTorsionAngles().addAll(structureSingleProcessingTorsionAngles);
       singleResultEntity.setStatus(Status.SUCCESS);
       singleRepository.save(singleResultEntity);
@@ -122,7 +122,7 @@ public class SingleProcessing {
     } catch (IllegalArgumentException e) {
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());
-      singleResultEntity.setUserErrorLog("Residues have not got atoms coordinates");
+      singleResultEntity.setUserErrorLog("Residues does not have atoms coordinates");
 
       singleRepository.save(singleResultEntity);
     }

@@ -2,6 +2,7 @@ package pl.poznan.put.rnatangoengine.database.business;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import pl.poznan.put.pdb.PdbAtomLine;
 import pl.poznan.put.pdb.analysis.CifModel;
@@ -40,10 +41,29 @@ public class Structure {
     List<Model> models = new ArrayList<Model>();
     for (CifModel cifModel : this.structureModels) {
       CifModel pdbModelFiltered = (CifModel) cifModel.filteredNewInstance(MoleculeType.RNA);
+      HashMap<String, List<Integer>> missingResidues = new HashMap<>();
+      for (PdbChain chain : pdbModelFiltered.chains()) {
+        int position = 0;
+        for (PdbResidue residue : chain.residues()) {
+          if (residue.isMissing()) {
+            List<Integer> residuePos =
+                missingResidues.getOrDefault(residue.chainIdentifier(), new ArrayList<>());
+            residuePos.add(position);
+            missingResidues.put(residue.chainIdentifier(), residuePos);
+          }
+          position++;
+        }
+      }
       List<Chain> chains = new ArrayList<Chain>();
       for (PdbChain chain : pdbModelFiltered.chains()) {
+
         chains.add(
-            ImmutableChain.builder().name(chain.identifier()).sequence(chain.sequence()).build());
+            ImmutableChain.builder()
+                .name(chain.identifier())
+                .sequence(chain.sequence())
+                .residuesWithoutAtoms(
+                    missingResidues.getOrDefault(chain.identifier(), new ArrayList<>()))
+                .build());
       }
       if (chains.size() > 0) {
         models.add(
@@ -58,7 +78,10 @@ public class Structure {
 
   public String filterParseCif(List<Selection> selections) throws IOException {
     CifModel pdbModelFiltered =
-        (CifModel) structureModels.get(Integer.parseInt(selections.get(0).modelName()) - 1);
+        (CifModel)
+            structureModels
+                .get(Integer.parseInt(selections.get(0).modelName()) - 1)
+                .filteredNewInstance(MoleculeType.RNA);
 
     List<PdbAtomLine> resultAtoms = new ArrayList<PdbAtomLine>();
     for (Selection selection : selections) {
