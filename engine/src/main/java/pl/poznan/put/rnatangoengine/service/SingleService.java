@@ -38,7 +38,7 @@ public class SingleService {
           singleInput.selections().stream()
               .map((selection) -> new SelectionEntity(selection))
               .collect(Collectors.toList()));
-      // selectionRepository.saveAll(selections);
+
       SingleResultEntity _singleResultEntity =
           singleRepository.saveAndFlush(new SingleResultEntity(selections, singleInput.fileId()));
 
