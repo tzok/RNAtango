@@ -19,6 +19,7 @@ public class ChainTorsionAngleEntity {
 
   private String name;
 
+  @Column(length = 5000)
   private String sequence;
 
   @ManyToMany(mappedBy = "chainTorsionAngleEntities")

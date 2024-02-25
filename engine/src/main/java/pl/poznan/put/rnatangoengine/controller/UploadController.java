@@ -17,6 +17,7 @@ public class UploadController {
     this.uploadService = uploadService;
   }
 
+  @CrossOrigin(origins = "*")
   @PostMapping(
       path = "/upload",
       consumes = {"multipart/form-data"})
@@ -24,6 +25,7 @@ public class UploadController {
     return new ResponseEntity<>(uploadService.upload(file), HttpStatus.OK);
   }
 
+  @CrossOrigin(origins = "*")
   @PostMapping("/upload/remove/{fileId}")
   public ResponseEntity<String> remove(@PathVariable String fileId) {
     uploadService.remove(fileId);

@@ -1,4 +1,6 @@
 #!/bin/sh
+cd /opt/rnatango/engine
+mvn spring-boot:run
 
 while :
 do

@@ -9,31 +9,30 @@ services:
     entrypoint: bash /opt/rnatango/docker-entrypoint.sh
     env_file:
       - ./.env
-    ports:
-      - 80:8080
+    # ports:
+    #   - 8080:8080
     networks:
       - web_network
       - db_network
       - rabbit_network
     volumes:
       - .:/opt/rnatango
-  # nginx:
-  #   build:
-  #     context: ./nginx
-  #   restart: always
-  #   ports:
-  #     - 80:8080
-  #     - 443:443
-  #   depends_on:
-  #     - web
-  #   volumes:
-  #     - ./static:/opt/webtetrado/static
-  #     - ./media:/opt/webtetrado/media
-  #     - ./ssl:/etc/letsencrypt/
-  #     - ./nginx/conf/:/etc/nginx/conf.d/
-  #     - ./logs/nginx:/logs
-  #   networks:
-  #     - web_network
+  nginx:
+    build:
+      context: ./nginx
+    restart: always
+    ports:
+      - 80:8000
+      - 443:443
+    depends_on:
+      - web
+    volumes:
+      - ./ssl:/etc/letsencrypt/
+      - ./nginx/conf/:/etc/nginx/conf.d/
+      - ./logs/nginx:/logs
+      - ./frontend:/usr/share/nginx/html
+    networks:
+      - web_network
   # pgadmin:
   #   image: dpage/pgadmin4:latest
   #   #restart: always
