@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.service;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -85,6 +86,13 @@ public class SingleService {
               _singleResultEntity.getChainTorsionAngles().stream()
                   .map((chainAngles) -> chainAngles.getConvertedToTorsionAnglesInChainImmutable())
                   .collect(Collectors.toList()))
+          .resultRemovedAfter(
+              _singleResultEntity.getRemoveAfter() != null
+                  ? new SimpleDateFormat("dd-MM-yyyy").format(_singleResultEntity.getRemoveAfter())
+                  : "")
+          .structureMolecule(_singleResultEntity.getStructureMolecule())
+          .structureName(_singleResultEntity.getStructureName().toUpperCase())
+          .containDiscontinuousSequences(_singleResultEntity.isDiscontinuousResiduesSequence())
           .build();
     } else {
       throw new ResponseStatusException(HttpStatus.LOCKED, "Not ready yet");

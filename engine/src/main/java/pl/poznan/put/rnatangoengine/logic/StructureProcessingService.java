@@ -1,12 +1,15 @@
 package pl.poznan.put.rnatangoengine.logic;
 
+import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ import pl.poznan.put.pdb.analysis.PdbParser;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
+import pl.poznan.put.rnatangoengine.dto.Molecule;
 
 @Configurable
 @Service
@@ -45,29 +49,43 @@ public class StructureProcessingService {
    */
   public Structure process(String structureCode) throws IOException {
     String structureFileContent;
-
+    Structure parsedStructure = null;
     if (structureCode.length() == 4) {
       structureFileContent = getFromRCSB(structureCode);
-      return parseStructureFile(structureFileContent, Format.Cif);
+      parsedStructure = parseStructureFile(structureFileContent, Format.Cif, structureCode);
+      parsedStructure.setStructureMolecule(getStructureMolecule(structureCode));
     } else if (structureCode.startsWith("example_")) {
       structureFileContent = getFromLocalExamples(structureCode.replace("example_", ""));
-      return parseStructureFile(structureFileContent, Format.Cif); // FIXME: to check
+      parsedStructure =
+          parseStructureFile(
+              structureFileContent,
+              Format.Cif,
+              structureCode.replace("example_", "")); // FIXME: to check
+      parsedStructure.setStructureMolecule(
+          getStructureMolecule(structureCode.split(".")[0].replace("example_", "")));
+
     } else if (structureCode.length() > 4) {
       FileEntity file = fileRepository.getByHashId(UUID.fromString(structureCode));
       if (file == null) {
         throw new ResponseStatusException(HttpStatus.GONE, "Structure file could not be found");
       }
       structureFileContent = new String(file.getContent(), StandardCharsets.UTF_8);
-      String[] filenameElements = file.getFilename().split("\\.");
+      String[] filenamePathElements = file.getFilename().split("/");
+      String[] filenameElements =
+          filenamePathElements[filenamePathElements.length - 1].split("\\.");
       fileRepository.deleteByHashId(UUID.fromString(structureCode));
       if (filenameElements[filenameElements.length - 1].toLowerCase().equals("cif")) {
-        return parseStructureFile(structureFileContent, Format.Cif);
+        parsedStructure = parseStructureFile(structureFileContent, Format.Cif, filenameElements[0]);
       }
       if (filenameElements[filenameElements.length - 1].toLowerCase().equals("pdb")) {
-        return parseStructureFile(structureFileContent, Format.Pdb);
+        parsedStructure = parseStructureFile(structureFileContent, Format.Pdb, filenameElements[0]);
       }
     }
-    throw new FileNotFoundException("Structure file could not be found");
+    if (parsedStructure == null) {
+      throw new FileNotFoundException("Structure file could not be found");
+    } else {
+      return parsedStructure;
+    }
   }
 
   /**
@@ -123,6 +141,14 @@ public class StructureProcessingService {
     return new Structure(structureModels);
   }
 
+  private Structure parseStructureFile(String structureFileContent, Format format, String name)
+      throws IOException {
+
+    Structure structure = parseStructureFile(structureFileContent, format);
+    structure.setStructureName(name);
+    return structure;
+  }
+
   /**
    * @param exampleName
    */
@@ -168,6 +194,66 @@ public class StructureProcessingService {
     } catch (Exception e) {
       e.printStackTrace();
       throw new IOException("Could not get structure from rcsb");
+    }
+  }
+
+  private Molecule getStructureMolecule(String structureCode) {
+    String query =
+        "{\"query\":\"query structure ($id: String!) {entry(entry_id:$id){exptl{method}}}\",\"variables\":{\"id\":\""
+            + structureCode.toUpperCase()
+            + "\"},\"operationName\":\"structure\"}";
+    try {
+      URL url = new URI("https://data.rcsb.org/graphql").toURL();
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setDoOutput(true);
+      con.setRequestMethod("POST");
+      try (OutputStream os = con.getOutputStream()) {
+        byte[] input = query.getBytes("utf-8");
+        os.write(input, 0, input.length);
+      }
+
+      try (BufferedReader br =
+          new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"))) {
+        StringBuilder response = new StringBuilder();
+        String responseLine = null;
+        while ((responseLine = br.readLine()) != null) {
+          response.append(responseLine.trim());
+        }
+        String moleculeString =
+            JsonParser.parseString(response.toString())
+                .getAsJsonObject()
+                .get("data")
+                .getAsJsonObject()
+                .get("entry")
+                .getAsJsonObject()
+                .get("exptl")
+                .getAsJsonArray()
+                .get(0)
+                .getAsJsonObject()
+                .get("method")
+                .getAsString();
+        switch (moleculeString) {
+          case "ELECTRON MICROSCOPY":
+            return Molecule.EM;
+          case "X-RAY DIFFRACTION":
+            return Molecule.XRAY;
+          case "SOLUTION NMR":
+            return Molecule.NMR;
+          default:
+            return Molecule.OTHER;
+        }
+      }
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+
+      return Molecule.NA;
+    } catch (IOException e) {
+      e.printStackTrace();
+
+      return Molecule.NA;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return Molecule.NA;
     }
   }
 }

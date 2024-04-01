@@ -17,6 +17,7 @@ import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
 import pl.poznan.put.rnatangoengine.database.definitions.ChainTorsionAngleEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ResidueTorsionAngleEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.SingleResultEntity;
+import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
 import pl.poznan.put.rnatangoengine.database.repository.ChainTorsionAngleRepository;
 import pl.poznan.put.rnatangoengine.database.repository.ResidueTorsionAngleRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
@@ -49,6 +50,8 @@ public class SingleProcessing {
       singleRepository.save(singleResultEntity);
 
       structure = structureProcessingService.process(singleResultEntity.getFileId());
+      singleResultEntity.setStructureName(structure.getStructureName());
+      singleResultEntity.setStructureMolecule(structure.getStructureMoleculeName());
       singleResultEntity.setStructureFileContent(
           structure
               .filterParseCif(
@@ -70,46 +73,50 @@ public class SingleProcessing {
           new String(singleResultEntity.getStructureFileContent(), StandardCharsets.UTF_8));
       writer.close();
 
-      PdbModel model =
-          StructureManager.loadStructure(tempFile)
-              .get(Integer.valueOf(singleResultEntity.getSelections().get(0).getModelName()) - 1);
+      for (SelectionEntity selection : singleResultEntity.getSelections()) {
+        PdbModel model =
+            StructureManager.loadStructure(tempFile)
+                .get(Integer.valueOf(selection.getModelName()) - 1);
+        for (final PdbChain chain : model.chains()) {
+          ChainTorsionAngleEntity chainTorsionAngleEntity =
+              new ChainTorsionAngleEntity(chain.identifier(), chain.sequence());
+          chainTorsionAngleRepository.save(chainTorsionAngleEntity);
+          ImmutablePdbCompactFragment fragment = ImmutablePdbCompactFragment.of(chain.residues());
+          List<ResidueTorsionAngleEntity> residueAngles =
+              new ArrayList<ResidueTorsionAngleEntity>();
 
-      for (final PdbChain chain : model.chains()) {
-        ChainTorsionAngleEntity chainTorsionAngleEntity =
-            new ChainTorsionAngleEntity(chain.identifier(), chain.sequence());
-        chainTorsionAngleRepository.save(chainTorsionAngleEntity);
-        ImmutablePdbCompactFragment fragment = ImmutablePdbCompactFragment.of(chain.residues());
-        List<ResidueTorsionAngleEntity> residueAngles = new ArrayList<ResidueTorsionAngleEntity>();
+          for (final PdbResidue residue : fragment.residues()) {
+            final ResidueTorsionAngles residueTorsionAngles =
+                fragment.torsionAngles(residue.identifier());
 
-        for (final PdbResidue residue : fragment.residues()) {
-          final ResidueTorsionAngles residueTorsionAngles =
-              fragment.torsionAngles(residue.identifier());
+            ResidueTorsionAngleEntity _residueTorsionAngleEntity =
+                residueTorsionAngleRepository.save(
+                    new ResidueTorsionAngleEntity(
+                        residue.modifiedResidueName(),
+                        residue.residueNumber(),
+                        residue.insertionCode().orElse("")));
 
-          ResidueTorsionAngleEntity _residueTorsionAngleEntity =
-              residueTorsionAngleRepository.save(
-                  new ResidueTorsionAngleEntity(
-                      residue.modifiedResidueName(),
-                      residue.residueNumber(),
-                      residue.insertionCode().orElse("")));
+            MoleculeType.RNA.allAngleTypes().stream()
+                .forEach(
+                    (residueAngle) ->
+                        _residueTorsionAngleEntity.setAngle(
+                            exportAngleNameToAngle.parse(residueAngle.exportName()),
+                            (residueTorsionAngles.value(residueAngle).isValid()
+                                ? residueTorsionAngles.value(residueAngle).degrees()
+                                : null)));
+            residueAngles.add(_residueTorsionAngleEntity);
+          }
 
-          MoleculeType.RNA.allAngleTypes().stream()
-              .forEach(
-                  (residueAngle) ->
-                      _residueTorsionAngleEntity.setAngle(
-                          exportAngleNameToAngle.parse(residueAngle.exportName()),
-                          (residueTorsionAngles.value(residueAngle).isValid()
-                              ? residueTorsionAngles.value(residueAngle).degrees()
-                              : null)));
-          residueAngles.add(_residueTorsionAngleEntity);
+          chainTorsionAngleEntity.getResiduesTorsionAngles().addAll(residueAngles);
+
+          structureSingleProcessingTorsionAngles.add(chainTorsionAngleEntity);
         }
-
-        chainTorsionAngleEntity.getResiduesTorsionAngles().addAll(residueAngles);
-
-        structureSingleProcessingTorsionAngles.add(chainTorsionAngleEntity);
       }
-
       singleResultEntity.getChainTorsionAngles().addAll(structureSingleProcessingTorsionAngles);
+
       singleResultEntity.setStatus(Status.SUCCESS);
+      singleResultEntity.setIsDiscontinuousResiduesSequence(
+          structure.getContainDiscontinuousScopes());
       singleRepository.save(singleResultEntity);
       tempFile.deleteOnExit();
 
