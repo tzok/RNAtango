@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.database.service;
 
+import java.sql.Date;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,5 +35,10 @@ public class DefaultSingleResultService implements SingleResultService {
   @Override
   public void deleteByHashId(UUID hashId) {
     repository.deleteByHashId(hashId);
+  }
+
+  @Override
+  public void deleteByRemoveAfterBefore(Date date) {
+    repository.deleteByRemoveAfterBefore(date);
   }
 }

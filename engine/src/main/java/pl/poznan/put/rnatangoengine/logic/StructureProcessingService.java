@@ -197,7 +197,7 @@ public class StructureProcessingService {
     }
   }
 
-  private Molecule getStructureMolecule(String structureCode) {
+  public Molecule getStructureMolecule(String structureCode) {
     String query =
         "{\"query\":\"query structure ($id: String!) {entry(entry_id:$id){exptl{method}}}\",\"variables\":{\"id\":\""
             + structureCode.toUpperCase()
