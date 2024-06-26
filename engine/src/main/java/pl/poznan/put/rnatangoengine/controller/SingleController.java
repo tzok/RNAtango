@@ -19,18 +19,21 @@ public class SingleController {
     this.singleService = singleService;
   }
 
+  @CrossOrigin(origins = "*")
   @PostMapping("/single")
   public ResponseEntity<TaskIdResponse> single(@RequestBody SingleInput singleInput) {
     return new ResponseEntity<>(singleService.single(singleInput), HttpStatus.ACCEPTED);
   }
 
+  @CrossOrigin(origins = "*")
   @GetMapping("/single/{taskId}")
-  public StatusResponse singleStatus(@PathVariable String taskId) {
-    return singleService.singleStatus(taskId);
+  public ResponseEntity<StatusResponse> singleStatus(@PathVariable String taskId) {
+    return new ResponseEntity<>(singleService.singleStatus(taskId), HttpStatus.ACCEPTED);
   }
 
+  @CrossOrigin(origins = "*")
   @GetMapping("/single/{taskId}/result")
-  public SingleOutput singleResult(@PathVariable String taskId) {
-    return singleService.singleResult(taskId);
+  public ResponseEntity<SingleOutput> singleResult(@PathVariable String taskId) {
+    return new ResponseEntity<>(singleService.singleResult(taskId), HttpStatus.ACCEPTED);
   }
 }

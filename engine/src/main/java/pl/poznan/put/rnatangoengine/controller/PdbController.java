@@ -1,6 +1,9 @@
 package pl.poznan.put.rnatangoengine.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,8 +20,9 @@ public class PdbController {
     this.pdbService = pdbService;
   }
 
+  @CrossOrigin(origins = "*")
   @PostMapping("/pdb")
-  public StructureFileOutput pdb(@RequestBody StructurePdbInput structurePdbInput) {
-    return pdbService.pdb(structurePdbInput);
+  public ResponseEntity<StructureFileOutput> pdb(@RequestBody StructurePdbInput structurePdbInput) {
+    return new ResponseEntity<>(pdbService.pdb(structurePdbInput), HttpStatus.ACCEPTED);
   }
 }

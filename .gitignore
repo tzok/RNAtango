@@ -1,0 +1,4 @@
+.env
+ssl/
+logs/
+frontend/
