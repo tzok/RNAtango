@@ -29,17 +29,13 @@ import pl.poznan.put.pdb.analysis.PdbParser;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
+import pl.poznan.put.rnatangoengine.dto.FileFormat;
 import pl.poznan.put.rnatangoengine.dto.Molecule;
 
 @Configurable
 @Service
 public class StructureProcessingService {
   @Autowired private FileRepository fileRepository;
-
-  enum Format {
-    Cif,
-    Pdb
-  }
 
   public StructureProcessingService() {}
 
@@ -52,14 +48,14 @@ public class StructureProcessingService {
     Structure parsedStructure = null;
     if (structureCode.length() == 4) {
       structureFileContent = getFromRCSB(structureCode);
-      parsedStructure = parseStructureFile(structureFileContent, Format.Cif, structureCode);
+      parsedStructure = parseStructureFile(structureFileContent, FileFormat.CIF, structureCode);
       parsedStructure.setStructureMolecule(getStructureMolecule(structureCode));
     } else if (structureCode.startsWith("example_")) {
       structureFileContent = getFromLocalExamples(structureCode.replace("example_", ""));
       parsedStructure =
           parseStructureFile(
               structureFileContent,
-              Format.Cif,
+              FileFormat.CIF,
               structureCode.replace("example_", "")); // FIXME: to check
       parsedStructure.setStructureMolecule(
           getStructureMolecule(structureCode.split(".")[0].replace("example_", "")));
@@ -75,10 +71,12 @@ public class StructureProcessingService {
           filenamePathElements[filenamePathElements.length - 1].split("\\.");
       fileRepository.deleteByHashId(UUID.fromString(structureCode));
       if (filenameElements[filenameElements.length - 1].toLowerCase().equals("cif")) {
-        parsedStructure = parseStructureFile(structureFileContent, Format.Cif, filenameElements[0]);
+        parsedStructure =
+            parseStructureFile(structureFileContent, FileFormat.CIF, filenameElements[0]);
       }
       if (filenameElements[filenameElements.length - 1].toLowerCase().equals("pdb")) {
-        parsedStructure = parseStructureFile(structureFileContent, Format.Pdb, filenameElements[0]);
+        parsedStructure =
+            parseStructureFile(structureFileContent, FileFormat.PDB, filenameElements[0]);
       }
     }
     if (parsedStructure == null) {
@@ -97,26 +95,26 @@ public class StructureProcessingService {
     String[] filenameElements = filename.split("\\.");
     if (filenameElements.length > 0) {
       if (filenameElements[filenameElements.length - 1].toLowerCase().equals("cif")) {
-        return parseStructureFile(structureFileContent, Format.Cif);
+        return parseStructureFile(structureFileContent, FileFormat.CIF);
       }
       if (filenameElements[filenameElements.length - 1].toLowerCase().equals("pdb")) {
-        return parseStructureFile(structureFileContent, Format.Pdb);
+        return parseStructureFile(structureFileContent, FileFormat.PDB);
       }
     }
 
     throw new IOException("Cannot parse structure file");
   }
 
-  private Structure parseStructureFile(String structureFileContent, Format format)
+  private Structure parseStructureFile(String structureFileContent, FileFormat format)
       throws IOException {
     List<CifModel> structureModels = new ArrayList<CifModel>();
     switch (format) {
-      case Cif:
+      case CIF:
         final CifParser parser = new CifParser();
         structureModels = parser.parse(structureFileContent);
         break;
 
-      case Pdb:
+      case PDB:
         structureModels =
             new PdbParser()
                 .parse(structureFileContent).stream()
@@ -141,7 +139,7 @@ public class StructureProcessingService {
     return new Structure(structureModels);
   }
 
-  private Structure parseStructureFile(String structureFileContent, Format format, String name)
+  private Structure parseStructureFile(String structureFileContent, FileFormat format, String name)
       throws IOException {
 
     Structure structure = parseStructureFile(structureFileContent, format);

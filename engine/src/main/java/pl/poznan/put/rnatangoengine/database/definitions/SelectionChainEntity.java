@@ -15,6 +15,7 @@ public class SelectionChainEntity {
   protected Long id;
 
   private String name;
+  private String sequence;
 
   private int fromInclusive;
 
@@ -29,6 +30,7 @@ public class SelectionChainEntity {
     this.name = name;
     this.fromInclusive = fromInclusive;
     this.toInclusive = toInclusive;
+    this.sequence = "";
   }
 
   public String getName() {
@@ -41,6 +43,10 @@ public class SelectionChainEntity {
 
   public int getToInclusive() {
     return this.toInclusive;
+  }
+
+  public String getSequence() {
+    return this.sequence;
   }
 
   public SelectionChain getConvertedToSelectionChainImmutable() {

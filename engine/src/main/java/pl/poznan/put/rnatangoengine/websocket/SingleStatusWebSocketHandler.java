@@ -69,39 +69,45 @@ public class SingleStatusWebSocketHandler extends TextWebSocketHandler {
       session.close(CloseStatus.NOT_ACCEPTABLE);
       return;
     }
-    SingleResultEntity _singleResultEntity = getTaskStatus(session, incoming.hashId());
+    try {
+      SingleResultEntity _singleResultEntity = getTaskStatus(session, incoming.hashId());
 
-    switch (_singleResultEntity.getStatus()) {
-      case SUCCESS:
-        session.sendMessage(
-            new TextMessage(
-                new Gson()
-                    .toJson(
-                        ImmutableStatusResponse.builder()
-                            .status(_singleResultEntity.getStatus())
-                            .resultUrl("/single/" + incoming.hashId() + "/result")
-                            .build())));
-        break;
+      switch (_singleResultEntity.getStatus()) {
+        case SUCCESS:
+          session.sendMessage(
+              new TextMessage(
+                  new Gson()
+                      .toJson(
+                          ImmutableStatusResponse.builder()
+                              .status(_singleResultEntity.getStatus())
+                              .resultUrl("/single/" + incoming.hashId() + "/result")
+                              .build())));
+          session.close(CloseStatus.NORMAL);
+          break;
 
-      case FAILED:
-        session.sendMessage(
-            new TextMessage(
-                new Gson()
-                    .toJson(
-                        ImmutableStatusResponse.builder()
-                            .error(_singleResultEntity.getUserErrorLog())
-                            .build())));
-        session.close(CloseStatus.NORMAL);
-        break;
+        case FAILED:
+          session.sendMessage(
+              new TextMessage(
+                  new Gson()
+                      .toJson(
+                          ImmutableStatusResponse.builder()
+                              .error(_singleResultEntity.getUserErrorLog())
+                              .build())));
+          session.close(CloseStatus.NORMAL);
+          break;
 
-      default:
-        session.sendMessage(
-            new TextMessage(
-                new Gson()
-                    .toJson(
-                        ImmutableStatusResponse.builder()
-                            .status(_singleResultEntity.getStatus())
-                            .build())));
+        default:
+          session.sendMessage(
+              new TextMessage(
+                  new Gson()
+                      .toJson(
+                          ImmutableStatusResponse.builder()
+                              .status(_singleResultEntity.getStatus())
+                              .build())));
+      }
+    } catch (Exception e) {
+      session.sendMessage(new TextMessage("Error during sending message"));
+      LOGGER.error(e.getStackTrace().toString());
     }
   }
 }
