@@ -2,6 +2,8 @@ package pl.poznan.put.rnatangoengine.logic;
 
 import com.google.gson.JsonParser;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,16 +18,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
 import pl.poznan.put.pdb.analysis.CifModel;
 import pl.poznan.put.pdb.analysis.CifParser;
-import pl.poznan.put.pdb.analysis.ImmutableDefaultCifModel;
-import pl.poznan.put.pdb.analysis.MoleculeType;
-import pl.poznan.put.pdb.analysis.PdbParser;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
@@ -38,6 +40,8 @@ public class StructureProcessingService {
   @Autowired private FileRepository fileRepository;
 
   public StructureProcessingService() {}
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(TextWebSocketHandler.class);
 
   /**
    * @param structureCode
@@ -108,34 +112,47 @@ public class StructureProcessingService {
   private Structure parseStructureFile(String structureFileContent, FileFormat format)
       throws IOException {
     List<CifModel> structureModels = new ArrayList<CifModel>();
+    final CifParser parser = new CifParser();
     switch (format) {
       case CIF:
-        final CifParser parser = new CifParser();
         structureModels = parser.parse(structureFileContent);
         break;
 
       case PDB:
-        structureModels =
-            new PdbParser()
-                .parse(structureFileContent).stream()
-                    .map(
-                        model ->
-                            ImmutableDefaultCifModel.of(
-                                model.header(),
-                                model.experimentalData(),
-                                model.resolution(),
-                                model.modelNumber(),
-                                model.filteredAtoms(MoleculeType.RNA),
-                                model.modifiedResidues(),
-                                model.filteredMissing(MoleculeType.RNA),
-                                model.title(),
-                                model.chainTerminatedAfter(),
-                                new ArrayList<>()))
-                    .collect(Collectors.toList());
+        URL url = new URL("http://maxit:8080");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "text/plain");
+        conn.setRequestProperty("Content-Length", String.valueOf(structureFileContent.length()));
+        try (OutputStream outputStream = conn.getOutputStream();
+            ByteArrayInputStream byteArrayInputStream =
+                new ByteArrayInputStream(structureFileContent.getBytes())) {
+          byte[] buffer = new byte[4096];
+          int bytesRead;
+          while ((bytesRead = byteArrayInputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+          }
+        }
+
+        if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+          throw new IOException("Error during parsing PDB to mmCIF");
+        }
+        try (InputStream inputStream = conn.getInputStream();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+          byte[] buffer = new byte[4096];
+          int bytesRead;
+          while ((bytesRead = inputStream.read(buffer)) != -1) {
+            byteArrayOutputStream.write(buffer, 0, bytesRead);
+          }
+          structureModels = parser.parse(byteArrayOutputStream.toString(StandardCharsets.UTF_8));
+        }
+
         break;
       default:
         throw new IOException("Cannot parse structure file");
     }
+
     return new Structure(structureModels);
   }
 

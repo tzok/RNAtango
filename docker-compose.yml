@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   web:
     build: .
@@ -9,8 +8,8 @@ services:
     entrypoint: bash /opt/rnatango/docker-entrypoint.sh
     env_file:
       - ./.env
-    # ports:
-    #   - 8080:8080
+    ports:
+      - 8080:8080
     networks:
       - web_network
       - db_network
@@ -33,19 +32,11 @@ services:
       - ./frontend:/usr/share/nginx/html
     networks:
       - web_network
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   #restart: always
-  #   ports:
-  #    - "5050:5050"
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@rnatango.pl
-  #     PGADMIN_DEFAULT_PASSWORD: zaq1@WSXcde3
-  #     PGADMIN_LISTEN_PORT: 5050
-  #   volumes:
-  #     - pgadmin-data:/var/lib/pgadmin
-  #   networks:
-  #     - db_network
+  maxit:
+    image: tzok/maxit:server
+    restart: always
+    networks:
+      - web_network
   rabbit:
     image: rabbitmq:3.11-alpine
     restart: always

@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import pl.poznan.put.rnatangoengine.dto.OneManyAddModelResponse;
 import pl.poznan.put.rnatangoengine.dto.OneManyOutput;
 import pl.poznan.put.rnatangoengine.dto.OneManySetFormInput;
 import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
@@ -44,7 +43,7 @@ public class OneManyController {
   }
 
   @GetMapping("/one-many/form/remove/model/{taskId}/{modelId}")
-  public ResponseEntity<OneManyAddModelResponse> oneManySubmitFormRemoveModel(
+  public ResponseEntity<OneManySetFormResponse> oneManySubmitFormRemoveModel(
       @PathVariable String taskId, @PathVariable String modelId) {
     return new ResponseEntity<>(
         oneManyService.oneManyFormRemoveModel(taskId, modelId), HttpStatus.ACCEPTED);

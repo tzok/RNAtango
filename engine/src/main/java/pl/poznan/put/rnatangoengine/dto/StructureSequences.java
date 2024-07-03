@@ -23,7 +23,8 @@ public class StructureSequences {
     chains.put(sequence.name, sequences);
   }
 
-  public List<StructureChainSequence> getChainSubsequence(String chain) {
+  public List<StructureChainSequence> getChainSubsequence(String chain) throws Exception {
+    if (chains.get(chain).size() == 0) throw new Exception("No sequences was found");
     return chains.get(chain);
   }
 }

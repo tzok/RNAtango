@@ -49,6 +49,18 @@ public class SelectionChainEntity {
     return this.sequence;
   }
 
+  public void setSequence(String sequence) {
+    this.sequence = sequence;
+  }
+
+  public void setFromInclusive(int fromInclusive) {
+    this.fromInclusive = fromInclusive;
+  }
+
+  public void setToInclusive(int toInclusive) {
+    this.toInclusive = toInclusive;
+  }
+
   public SelectionChain getConvertedToSelectionChainImmutable() {
     return ImmutableSelectionChain.builder()
         .name(this.name)

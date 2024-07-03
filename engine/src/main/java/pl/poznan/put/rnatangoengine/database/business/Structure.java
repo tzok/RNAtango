@@ -129,11 +129,9 @@ public class Structure {
                   new StructureChainSequence(
                       pdbChain.identifier(),
                       sequenceResidues.stream()
-                          .map((r) -> r.identifier())
-                          .collect(Collectors.toList())
-                          .stream()
-                          .map(Object::toString)
-                          .collect(Collectors.joining("")),
+                          .map((r) -> r.oneLetterName())
+                          .map(String::valueOf)
+                          .collect(Collectors.joining()),
                       sequenceResidues.get(0).residueNumber(),
                       sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
 
@@ -147,11 +145,9 @@ public class Structure {
             new StructureChainSequence(
                 pdbChain.identifier(),
                 sequenceResidues.stream()
-                    .map((r) -> r.identifier())
-                    .collect(Collectors.toList())
-                    .stream()
-                    .map(Object::toString)
-                    .collect(Collectors.joining("")),
+                    .map((r) -> r.oneLetterName())
+                    .map(String::valueOf)
+                    .collect(Collectors.joining()),
                 sequenceResidues.get(0).residueNumber(),
                 sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
         sequenceResidues.clear();
@@ -207,11 +203,9 @@ public class Structure {
                         new StructureChainSequence(
                             chain.identifier(),
                             sequenceResidues.stream()
-                                .map((r) -> r.identifier())
-                                .collect(Collectors.toList())
-                                .stream()
-                                .map(Object::toString)
-                                .collect(Collectors.joining("")),
+                                .map((r) -> r.oneLetterName())
+                                .map(String::valueOf)
+                                .collect(Collectors.joining()),
                             sequenceResidues.get(0).residueNumber(),
                             sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
                     sequenceResidues.clear();
@@ -239,11 +233,9 @@ public class Structure {
               new StructureChainSequence(
                   chain.identifier(),
                   sequenceResidues.stream()
-                      .map((r) -> r.identifier())
-                      .collect(Collectors.toList())
-                      .stream()
-                      .map(Object::toString)
-                      .collect(Collectors.joining("")),
+                      .map((r) -> r.oneLetterName())
+                      .map(String::valueOf)
+                      .collect(Collectors.joining()),
                   sequenceResidues.get(0).residueNumber(),
                   sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
           sequenceResidues.clear();

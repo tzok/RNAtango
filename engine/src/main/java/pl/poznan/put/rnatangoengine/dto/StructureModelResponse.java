@@ -2,7 +2,6 @@ package pl.poznan.put.rnatangoengine.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -15,7 +14,7 @@ public interface StructureModelResponse {
 
   String sequence();
 
-  Optional<String> originalSequence();
-
   Selection selection();
+
+  Selection sourceSelection();
 }

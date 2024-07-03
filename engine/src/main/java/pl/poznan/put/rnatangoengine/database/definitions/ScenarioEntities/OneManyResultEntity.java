@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
-import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.dto.Status;
 
@@ -48,13 +47,9 @@ public class OneManyResultEntity {
     setDefaultValues();
   }
 
-  public OneManyResultEntity(StructureModelEntity target, SelectionEntity selectionEntity) {
-    this.model = selectionEntity.getModelName();
-    this.chain =
-        selectionEntity
-            .getSelectionChains()
-            .get(Integer.getInteger(selectionEntity.getModelName()) - 1)
-            .getName();
+  public OneManyResultEntity(StructureModelEntity target, String modelNumber, String chain) {
+    this.model = modelNumber;
+    this.chain = chain;
     this.target = target;
     setDefaultValues();
   }
@@ -93,6 +88,10 @@ public class OneManyResultEntity {
 
   public Status getStatus() {
     return this.status;
+  }
+
+  public void removeModel(StructureModelEntity model) {
+    models.remove(model);
   }
 
   public List<StructureModelEntity> getModels() {

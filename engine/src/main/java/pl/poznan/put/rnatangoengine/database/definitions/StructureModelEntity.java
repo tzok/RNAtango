@@ -31,25 +31,35 @@ public class StructureModelEntity {
   public StructureModelEntity(FileEntity file, SelectionEntity selection) {
     this.sourceContent = file.getContent();
     this.filename = file.getFilename();
-    this.targetSourceSelection = selection;
-    this.selection = selection;
+    this.sourceSelection = selection;
   }
 
   public StructureModelEntity(byte[] structureContent, String filename, SelectionEntity selection) {
     this.sourceContent = structureContent;
     this.filename = filename;
-    this.targetSourceSelection = selection;
+    this.sourceSelection = selection;
+  }
+
+  public StructureModelEntity(
+      byte[] structureContent,
+      String filename,
+      SelectionEntity selection,
+      SelectionEntity sourceSelection) {
+    this.sourceContent = structureContent;
+    this.filename = filename;
+    this.sourceSelection = sourceSelection;
     this.selection = selection;
   }
 
   @ManyToOne
   @JoinColumn(name = "model_sequence_selection_id", nullable = true)
-  private SelectionEntity selection; // it means original selection
+  private SelectionEntity selection; // it means filtered selection
 
   @ManyToOne
-  @JoinColumn(name = "target_sequence_selection_id", nullable = true)
-  private SelectionEntity targetSourceSelection; // it means filtered selection
+  @JoinColumn(name = "source_sequence_selection_id", nullable = true)
+  private SelectionEntity sourceSelection; // it means original selection
 
+  //
   public void setTargetRangeRelative(IndexPair indexPair) {
     this.toInclusiveTargetRelative = indexPair.toInclusive;
     this.fromInclusiveTargetRelative = indexPair.fromInclusive;
@@ -111,11 +121,11 @@ public class StructureModelEntity {
     return selection;
   }
 
-  public void setTargetSelection(SelectionEntity selectionEntity) {
-    this.targetSourceSelection = selectionEntity;
+  public void setSourceSelection(SelectionEntity selectionEntity) {
+    this.sourceSelection = selectionEntity;
   }
 
-  public SelectionEntity getTargetSourceSelection() {
-    return targetSourceSelection;
+  public SelectionEntity getSourceSelection() {
+    return sourceSelection;
   }
 }
