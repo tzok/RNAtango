@@ -1,16 +1,12 @@
 package pl.poznan.put.rnatangoengine.logic.oneManyProcessing;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.circular.Angle;
@@ -27,15 +23,20 @@ import pl.poznan.put.pdb.analysis.PdbCompactFragment;
 import pl.poznan.put.rna.NucleotideTorsionAngle;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
+import pl.poznan.put.rnatangoengine.database.definitions.ResidueTorsionAngleEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.SelectionChainEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
+import pl.poznan.put.rnatangoengine.database.repository.ResidueTorsionAngleRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionChainRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
 import pl.poznan.put.rnatangoengine.dto.FileFormat;
+import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
+import pl.poznan.put.structure.formats.DotBracket;
 import pl.poznan.put.torsion.MasterTorsionAngleType;
+import pl.poznan.put.torsion.TorsionAngleDelta;
 
 @Service
 public class OneManyProcessing {
@@ -44,19 +45,19 @@ public class OneManyProcessing {
   @Autowired StructureProcessingService structureProcessingService;
   @Autowired StructureModelRepository structureModelRepository;
   @Autowired SelectionChainRepository selectionChainRepository;
+  @Autowired ResidueTorsionAngleRepository residueTorsionAngleRepository;
 
   public void startTask(UUID taskHashId) throws Exception {
 
     Structure targetStructure;
     Structure modelStructure;
     OneManyResultEntity oneManyResultEntity = oneManyRepository.getByHashId(taskHashId);
-    // if (!oneManyResultEntity.getStatus().equals(Status.WAITING)) {
-    //   return;
-    // }
-    // oneManyResultEntity.setStatus(Status.PROCESSING);
+    if (!oneManyResultEntity.getStatus().equals(Status.WAITING)) {
+      return;
+    }
+    oneManyResultEntity.setStatus(Status.PROCESSING);
     oneManyRepository.save(oneManyResultEntity);
     StructureModelEntity target;
-    List<StructureSelection> modelsSelection = new ArrayList<>();
     try {
       target = oneManyResultEntity.getTargetEntity();
       targetStructure =
@@ -68,152 +69,133 @@ public class OneManyProcessing {
               .getBytes());
       target.setFilteredSequence(targetStructure.getModelSequence());
       target = structureModelRepository.saveAndFlush(target);
+
+      List<StructureSelection> modelsSelection = new ArrayList<>();
+      for (StructureModelEntity model : oneManyResultEntity.getModels()) {
+        int startIndex = model.getFilteredSequence().indexOf(target.getFilteredSequence());
+        SelectionChainEntity selectionChain = model.getSelection().getSelectionChains().get(0);
+        selectionChain.setFromInclusive(selectionChain.getFromInclusive() + startIndex);
+        selectionChain.setToInclusive(
+            selectionChain.getFromInclusive()
+                + startIndex
+                + target.getFilteredSequence().length()
+                - 1);
+        model.setFilteredSequence(target.getFilteredSequence());
+        selectionChainRepository.saveAndFlush(selectionChain);
+        modelStructure =
+            structureProcessingService.parseStructureFile(
+                new String(model.getContent(), StandardCharsets.UTF_8), FileFormat.CIF);
+        model.setContent(
+            modelStructure
+                .filterAuthParseCif(model.getSelection().getConvertedToSelectionImmutable())
+                .getBytes());
+        model = structureModelRepository.saveAndFlush(model);
+        modelsSelection.add(
+            StructureSelection.divideIntoCompactFragments(
+                model.getFilename(), modelStructure.getCifModels().get(0).residues()));
+      }
+      StructureSelection targetStructureSelection =
+          StructureSelection.divideIntoCompactFragments(
+              target.getFilename(), targetStructure.getCifModels().get(0).residues());
+      List<MasterTorsionAngleType> masterTorsionAngleTypes =
+          oneManyResultEntity.getAnglesToAnalyze().stream()
+              .map(
+                  (angle) ->
+                      NucleotideTorsionAngle.valueOf(
+                          ExportAngleNameToAngle.parse(angle).toUpperCase()))
+              .collect(Collectors.toList());
+      // List<MasterTorsionAngleType> masterTorsionAngleTypes=new Ma
+      List<ModelsComparisonResult> comparisonResults =
+          compare(
+              targetStructureSelection,
+              modelsSelection,
+              masterTorsionAngleTypes,
+              oneManyResultEntity);
+      comparisonResults.get(0).fragmentMatches().get(0).getTargetDotBracket();
+      DotBracket dotBracket =
+          comparisonResults.get(0).fragmentMatches().get(0).getTargetDotBracket();
+      oneManyResultEntity.setFinalSequence(dotBracket.sequence());
+      oneManyResultEntity.setFinalStructure(dotBracket.structure());
+      oneManyResultEntity.setStatus(Status.SUCCESS);
+
+      oneManyRepository.saveAndFlush(oneManyResultEntity);
     } catch (Exception e) {
+      oneManyResultEntity.setStatus(Status.FAILED);
+      oneManyRepository.saveAndFlush(oneManyResultEntity);
       e.printStackTrace();
       throw new Exception("Target processing error");
     }
-    for (StructureModelEntity model : oneManyResultEntity.getModels()) {
-      int startIndex = model.getFilteredSequence().indexOf(target.getFilteredSequence());
-      SelectionChainEntity selectionChain = model.getSelection().getSelectionChains().get(0);
-      selectionChain.setFromInclusive(selectionChain.getFromInclusive() + startIndex);
-      selectionChain.setToInclusive(
-          selectionChain.getFromInclusive()
-              + startIndex
-              + target.getFilteredSequence().length()
-              - 1);
-      model.setFilteredSequence(target.getFilteredSequence());
-      selectionChainRepository.saveAndFlush(selectionChain);
-      modelStructure =
-          structureProcessingService.parseStructureFile(
-              new String(model.getContent(), StandardCharsets.UTF_8), FileFormat.CIF);
-      model.setContent(
-          modelStructure
-              .filterAuthParseCif(model.getSelection().getConvertedToSelectionImmutable())
-              .getBytes());
-      model = structureModelRepository.saveAndFlush(model);
-      modelsSelection.add(
-          StructureSelection.divideIntoCompactFragments(
-              model.getFilename(), modelStructure.getCifModels().get(0).residues()));
-    }
-    StructureSelection targetStructureSelection =
-        StructureSelection.divideIntoCompactFragments(
-            target.getFilename(), targetStructure.getCifModels().get(0).residues());
-    List<MasterTorsionAngleType> masterTorsionAngleTypes =
-        oneManyResultEntity.getAnglesToAnalyze().stream()
-            .map(
-                (angle) ->
-                    NucleotideTorsionAngle.valueOf(
-                        ExportAngleNameToAngle.parse(angle).toUpperCase()))
-            .collect(Collectors.toList());
-    // List<MasterTorsionAngleType> masterTorsionAngleTypes=new Ma
-    compare(targetStructureSelection, modelsSelection, masterTorsionAngleTypes);
-    // try {
-    //
-
-    //
-    // structure =
-    // structureProcessingService.process(singleResultEntity.getFileId());
-    // singleResultEntity.setStructureName(structure.getStructureName());
-    // singleResultEntity.setStructureMolecule(structure.getStructureMoleculeName());
-    // singleResultEntity.setStructureFileContent(
-    // structure
-    // .filterParseCif(
-    // singleResultEntity.getSelections().stream()
-    // .map((s) -> s.getConvertedToSelectionImmutable())
-    // .collect(Collectors.toList()))
-    // .getBytes());
-    //
-    // singleRepository.save(singleResultEntity);
-    //
-    // List<ChainTorsionAngleEntity> structureSingleProcessingTorsionAngles =
-    // new ArrayList<ChainTorsionAngleEntity>();
-    // ExportAngleNameToAngle exportAngleNameToAngle = new ExportAngleNameToAngle();
-    //
-    // File tempFile = File.createTempFile("structure", ".cif");
-    //
-    // BufferedWriter writer = new BufferedWriter(new
-    // FileWriter(tempFile.getAbsolutePath()));
-    // writer.write(
-    // new String(singleResultEntity.getStructureFileContent(),
-    // StandardCharsets.UTF_8));
-    // writer.close();
-    //
-    // for (SelectionEntity selection : singleResultEntity.getSelections()) {
-    // PdbModel model =
-    // StructureManager.loadStructure(tempFile)
-    // .get(Integer.valueOf(selection.getModelName()) - 1);
-    // for (final PdbChain chain : model.chains()) {
-    // ChainTorsionAngleEntity chainTorsionAngleEntity =
-    // new ChainTorsionAngleEntity(chain.identifier(), chain.sequence());
-    // chainTorsionAngleRepository.save(chainTorsionAngleEntity);
-    // ImmutablePdbCompactFragment fragment =
-    // ImmutablePdbCompactFragment.of(chain.residues());
-    // List<ResidueTorsionAngleEntity> residueAngles =
-    // new ArrayList<ResidueTorsionAngleEntity>();
-    //
-    // for (final PdbResidue residue : fragment.residues()) {
-    // final ResidueTorsionAngles residueTorsionAngles =
-    // fragment.torsionAngles(residue.identifier());
-    //
-    // ResidueTorsionAngleEntity _residueTorsionAngleEntity =
-    // residueTorsionAngleRepository.save(
-    // new ResidueTorsionAngleEntity(
-    // residue.modifiedResidueName(),
-    // residue.residueNumber(),
-    // residue.insertionCode().orElse("")));
-    //
-    // MoleculeType.RNA.allAngleTypes().stream()
-    // .forEach(
-    // (residueAngle) ->
-    // _residueTorsionAngleEntity.setAngle(
-    // exportAngleNameToAngle.parse(residueAngle.exportName()),
-    // (residueTorsionAngles.value(residueAngle).isValid()
-    // ? residueTorsionAngles.value(residueAngle).degrees()
-    // : null)));
-    // residueAngles.add(_residueTorsionAngleEntity);
-    // }
-    //
-    // chainTorsionAngleEntity.getResiduesTorsionAngles().addAll(residueAngles);
-    //
-    // structureSingleProcessingTorsionAngles.add(chainTorsionAngleEntity);
-    // }
-    // }
-    //
-    // singleResultEntity.getChainTorsionAngles().addAll(structureSingleProcessingTorsionAngles);
-    //
-    // singleResultEntity.setStatus(Status.SUCCESS);
-    // singleResultEntity.setIsDiscontinuousResiduesSequence(
-    // structure.getContainDiscontinuousScopes());
-    // singleRepository.save(singleResultEntity);
-    // tempFile.deleteOnExit();
-    // try {
-    // fileRepository.deleteByHashId(UUID.fromString(singleResultEntity.getFileId()));
-    // } catch (Exception e) {
-    // }
-    // } catch (IOException e) {
-    // singleResultEntity.setStatus(Status.FAILED);
-    // singleResultEntity.setErrorLog(e.getStackTrace().toString());
-    // singleResultEntity.setUserErrorLog("Error during structure processing");
-    //
-    // singleRepository.save(singleResultEntity);
-    // } catch (IllegalArgumentException e) {
-    // singleResultEntity.setStatus(Status.FAILED);
-    // singleResultEntity.setErrorLog(e.getStackTrace().toString());
-    // singleResultEntity.setUserErrorLog("Residues does not have atoms
-    // coordinates");
-    //
-    // singleRepository.save(singleResultEntity);
-    // }
   }
 
-  private void compare(
+  private List<ModelsComparisonResult> compare(
       StructureSelection target,
       List<StructureSelection> models,
-      List<MasterTorsionAngleType> angleTypes) {
+      List<MasterTorsionAngleType> angleTypes,
+      OneManyResultEntity oneManyResultEntity) {
     // compare each compact fragment
     List<ModelsComparisonResult> comparisonResults = new ArrayList<>();
+    List<StructureModelEntity> structureModels = oneManyResultEntity.getModels();
     for (int i = 0; i < target.getCompactFragments().size(); i++) {
-      comparisonResults.add(compareFragment(target, models, angleTypes, i));
+      ModelsComparisonResult compareResult = compareFragment(target, models, angleTypes, i);
+      comparisonResults.add(compareResult);
+      // exportTable(compareResult);
+      // SelectedAngle selectedAngle = compareResult.selectAverageOfAngles();
+      // selectedAngle.export(null);
+
+      for (int j = 0; j < compareResult.fragmentMatches().size(); j++) {
+        FragmentMatch fragmentMatch = compareResult.fragmentMatches().get(j);
+        StructureModelEntity structureModelEntity = structureModels.get(j);
+        DotBracket dotBracket = fragmentMatch.getTargetDotBracket();
+        List<ResidueTorsionAngleEntity> residueTorsionAngleEntities = new ArrayList<>();
+        Double mcqForModel = 0.0;
+        for (int k = 0;
+            k < fragmentMatch.getFragmentComparison().getResidueComparisons().size();
+            k++) {
+          ResidueComparison residueComparison =
+              fragmentMatch.getFragmentComparison().getResidueComparisons().get(k);
+          ResidueTorsionAngleEntity residueTorsionAngleEntity =
+              new ResidueTorsionAngleEntity(
+                  String.valueOf(residueComparison.model().oneLetterName()),
+                  residueComparison.model().residueNumber(),
+                  residueComparison.model().insertionCode().orElse(""));
+          residueTorsionAngleEntity.setDotBracketSymbol(
+              String.valueOf(dotBracket.structure().charAt(k)));
+
+          for (MasterTorsionAngleType angle : angleTypes) {
+            TorsionAngleDelta torsionAngleDelta = residueComparison.angleDelta(angle);
+            if (torsionAngleDelta.delta().isValid()) {
+              residueTorsionAngleEntity.setAngle(
+                  ExportAngleNameToAngle.parse(
+                      torsionAngleDelta.angleType().exportName().toLowerCase()),
+                  torsionAngleDelta.delta().degrees360());
+            }
+          }
+          Double mcq =
+              residueComparison.filteredByAngleTypes(angleTypes).angleDeltas().stream()
+                  .filter((x) -> x.delta().isValid())
+                  .map((angle) -> angle.delta().degrees360())
+                  .reduce(0.0, Double::sum);
+          residueTorsionAngleEntity.setMcqValue(mcq);
+          mcqForModel += mcq;
+          residueTorsionAngleEntities.add(residueTorsionAngleEntity);
+        }
+
+        // try {
+        //   structureModelEntity.setSecondaryStructureVisualizationSVG(
+        //       SVGHelper.export(
+        //           SecondaryStructureVisualizer.visualize(
+        //               fragmentMatch, (ComparisonMapper) AngleDeltaMapper.getInstance()),
+        //           Format.SVG));
+        // } catch (Exception el) {
+        //   el.printStackTrace();
+        // }
+        residueTorsionAngleRepository.saveAllAndFlush(residueTorsionAngleEntities);
+
+        structureModelEntity.addResidueEntities(residueTorsionAngleEntities);
+        structureModelRepository.saveAndFlush(structureModelEntity);
+        structureModelEntity.setMcqValue(
+            mcqForModel / fragmentMatch.getFragmentComparison().getResidueComparisons().size());
+      }
     }
 
     // compare mcq for each model
@@ -234,16 +216,17 @@ public class OneManyProcessing {
             .map(AngleSample::meanDirection)
             .collect(Collectors.toList());
 
-    // generate ranking
-    final List<Pair<Double, StructureSelection>> ranking =
-        IntStream.range(0, models.size())
-            .mapToObj(i -> Pair.of(mcqs.get(i).degrees(), models.get(i)))
-            .sorted(Comparator.comparingDouble(Pair::getLeft))
-            .collect(Collectors.toList());
+    // // generate ranking
+    // final List<Pair<Double, StructureSelection>> ranking =
+    //     IntStream.range(0, models.size())
+    //         .mapToObj(i -> Pair.of(mcqs.get(i).degrees(), models.get(i)))
+    //         .sorted(Comparator.comparingDouble(Pair::getLeft))
+    //         .collect(Collectors.toList());
 
-    for (final Pair<Double, StructureSelection> pair : ranking) {
-      System.out.printf(Locale.US, "%s %.2f%n", pair.getValue().getName(), pair.getKey());
-    }
+    // for (final Pair<Double, StructureSelection> pair : ranking) {
+    //   System.out.printf(Locale.US, "%s %.2f%n", pair.getValue().getName(), pair.getKey());
+    // }
+    return comparisonResults;
   }
 
   private static ImmutablePdbCompactFragment renamedInstance(
@@ -270,37 +253,30 @@ public class OneManyProcessing {
         .compareModels(targetFragment, modelFragments);
   }
 
-  private void exportResults(final ModelsComparisonResult comparisonResult) {
-    try {
-      exportTable(comparisonResult);
-      comparisonResult.fragmentMatches().forEach(this::exportModelResults);
-    } catch (final IOException e) {
-      throw new IllegalArgumentException("Failed to export results", e);
-    }
-  }
+  // private void exportResults(final ModelsComparisonResult comparisonResult) {
+  //   try {
+  //     exportTable(comparisonResult);
+  //     comparisonResult.fragmentMatches().forEach(this::exportModelResults);
+  //   } catch (final IOException e) {
+  //     throw new IllegalArgumentException("Failed to export results", e);
+  //   }
+  // }
 
-  private void exportModelResults(final FragmentMatch fragmentMatch) {
-    try {
-      final String name = fragmentMatch.getModelFragment().name();
-      // final File directory = new File(outputDirectory().toFile(), name);
-      // FileUtils.forceMkdir(directory);
+  // // private void exportModelResults(final FragmentMatch fragmentMatch) {
+  // //   try {
+  // //     final String name = fragmentMatch.getModelFragment().name();
+  // //     // final File directory = new File(outputDirectory().toFile(), name);
+  // //     // FileUtils.forceMkdir(directory);
 
-      // Local.exportSecondaryStructureImage(
-      //     fragmentMatch, directory, "delta.svg", AngleDeltaMapper.getInstance());
-      // Local.exportSecondaryStructureImage(
-      //     fragmentMatch, directory, "range.svg", RangeDifferenceMapper.getInstance());
+  // //     // Local.exportSecondaryStructureImage(
+  // //     //     fragmentMatch, directory, "delta.svg", AngleDeltaMapper.getInstance());
+  // //     // Local.exportSecondaryStructureImage(
+  // //     //     fragmentMatch, directory, "range.svg", RangeDifferenceMapper.getInstance());
 
-      // exportDifferences(fragmentMatch, directory);
-    } catch (final Exception e) {
-      throw new IllegalArgumentException("Failed to export results", e);
-    }
-  }
+  // //     // exportDifferences(fragmentMatch, directory);
+  // //   } catch (final Exception e) {
+  // //     throw new IllegalArgumentException("Failed to export results", e);
+  // //   }
+  // // }
 
-  private void exportTable(final ModelsComparisonResult comparisonResult) throws IOException {
-    // final File file = new File(outputDirectory().toFile(), "table.csv");
-    // try (final OutputStream stream = Files.newOutputStream(file.toPath())) {
-    //   final SelectedAngle selectedAngle = comparisonResult.selectAverageOfAngles();
-    //   selectedAngle.export(stream);
-    // }
-  }
 }

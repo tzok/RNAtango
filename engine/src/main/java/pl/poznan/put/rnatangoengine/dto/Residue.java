@@ -15,6 +15,8 @@ public interface Residue {
 
   int number();
 
+  String dotBracketSymbol();
+
   Optional<String> icode();
 
   List<AngleValue> torsionAngles();

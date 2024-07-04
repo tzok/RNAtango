@@ -47,7 +47,7 @@ public class ResidueTorsionAngleEntity {
     this.number = number;
     this.icode = icode;
     this.mcq = 0.0;
-    this.dotBracketSymbol = "";
+    this.dotBracketSymbol = ".";
   }
 
   public List<AngleValue> getAllAngleValues() {
@@ -99,6 +99,7 @@ public class ResidueTorsionAngleEntity {
         .name(this.name)
         .number(this.number)
         .addAllTorsionAngles(this.getAllAngleValues())
+        .dotBracketSymbol(dotBracketSymbol)
         .build();
   }
 

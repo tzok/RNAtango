@@ -251,12 +251,13 @@ public class Structure {
       if (selection.chains().isEmpty()) {
         return pdbModelFiltered.toCif();
       }
+      HashMap<String, Integer> discontinousMemory = new HashMap<>();
 
       for (PdbChain chain : pdbModelFiltered.chains()) {
         List<PdbResidue> sequenceResidues = new ArrayList<PdbResidue>();
         for (SelectionChain selectionChain : selection.chains()) {
           if (chain.identifier().equals(selectionChain.name())) {
-            int residue_pos = 0;
+            int residue_pos = discontinousMemory.getOrDefault(chain.identifier(), 0);
             int begin_s = -1;
             int end_s = -1;
             for (PdbResidue residue : chain.residues()) {
@@ -291,6 +292,12 @@ public class Structure {
               createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
           sequenceResidues.clear();
         }
+
+        discontinousMemory.put(
+            chain.identifier(),
+            discontinousMemory.getOrDefault(chain.identifier(), 0)
+                + chain.residueIdentifiers().size()
+                + 1);
       }
     }
     this.filteredContent =

@@ -25,6 +25,9 @@ public class AngleListConverter implements AttributeConverter<List<Angle>, Strin
     if (dbData == null || dbData.isEmpty()) {
       return Arrays.asList();
     }
-    return Arrays.stream(dbData.split(SEPARATOR)).map(Angle::valueOf).collect(Collectors.toList());
+    return Arrays.stream(dbData.split(SEPARATOR))
+        .map(String::toUpperCase)
+        .map(Angle::valueOf)
+        .collect(Collectors.toList());
   }
 }

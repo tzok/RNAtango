@@ -2,6 +2,7 @@ package pl.poznan.put.rnatangoengine.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +21,12 @@ import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
 import pl.poznan.put.rnatangoengine.dto.ImmutableNucleotideRange;
+import pl.poznan.put.rnatangoengine.dto.ImmutableOneManyOutput;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelectionChain;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.ImmutableTorsionAngleDifferences;
 import pl.poznan.put.rnatangoengine.dto.IndexPair;
 import pl.poznan.put.rnatangoengine.dto.OneManyOutput;
 import pl.poznan.put.rnatangoengine.dto.OneManySetFormInput;
@@ -239,9 +242,9 @@ public class OneManyService {
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(input.taskHashId()));
 
-    // if (_oneManyResultEntity.getStatus() != Status.SETTING) {
-    //   throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
-    // }
+    if (_oneManyResultEntity.getStatus() != Status.SETTING) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
+    }
     _oneManyResultEntity.setTreshold(input.threshold());
     _oneManyResultEntity.setAnglesToAnalyze(input.angles());
     _oneManyResultEntity.setStatus(Status.WAITING);
@@ -293,6 +296,35 @@ public class OneManyService {
   }
 
   public OneManyOutput oneManyResult(String taskId) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    OneManyResultEntity _oneManyResultEntity =
+        oneManyRepository.getByHashId(UUID.fromString(taskId));
+    if (_oneManyResultEntity.getStatus().equals(Status.SUCCESS)) {
+      return ImmutableOneManyOutput.builder()
+          .model(_oneManyResultEntity.getModelNumber())
+          .chain(_oneManyResultEntity.getChain())
+          .addAllDifferences(
+              _oneManyResultEntity.getModels().stream()
+                  .map(
+                      (model) ->
+                          ImmutableTorsionAngleDifferences.builder()
+                              .model("1")
+                              .modelMCQ(model.getMcqValue())
+                              .modelName(model.getFilename())
+                              .modelHashId(model.getHashId().toString())
+                              .addAllResidueMCQs(
+                                  model.getTorsionAngleEntities().stream()
+                                      .map((residue) -> residue.getMcqValue())
+                                      .collect(Collectors.toList()))
+                              .residues(
+                                  model.getTorsionAngleEntities().stream()
+                                      .map((residue) -> residue.getConvertedToResidueImmutable())
+                                      .collect(Collectors.toList()))
+                              // .chainLCS(ImmutableLCS.builder().build())
+                              .build())
+                  .collect(Collectors.toList()))
+          .build();
+    } else {
+      throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Task not available");
+    }
   }
 }

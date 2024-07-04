@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
+import java.util.List;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.dto.IndexPair;
 
@@ -24,8 +25,9 @@ public class StructureModelEntity {
   private Integer fromInclusiveTargetRelative;
 
   @Lob private byte[] content;
-
   @Lob private byte[] secondaryStructureVisualizationSVG;
+
+  private Double mcq;
 
   // @Lob private byte[] filteredContent;
 
@@ -62,9 +64,12 @@ public class StructureModelEntity {
   @JoinColumn(name = "source_sequence_selection_id", nullable = true)
   private SelectionEntity sourceSelection; // it means original selection
 
-  @ManyToOne
-  @JoinColumn(name = "residue_angle_values", nullable = true)
-  private ChainTorsionAngleEntity chainTorsionAngleEntities;
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  // @JoinTable(
+  //     name = "chain_residue_torsion_angle",
+  //     joinColumns = @JoinColumn(name = "residue_torsion_angle_id"),
+  //     inverseJoinColumns = @JoinColumn(name = "chain_id"))
+  List<ResidueTorsionAngleEntity> residuesTorsionAngleEntities;
 
   public void setTargetRangeRelative(IndexPair indexPair) {
     this.toInclusiveTargetRelative = indexPair.toInclusive;
@@ -81,6 +86,18 @@ public class StructureModelEntity {
 
   public void setContent(byte[] content) {
     this.content = content;
+  }
+
+  public void setMcqValue(Double mcq) {
+    this.mcq = mcq;
+  }
+
+  public Double getMcqValue() {
+    return mcq;
+  }
+
+  public void setSecondaryStructureVisualizationSVG(byte[] content) {
+    this.secondaryStructureVisualizationSVG = content;
   }
 
   // public void setFilteredContent(byte[] content) {
@@ -133,5 +150,13 @@ public class StructureModelEntity {
 
   public SelectionEntity getSourceSelection() {
     return sourceSelection;
+  }
+
+  public List<ResidueTorsionAngleEntity> getTorsionAngleEntities() {
+    return residuesTorsionAngleEntities;
+  }
+
+  public void addResidueEntities(List<ResidueTorsionAngleEntity> residueTorsionAngleEntities) {
+    residuesTorsionAngleEntities.addAll(residueTorsionAngleEntities);
   }
 }

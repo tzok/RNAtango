@@ -30,6 +30,11 @@ public class OneManyResultEntity {
 
   private Double threshold;
 
+  private String finalSequence;
+  private String finalStructure;
+
+  private Double mcq;
+
   @Convert(converter = AngleListConverter.class)
   private List<Angle> anglesToAnalyze;
 
@@ -81,6 +86,10 @@ public class OneManyResultEntity {
     return hashId;
   }
 
+  public String getModelNumber() {
+    return model;
+  }
+
   public void setErrorLog(String errorLog) {
     this.errorLog = errorLog;
   }
@@ -91,6 +100,14 @@ public class OneManyResultEntity {
 
   public void setIsDiscontinuousResiduesSequence(Boolean isDiscontinuous) {
     discontinuousResiduesSequence = isDiscontinuous;
+  }
+
+  public void setFinalStructure(String structure) {
+    this.finalStructure = structure;
+  }
+
+  public void setFinalSequence(String sequence) {
+    this.finalSequence = sequence;
   }
 
   public String getErrorLog() {
