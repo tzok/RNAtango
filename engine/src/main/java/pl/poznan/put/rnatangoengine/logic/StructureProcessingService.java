@@ -109,7 +109,7 @@ public class StructureProcessingService {
     throw new IOException("Cannot parse structure file");
   }
 
-  private Structure parseStructureFile(String structureFileContent, FileFormat format)
+  public Structure parseStructureFile(String structureFileContent, FileFormat format)
       throws IOException {
     List<CifModel> structureModels = new ArrayList<CifModel>();
     final CifParser parser = new CifParser();

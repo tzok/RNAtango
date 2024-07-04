@@ -23,9 +23,15 @@ public class OneManyUtils {
   @Autowired StructureModelRepository structureModelRepository;
 
   public void applyCommonSubsequenceToTarget(OneManyResultEntity _oneManyResultEntity) {
+    StructureModelEntity target = _oneManyResultEntity.getTargetEntity();
     List<StructureModelEntity> models = _oneManyResultEntity.getModels();
     IndexPair localModelIndexes;
-    IndexPair indexPair = models.get(0).getTargetRangeRelative();
+    IndexPair indexPair;
+    try {
+      indexPair = models.get(0).getTargetRangeRelative();
+    } catch (Exception e) {
+      indexPair = new IndexPair(0, target.getSourceSequence().length() - 1);
+    }
     for (StructureModelEntity structureModelEntity : models) {
       localModelIndexes = structureModelEntity.getTargetRangeRelative();
       if (indexPair.toInclusive > localModelIndexes.toInclusive) {
@@ -35,7 +41,6 @@ public class OneManyUtils {
         indexPair.fromInclusive = localModelIndexes.fromInclusive;
       }
     }
-    StructureModelEntity target = _oneManyResultEntity.getTargetEntity();
     SelectionEntity targetSelectionEntity = target.getSelection();
     SelectionEntity targetSourceSelectionEntity = target.getSourceSelection();
     SelectionChainEntity selectionChainEntity = targetSelectionEntity.getSelectionChains().get(0);

@@ -1,7 +1,5 @@
 package pl.poznan.put.rnatangoengine.service;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -38,83 +36,89 @@ import pl.poznan.put.rnatangoengine.dto.StructureComparingResult;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
 import pl.poznan.put.rnatangoengine.logic.CompareStructures;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
+import pl.poznan.put.rnatangoengine.logic.oneManyProcessing.OneManyProcessing;
+import pl.poznan.put.rnatangoengine.utils.ModelTargetMatchingException;
 import pl.poznan.put.rnatangoengine.utils.OneManyUtils;
 
 @Service
 public class OneManyService {
-  @Autowired
-  OneManyRepository oneManyRepository;
-  @Autowired
-  FileRepository fileRepository;
-  @Autowired
-  SelectionRepository selectionRepository;
-  @Autowired
-  StructureProcessingService structureProcessingService;
-  @Autowired
-  StructureModelRepository structureModelRepository;
-  @Autowired
-  CompareStructures compareStructures;
-  @Autowired
-  OneManyUtils oneManyUtils;
-
+  @Autowired OneManyRepository oneManyRepository;
+  @Autowired FileRepository fileRepository;
+  @Autowired SelectionRepository selectionRepository;
+  @Autowired StructureProcessingService structureProcessingService;
+  @Autowired StructureModelRepository structureModelRepository;
+  @Autowired CompareStructures compareStructures;
+  @Autowired OneManyUtils oneManyUtils;
+  @Autowired OneManyProcessing oneManyProcessing;
   private static final Logger LOGGER = LoggerFactory.getLogger(TextWebSocketHandler.class);
 
   public OneManySetFormResponse oneManyFormAddModel(String taskId, MultipartFile file) {
-    OneManyResultEntity _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
+    OneManyResultEntity _oneManyResultEntity =
+        oneManyRepository.getByHashId(UUID.fromString(taskId));
+    if (_oneManyResultEntity.getStatus() != Status.SETTING) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can not modify processed task");
+    }
     if (_oneManyResultEntity.getModels().size() >= 10) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Number of models is limited to 10");
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Number of models is limited to 10");
     }
     try {
-      Structure structure = structureProcessingService.process(
-          new String(file.getBytes(), StandardCharsets.UTF_8), file.getOriginalFilename());
+      Structure structure =
+          structureProcessingService.process(
+              new String(file.getBytes(), StandardCharsets.UTF_8), file.getOriginalFilename());
 
-      String structureFilteredContent = structure.filterParseCif("1", _oneManyResultEntity.getChain());
+      String structureFilteredContent =
+          structure.filterParseCif("1", _oneManyResultEntity.getChain());
 
-      StructureComparingResult comparingResult = compareStructures.compareTargetAndModelSequences(
-          _oneManyResultEntity.getTargetEntity().getSourceSequence(),
-          structure
-              .getContinuousSequences()
-              .getChainSubsequence(_oneManyResultEntity.getChain()));
+      StructureComparingResult comparingResult =
+          compareStructures.compareTargetAndModelSequences(
+              _oneManyResultEntity.getTargetEntity().getSourceSequence(),
+              structure
+                  .getContinuousSequences()
+                  .getChainSubsequence(_oneManyResultEntity.getChain()));
 
       StructureChainSequence bestSubsequence = comparingResult.getModel();
-      SelectionEntity selectionEntity = new SelectionEntity(
-          ImmutableSelection.builder()
-              .modelName("1")
-              .addChains(
-                  ImmutableSelectionChain.builder()
-                      .name(_oneManyResultEntity.getChain())
-                      .nucleotideRange(
-                          ImmutableNucleotideRange.builder()
-                              .fromInclusive(
-                                  bestSubsequence.getFrom()
-                                      + comparingResult.getModelFromInclusiveRelative())
-                              .toInclusive(
-                                  bestSubsequence.getFrom()
-                                      + comparingResult.getModelToInclusiveRelative()
-                                      + comparingResult.getModelFromInclusiveRelative())
-                              .build())
-                      .build())
-              .build());
-      SelectionEntity sourceSelectionEntity = new SelectionEntity(
-          ImmutableSelection.builder()
-              .modelName("1")
-              .addChains(
-                  ImmutableSelectionChain.builder()
-                      .name(_oneManyResultEntity.getChain())
-                      .nucleotideRange(
-                          ImmutableNucleotideRange.builder()
-                              .fromInclusive(bestSubsequence.getFrom())
-                              .toInclusive(bestSubsequence.getTo())
-                              .build())
-                      .build())
-              .build());
+      SelectionEntity selectionEntity =
+          new SelectionEntity(
+              ImmutableSelection.builder()
+                  .modelName("1")
+                  .addChains(
+                      ImmutableSelectionChain.builder()
+                          .name(_oneManyResultEntity.getChain())
+                          .nucleotideRange(
+                              ImmutableNucleotideRange.builder()
+                                  .fromInclusive(
+                                      bestSubsequence.getFrom()
+                                          + comparingResult.getModelFromInclusiveRelative())
+                                  .toInclusive(
+                                      bestSubsequence.getFrom()
+                                          + comparingResult.getModelToInclusiveRelative()
+                                          + comparingResult.getModelFromInclusiveRelative())
+                                  .build())
+                          .build())
+                  .build());
+      SelectionEntity sourceSelectionEntity =
+          new SelectionEntity(
+              ImmutableSelection.builder()
+                  .modelName("1")
+                  .addChains(
+                      ImmutableSelectionChain.builder()
+                          .name(_oneManyResultEntity.getChain())
+                          .nucleotideRange(
+                              ImmutableNucleotideRange.builder()
+                                  .fromInclusive(bestSubsequence.getFrom())
+                                  .toInclusive(bestSubsequence.getTo())
+                                  .build())
+                          .build())
+                  .build());
       selectionEntity = selectionRepository.saveAndFlush(selectionEntity);
       sourceSelectionEntity = selectionRepository.saveAndFlush(sourceSelectionEntity);
-      StructureModelEntity model = new StructureModelEntity(
-          structureFilteredContent.getBytes(),
-          file.getOriginalFilename(),
-          selectionEntity,
-          sourceSelectionEntity);
+      StructureModelEntity model =
+          new StructureModelEntity(
+              structureFilteredContent.getBytes(),
+              file.getOriginalFilename(),
+              selectionEntity,
+              sourceSelectionEntity);
       model.setTargetRangeRelative(
           new IndexPair(
               comparingResult.getTargetFromInclusiveRelative(),
@@ -132,22 +136,27 @@ public class OneManyService {
 
       return oneManyUtils.buildFormStateResponse(_oneManyResultEntity);
 
+    } catch (ModelTargetMatchingException e) {
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "No matching");
     } catch (Exception e) {
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      e.printStackTrace(pw);
-      String sStackTrace = sw.toString(); // stack trace as a string
-      LOGGER.error(sStackTrace);
+      e.printStackTrace();
+
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Error during comparing model to target");
     }
   }
-    @Transactional
-  public OneManySetFormResponse oneManyFormRemoveModel(String taskId, String modelId) {
-    OneManyResultEntity _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
 
+  @Transactional
+  public OneManySetFormResponse oneManyFormRemoveModel(String taskId, String modelId) {
+
+    OneManyResultEntity _oneManyResultEntity =
+        oneManyRepository.getByHashId(UUID.fromString(taskId));
+    if (_oneManyResultEntity.getStatus() != Status.SETTING) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
+    }
     _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
-    _oneManyResultEntity.removeModel(structureModelRepository.getByHashId(UUID.fromString(modelId)));
+    _oneManyResultEntity.removeModel(
+        structureModelRepository.getByHashId(UUID.fromString(modelId)));
     _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
     structureModelRepository.deleteByHashId(UUID.fromString(modelId));
     oneManyUtils.applyCommonSubsequenceToTarget(_oneManyResultEntity);
@@ -158,54 +167,60 @@ public class OneManyService {
   public TaskIdResponse oneMany(OneManySetFormInput input) {
     try {
       Structure structure = structureProcessingService.process(input.targetHashId());
-      byte[] structureFilteredContent = structure.filterParseCif(input.selection(), false).getBytes();
-      StructureChainSequence chainSequence = structure
-          .getContinuousSequences()
-          .getChainSubsequence(input.selection().chains().get(0).name())
-          .get(0);
-      SelectionEntity sourceSelection = selectionRepository.saveAndFlush(
-          new SelectionEntity(
-              ImmutableSelection.builder()
-                  .modelName(input.selection().modelName())
-                  .addChains(
-                      ImmutableSelectionChain.builder()
-                          .name(input.selection().chains().get(0).name())
-                          .nucleotideRange(
-                              ImmutableNucleotideRange.builder()
-                                  .fromInclusive(chainSequence.getFrom())
-                                  .toInclusive(chainSequence.getTo())
-                                  .build())
-                          .build())
-                  .build()));
-      SelectionEntity selection = selectionRepository.saveAndFlush(
-          new SelectionEntity(
-              ImmutableSelection.builder()
-                  .modelName(input.selection().modelName())
-                  .addChains(
-                      ImmutableSelectionChain.builder()
-                          .name(input.selection().chains().get(0).name())
-                          .nucleotideRange(
-                              ImmutableNucleotideRange.builder()
-                                  .fromInclusive(chainSequence.getFrom())
-                                  .toInclusive(chainSequence.getTo())
-                                  .build())
-                          .build())
-                  .build()));
-      StructureModelEntity target = structureModelRepository.saveAndFlush(
-          new StructureModelEntity(
-              structureFilteredContent, structure.getStructureName(), sourceSelection));
+      byte[] structureFilteredContent =
+          structure.filterParseCif(input.selection(), false).getBytes();
+      StructureChainSequence chainSequence =
+          structure
+              .getContinuousSequences()
+              .getChainSubsequence(input.selection().chains().get(0).name())
+              .get(0);
+      SelectionEntity sourceSelection =
+          selectionRepository.saveAndFlush(
+              new SelectionEntity(
+                  ImmutableSelection.builder()
+                      .modelName(input.selection().modelName())
+                      .addChains(
+                          ImmutableSelectionChain.builder()
+                              .name(input.selection().chains().get(0).name())
+                              .nucleotideRange(
+                                  ImmutableNucleotideRange.builder()
+                                      .fromInclusive(chainSequence.getFrom())
+                                      .toInclusive(chainSequence.getTo())
+                                      .build())
+                              .build())
+                      .build()));
+      SelectionEntity selection =
+          selectionRepository.saveAndFlush(
+              new SelectionEntity(
+                  ImmutableSelection.builder()
+                      .modelName(input.selection().modelName())
+                      .addChains(
+                          ImmutableSelectionChain.builder()
+                              .name(input.selection().chains().get(0).name())
+                              .nucleotideRange(
+                                  ImmutableNucleotideRange.builder()
+                                      .fromInclusive(chainSequence.getFrom())
+                                      .toInclusive(chainSequence.getTo())
+                                      .build())
+                              .build())
+                      .build()));
+      StructureModelEntity target =
+          structureModelRepository.saveAndFlush(
+              new StructureModelEntity(
+                  structureFilteredContent, structure.getStructureName(), sourceSelection));
       target.setSelection(selection);
-      OneManyResultEntity _oneManyResultEntity = oneManyRepository.saveAndFlush(
-          new OneManyResultEntity(
-              target,
-              selection.getModelName(),
-              selection.getSelectionChains().get(0).getName()));
+      OneManyResultEntity _oneManyResultEntity =
+          oneManyRepository.saveAndFlush(
+              new OneManyResultEntity(
+                  target,
+                  selection.getModelName(),
+                  selection.getSelectionChains().get(0).getName()));
       try {
         fileRepository.deleteByHashId(UUID.fromString(input.targetHashId()));
       } catch (Exception e) {
       }
       target.setStructureMolecule(structure.getStructureMoleculeName());
-      target.setSourceContent(structureFilteredContent);
+      target.setContent(structureFilteredContent);
       target.setSourceSequence(structure.getModelSequence());
       target.setFilteredSequence(structure.getModelSequence());
       target = structureModelRepository.saveAndFlush(target);
@@ -221,12 +236,30 @@ public class OneManyService {
   }
 
   public TaskIdResponse oneMany(OneManySubmitFormInput input) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    OneManyResultEntity _oneManyResultEntity =
+        oneManyRepository.getByHashId(UUID.fromString(input.taskHashId()));
+
+    // if (_oneManyResultEntity.getStatus() != Status.SETTING) {
+    //   throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
+    // }
+    _oneManyResultEntity.setTreshold(input.threshold());
+    _oneManyResultEntity.setAnglesToAnalyze(input.angles());
+    _oneManyResultEntity.setStatus(Status.WAITING);
+    _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
+    try {
+      oneManyProcessing.startTask(UUID.fromString(input.taskHashId()));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return ImmutableTaskIdResponse.builder()
+        .taskId(_oneManyResultEntity.getHashId().toString())
+        .build();
   }
 
   public OneManySetFormResponse oneManyFormState(String taskId) {
     try {
-      OneManyResultEntity _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
+      OneManyResultEntity _oneManyResultEntity =
+          oneManyRepository.getByHashId(UUID.fromString(taskId));
 
       return oneManyUtils.buildFormStateResponse(_oneManyResultEntity);
     } catch (Exception e) {
@@ -237,7 +270,8 @@ public class OneManyService {
 
   public StatusResponse oneManyStatus(String taskId) {
     try {
-      OneManyResultEntity _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
+      OneManyResultEntity _oneManyResultEntity =
+          oneManyRepository.getByHashId(UUID.fromString(taskId));
       if (_oneManyResultEntity.getStatus().equals(Status.FAILED)) {
         return ImmutableStatusResponse.builder()
             .status(_oneManyResultEntity.getStatus())

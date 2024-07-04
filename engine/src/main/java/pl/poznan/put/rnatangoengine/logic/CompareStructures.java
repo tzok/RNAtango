@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import pl.poznan.put.rnatangoengine.dto.IndexPair;
 import pl.poznan.put.rnatangoengine.dto.StructureChainSequence;
 import pl.poznan.put.rnatangoengine.dto.StructureComparingResult;
+import pl.poznan.put.rnatangoengine.utils.ModelTargetMatchingException;
 
 @Service
 public class CompareStructures {
@@ -88,7 +89,8 @@ public class CompareStructures {
   }
 
   public StructureComparingResult compareTargetAndModelSequences(
-      String targetSequence, List<StructureChainSequence> structureChainSequence) throws Exception {
+      String targetSequence, List<StructureChainSequence> structureChainSequence)
+      throws ModelTargetMatchingException {
     StructureComparingResult structureComparingResult = new StructureComparingResult();
     LCSResult lcsResult;
     for (StructureChainSequence sequence : structureChainSequence) {
@@ -104,9 +106,8 @@ public class CompareStructures {
       }
     }
     if (structureComparingResult.getModel() == null) {
-      throw new Exception("Target no match model");
+      throw new ModelTargetMatchingException("Target no match model");
     }
     return structureComparingResult;
-    // return findIndexesOfBestMatch(targetSequence, structureComparingResult);
   }
 }

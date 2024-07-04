@@ -34,10 +34,10 @@ public class OneManyController {
   }
 
   @PostMapping(
-      path = "/one-many/form/add/model",
+      path = "/one-many/form/add/model/{taskId}",
       consumes = {"multipart/form-data"})
   public ResponseEntity<OneManySetFormResponse> oneManySubmitFormAddModel(
-      @RequestParam("taskId") String taskId, @RequestParam("file") MultipartFile file) {
+      @PathVariable("taskId") String taskId, @RequestParam("file") MultipartFile file) {
     return new ResponseEntity<>(
         oneManyService.oneManyFormAddModel(taskId, file), HttpStatus.ACCEPTED);
   }

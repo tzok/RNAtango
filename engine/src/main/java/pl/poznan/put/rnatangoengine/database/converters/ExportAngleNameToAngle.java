@@ -4,9 +4,37 @@ import pl.poznan.put.rnatangoengine.dto.Angle;
 
 public class ExportAngleNameToAngle {
 
-  public ExportAngleNameToAngle() {}
+  // public ExportAngleNameToAngle() {}
 
-  public Angle parse(String exportName) {
+  public static String parse(Angle angle) {
+    switch (angle) {
+      case ALPHA:
+        return "alpha";
+      case BETA:
+        return "beta";
+      case GAMMA:
+        return "gamma";
+      case DELTA:
+        return "delta";
+      case EPSILON:
+        return "epsilon";
+      case ZETA:
+        return "zeta";
+      case CHI:
+        return "chi";
+      case ETA:
+        return "eta";
+      case THETA:
+        return "theta";
+      case ETA_PRIM:
+        return "eta-prim";
+      case THETA_PRIM:
+        return "theta-prim";
+    }
+    return null;
+  }
+
+  public static Angle parse(String exportName) {
     switch (exportName) {
       case "alpha":
         return Angle.ALPHA;

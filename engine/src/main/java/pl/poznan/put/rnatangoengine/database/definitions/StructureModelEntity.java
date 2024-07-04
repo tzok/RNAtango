@@ -23,19 +23,22 @@ public class StructureModelEntity {
   private Integer toInclusiveTargetRelative;
   private Integer fromInclusiveTargetRelative;
 
-  @Lob private byte[] sourceContent;
-  @Lob private byte[] filteredContent;
+  @Lob private byte[] content;
+
+  @Lob private byte[] secondaryStructureVisualizationSVG;
+
+  // @Lob private byte[] filteredContent;
 
   public StructureModelEntity() {}
 
   public StructureModelEntity(FileEntity file, SelectionEntity selection) {
-    this.sourceContent = file.getContent();
+    this.content = file.getContent();
     this.filename = file.getFilename();
     this.sourceSelection = selection;
   }
 
   public StructureModelEntity(byte[] structureContent, String filename, SelectionEntity selection) {
-    this.sourceContent = structureContent;
+    this.content = structureContent;
     this.filename = filename;
     this.sourceSelection = selection;
   }
@@ -45,7 +48,7 @@ public class StructureModelEntity {
       String filename,
       SelectionEntity selection,
       SelectionEntity sourceSelection) {
-    this.sourceContent = structureContent;
+    this.content = structureContent;
     this.filename = filename;
     this.sourceSelection = sourceSelection;
     this.selection = selection;
@@ -59,7 +62,10 @@ public class StructureModelEntity {
   @JoinColumn(name = "source_sequence_selection_id", nullable = true)
   private SelectionEntity sourceSelection; // it means original selection
 
-  //
+  @ManyToOne
+  @JoinColumn(name = "residue_angle_values", nullable = true)
+  private ChainTorsionAngleEntity chainTorsionAngleEntities;
+
   public void setTargetRangeRelative(IndexPair indexPair) {
     this.toInclusiveTargetRelative = indexPair.toInclusive;
     this.fromInclusiveTargetRelative = indexPair.fromInclusive;
@@ -73,13 +79,13 @@ public class StructureModelEntity {
     this.fileStructureMolecule = molecule;
   }
 
-  public void setSourceContent(byte[] content) {
-    this.sourceContent = content;
+  public void setContent(byte[] content) {
+    this.content = content;
   }
 
-  public void setFilteredContent(byte[] content) {
-    this.filteredContent = content;
-  }
+  // public void setFilteredContent(byte[] content) {
+  //   this.filteredContent = content;
+  // }
 
   public void setFilteredSequence(String sequence) {
     this.filteredSequence = sequence;
@@ -101,13 +107,13 @@ public class StructureModelEntity {
     return hashId;
   }
 
-  public byte[] getSourceContent() {
-    return sourceContent;
+  public byte[] getContent() {
+    return content;
   }
 
-  public byte[] getFilteredContent() {
-    return filteredContent;
-  }
+  // public byte[] getFilteredContent() {
+  //   return filteredContent;
+  // }
 
   public String getFilename() {
     return filename;

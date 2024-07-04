@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.SingleResultEntity;
 import pl.poznan.put.rnatangoengine.dto.ImmutableChain;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTorsionAnglesInChain;
 import pl.poznan.put.rnatangoengine.dto.TorsionAnglesInChain;
@@ -22,14 +21,14 @@ public class ChainTorsionAngleEntity {
   @Column(length = 5000)
   private String sequence;
 
-  @ManyToMany(mappedBy = "chainTorsionAngleEntities")
-  List<SingleResultEntity> singleResults;
+  // @ManyToMany(mappedBy = "chainTorsionAngleEntities")
+  // List<SingleResultEntity> singleResults;
 
-  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinTable(
-      name = "chain_residue_torsion_angle",
-      joinColumns = @JoinColumn(name = "residue_torsion_angle_id"),
-      inverseJoinColumns = @JoinColumn(name = "chain_id"))
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  // @JoinTable(
+  //     name = "chain_residue_torsion_angle",
+  //     joinColumns = @JoinColumn(name = "residue_torsion_angle_id"),
+  //     inverseJoinColumns = @JoinColumn(name = "chain_id"))
   List<ResidueTorsionAngleEntity> residuesTorsionAngleEntities;
 
   public ChainTorsionAngleEntity() {}

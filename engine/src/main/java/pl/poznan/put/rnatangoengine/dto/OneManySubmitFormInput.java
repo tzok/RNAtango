@@ -2,6 +2,7 @@ package pl.poznan.put.rnatangoengine.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.List;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -9,8 +10,9 @@ import org.immutables.value.Value;
 @JsonSerialize(as = ImmutableOneManySubmitFormInput.class)
 @JsonDeserialize(as = ImmutableOneManySubmitFormInput.class)
 public interface OneManySubmitFormInput {
-  // FIX: ADJUST
-  String targetHashId();
+  String taskHashId();
 
-  Selection selection();
+  List<Angle> angles();
+
+  double threshold();
 }

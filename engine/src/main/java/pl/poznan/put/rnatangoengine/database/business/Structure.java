@@ -126,15 +126,7 @@ public class Structure {
           } else {
             if (sequenceResidues.size() > 0) {
               this.continuousSequences.insertSequence(
-                  new StructureChainSequence(
-                      pdbChain.identifier(),
-                      sequenceResidues.stream()
-                          .map((r) -> r.oneLetterName())
-                          .map(String::valueOf)
-                          .collect(Collectors.joining()),
-                      sequenceResidues.get(0).residueNumber(),
-                      sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
-
+                  createStructureChainSequenceEntry(pdbChain.identifier(), sequenceResidues));
               sequenceResidues.clear();
             }
           }
@@ -142,15 +134,88 @@ public class Structure {
       }
       if (sequenceResidues.size() > 0) {
         this.continuousSequences.insertSequence(
-            new StructureChainSequence(
-                pdbChain.identifier(),
-                sequenceResidues.stream()
-                    .map((r) -> r.oneLetterName())
-                    .map(String::valueOf)
-                    .collect(Collectors.joining()),
-                sequenceResidues.get(0).residueNumber(),
-                sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
+            createStructureChainSequenceEntry(pdbChain.identifier(), sequenceResidues));
         sequenceResidues.clear();
+      }
+    }
+    this.filteredContent =
+        ImmutableDefaultCifModel.of(
+                pdbModelFiltered.header(),
+                pdbModelFiltered.experimentalData(),
+                pdbModelFiltered.resolution(),
+                pdbModelFiltered.modelNumber(),
+                resultAtoms,
+                pdbModelFiltered.modifiedResidues(),
+                pdbModelFiltered.missingResidues(),
+                pdbModelFiltered.title(),
+                pdbModelFiltered.chainTerminatedAfter(),
+                pdbModelFiltered.basePairs())
+            .toCif();
+    final CifParser parser = new CifParser();
+    structureModels = parser.parse(this.filteredContent);
+
+    return filteredContent;
+  }
+
+  private StructureChainSequence createStructureChainSequenceEntry(
+      String chain, List<PdbResidue> sequenceResidues) {
+    return new StructureChainSequence(
+        chain,
+        sequenceResidues.stream()
+            .map((r) -> r.oneLetterName())
+            .map(String::valueOf)
+            .collect(Collectors.joining()),
+        sequenceResidues.get(0).residueNumber(),
+        sequenceResidues.get(sequenceResidues.size() - 1).residueNumber());
+  }
+
+  public String filterAuthParseCif(Selection selection) throws IOException {
+    List<Selection> selections = new ArrayList<>();
+    selections.add(selection);
+    return filterAuthParseCif(selections);
+  }
+
+  public String filterAuthParseCif(List<Selection> selections) throws IOException {
+    this.continuousSequences = new StructureSequences("1");
+    CifModel pdbModelFiltered =
+        (CifModel)
+            structureModels
+                .get(Integer.parseInt(selections.get(0).modelName()) - 1)
+                .filteredNewInstance(MoleculeType.RNA);
+
+    List<PdbAtomLine> resultAtoms = new ArrayList<PdbAtomLine>();
+    for (Selection selection : selections) {
+
+      if (selection.chains().isEmpty()) {
+        return pdbModelFiltered.toCif();
+      }
+
+      for (PdbChain chain : pdbModelFiltered.chains()) {
+        List<PdbResidue> sequenceResidues = new ArrayList<PdbResidue>();
+        for (SelectionChain selectionChain : selection.chains()) {
+          if (chain.identifier().equals(selectionChain.name())) {
+            for (PdbResidue residue : chain.residues()) {
+              if (residue.residueNumber() >= selectionChain.nucleotideRange().fromInclusive()
+                  && residue.residueNumber() <= selectionChain.nucleotideRange().toInclusive()) {
+                if (residue.atoms().size() == 0) {
+                  if (sequenceResidues.size() > 0) {
+                    this.continuousSequences.insertSequence(
+                        createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
+                    sequenceResidues.clear();
+                  }
+                } else {
+                  sequenceResidues.add(residue);
+                  resultAtoms.addAll(residue.atoms());
+                }
+              }
+            }
+          }
+        }
+        if (sequenceResidues.size() > 0) {
+          this.continuousSequences.insertSequence(
+              createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
+          sequenceResidues.clear();
+        }
       }
     }
     this.filteredContent =
@@ -200,14 +265,7 @@ public class Structure {
                 if (residue.atoms().size() == 0) {
                   if (sequenceResidues.size() > 0) {
                     this.continuousSequences.insertSequence(
-                        new StructureChainSequence(
-                            chain.identifier(),
-                            sequenceResidues.stream()
-                                .map((r) -> r.oneLetterName())
-                                .map(String::valueOf)
-                                .collect(Collectors.joining()),
-                            sequenceResidues.get(0).residueNumber(),
-                            sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
+                        createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
                     sequenceResidues.clear();
                   }
                   if (begin_s >= 0 && end_s < 0) {
@@ -230,14 +288,7 @@ public class Structure {
         }
         if (sequenceResidues.size() > 0) {
           this.continuousSequences.insertSequence(
-              new StructureChainSequence(
-                  chain.identifier(),
-                  sequenceResidues.stream()
-                      .map((r) -> r.oneLetterName())
-                      .map(String::valueOf)
-                      .collect(Collectors.joining()),
-                  sequenceResidues.get(0).residueNumber(),
-                  sequenceResidues.get(sequenceResidues.size() - 1).residueNumber()));
+              createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
           sequenceResidues.clear();
         }
       }

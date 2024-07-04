@@ -6,7 +6,9 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+import pl.poznan.put.rnatangoengine.database.converters.AngleListConverter;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
+import pl.poznan.put.rnatangoengine.dto.Angle;
 import pl.poznan.put.rnatangoengine.dto.Status;
 
 @Entity
@@ -25,6 +27,11 @@ public class OneManyResultEntity {
   protected String errorLog;
   protected String userErrorLog;
   protected Status status;
+
+  private Double threshold;
+
+  @Convert(converter = AngleListConverter.class)
+  private List<Angle> anglesToAnalyze;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "structure_target_id", insertable = true, updatable = true, nullable = true)
@@ -52,6 +59,18 @@ public class OneManyResultEntity {
     this.chain = chain;
     this.target = target;
     setDefaultValues();
+  }
+
+  public void setAnglesToAnalyze(List<Angle> angle) {
+    this.anglesToAnalyze = angle;
+  }
+
+  public List<Angle> getAnglesToAnalyze() {
+    return this.anglesToAnalyze;
+  }
+
+  public void setTreshold(Double treshold) {
+    this.threshold = treshold;
   }
 
   public String getChain() {
