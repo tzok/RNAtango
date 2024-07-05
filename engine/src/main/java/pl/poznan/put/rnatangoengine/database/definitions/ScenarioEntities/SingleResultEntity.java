@@ -41,7 +41,10 @@ public class SingleResultEntity {
 
   private Date removeAfter;
   private Boolean discontinuousResiduesSequence;
+
+  @Column(length = 5000)
   protected String errorLog;
+
   protected String userErrorLog;
   protected Status status;
 

@@ -39,7 +39,7 @@ public class Structure {
   }
 
   /**
-   * @return
+   * @return List<CifModel> list of models
    * @throws IOException
    */
   public List<CifModel> getCifModels() throws IOException {
@@ -90,6 +90,10 @@ public class Structure {
     return models;
   }
 
+  /**
+   * @return String mmCIF file body
+   * @throws Exception
+   */
   public String getCifContent() throws Exception {
     if (this.filteredContent.isEmpty()) {
       throw new Exception("Not filtered yet");
@@ -97,6 +101,10 @@ public class Structure {
     return this.filteredContent;
   }
 
+  /**
+   * @return String mmCIF file body
+   * @throws IOException
+   */
   public String filterParseCif(Selection selection, Boolean acceptDiscontinuous)
       throws IOException {
     List<Selection> selections = new ArrayList<>();
@@ -106,55 +114,6 @@ public class Structure {
       throw new IOException("Sequence need to be continuous");
     }
     return filteredStructure;
-  }
-
-  public String filterParseCif(String model, String chain) throws IOException {
-    this.continuousSequences = new StructureSequences("1");
-    CifModel pdbModelFiltered =
-        (CifModel)
-            structureModels.get(Integer.parseInt(model) - 1).filteredNewInstance(MoleculeType.RNA);
-
-    List<PdbAtomLine> resultAtoms = new ArrayList<PdbAtomLine>();
-
-    for (PdbChain pdbChain : pdbModelFiltered.chains()) {
-      List<PdbResidue> sequenceResidues = new ArrayList<PdbResidue>();
-      if (pdbChain.identifier().equals(chain)) {
-        for (PdbResidue residue : pdbChain.residues()) {
-          if (residue.atoms().size() > 0) {
-            sequenceResidues.add(residue);
-            resultAtoms.addAll(residue.atoms());
-          } else {
-            if (sequenceResidues.size() > 0) {
-              this.continuousSequences.insertSequence(
-                  createStructureChainSequenceEntry(pdbChain.identifier(), sequenceResidues));
-              sequenceResidues.clear();
-            }
-          }
-        }
-      }
-      if (sequenceResidues.size() > 0) {
-        this.continuousSequences.insertSequence(
-            createStructureChainSequenceEntry(pdbChain.identifier(), sequenceResidues));
-        sequenceResidues.clear();
-      }
-    }
-    this.filteredContent =
-        ImmutableDefaultCifModel.of(
-                pdbModelFiltered.header(),
-                pdbModelFiltered.experimentalData(),
-                pdbModelFiltered.resolution(),
-                pdbModelFiltered.modelNumber(),
-                resultAtoms,
-                pdbModelFiltered.modifiedResidues(),
-                pdbModelFiltered.missingResidues(),
-                pdbModelFiltered.title(),
-                pdbModelFiltered.chainTerminatedAfter(),
-                pdbModelFiltered.basePairs())
-            .toCif();
-    final CifParser parser = new CifParser();
-    structureModels = parser.parse(this.filteredContent);
-
-    return filteredContent;
   }
 
   private StructureChainSequence createStructureChainSequenceEntry(
@@ -169,12 +128,20 @@ public class Structure {
         sequenceResidues.get(sequenceResidues.size() - 1).residueNumber());
   }
 
+  /**
+   * @return String mmCIF file body, filtering using auth positions
+   * @throws IOException
+   */
   public String filterAuthParseCif(Selection selection) throws IOException {
     List<Selection> selections = new ArrayList<>();
     selections.add(selection);
     return filterAuthParseCif(selections);
   }
 
+  /**
+   * @return String mmCIF file body, filtering using auth positions
+   * @throws IOException
+   */
   public String filterAuthParseCif(List<Selection> selections) throws IOException {
     this.continuousSequences = new StructureSequences("1");
     CifModel pdbModelFiltered =
@@ -237,6 +204,10 @@ public class Structure {
     return filteredContent;
   }
 
+  /**
+   * @return String mmCIF file body, filtering using relative positions
+   * @throws IOException
+   */
   public String filterParseCif(List<Selection> selections) throws IOException {
     this.continuousSequences = new StructureSequences("1");
     CifModel pdbModelFiltered =
@@ -298,6 +269,59 @@ public class Structure {
             discontinousMemory.getOrDefault(chain.identifier(), 0)
                 + chain.residueIdentifiers().size()
                 + 1);
+      }
+    }
+    this.filteredContent =
+        ImmutableDefaultCifModel.of(
+                pdbModelFiltered.header(),
+                pdbModelFiltered.experimentalData(),
+                pdbModelFiltered.resolution(),
+                pdbModelFiltered.modelNumber(),
+                resultAtoms,
+                pdbModelFiltered.modifiedResidues(),
+                pdbModelFiltered.missingResidues(),
+                pdbModelFiltered.title(),
+                pdbModelFiltered.chainTerminatedAfter(),
+                pdbModelFiltered.basePairs())
+            .toCif();
+    final CifParser parser = new CifParser();
+    structureModels = parser.parse(this.filteredContent);
+
+    return filteredContent;
+  }
+
+  /**
+   * @return String mmCIF file body, filtering using auth positions
+   * @throws IOException
+   */
+  public String filterParseCif(String model, String chain) throws IOException {
+    this.continuousSequences = new StructureSequences("1");
+    CifModel pdbModelFiltered =
+        (CifModel)
+            structureModels.get(Integer.parseInt(model) - 1).filteredNewInstance(MoleculeType.RNA);
+
+    List<PdbAtomLine> resultAtoms = new ArrayList<PdbAtomLine>();
+
+    for (PdbChain pdbChain : pdbModelFiltered.chains()) {
+      List<PdbResidue> sequenceResidues = new ArrayList<PdbResidue>();
+      if (pdbChain.identifier().equals(chain)) {
+        for (PdbResidue residue : pdbChain.residues()) {
+          if (residue.atoms().size() > 0) {
+            sequenceResidues.add(residue);
+            resultAtoms.addAll(residue.atoms());
+          } else {
+            if (sequenceResidues.size() > 0) {
+              this.continuousSequences.insertSequence(
+                  createStructureChainSequenceEntry(pdbChain.identifier(), sequenceResidues));
+              sequenceResidues.clear();
+            }
+          }
+        }
+      }
+      if (sequenceResidues.size() > 0) {
+        this.continuousSequences.insertSequence(
+            createStructureChainSequenceEntry(pdbChain.identifier(), sequenceResidues));
+        sequenceResidues.clear();
       }
     }
     this.filteredContent =

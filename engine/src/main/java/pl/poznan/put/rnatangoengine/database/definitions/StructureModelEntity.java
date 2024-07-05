@@ -29,8 +29,6 @@ public class StructureModelEntity {
 
   private Double mcq;
 
-  // @Lob private byte[] filteredContent;
-
   public StructureModelEntity() {}
 
   public StructureModelEntity(FileEntity file, SelectionEntity selection) {
@@ -65,10 +63,6 @@ public class StructureModelEntity {
   private SelectionEntity sourceSelection; // it means original selection
 
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  // @JoinTable(
-  //     name = "chain_residue_torsion_angle",
-  //     joinColumns = @JoinColumn(name = "residue_torsion_angle_id"),
-  //     inverseJoinColumns = @JoinColumn(name = "chain_id"))
   List<ResidueTorsionAngleEntity> residuesTorsionAngleEntities;
 
   public void setTargetRangeRelative(IndexPair indexPair) {
@@ -100,9 +94,9 @@ public class StructureModelEntity {
     this.secondaryStructureVisualizationSVG = content;
   }
 
-  // public void setFilteredContent(byte[] content) {
-  //   this.filteredContent = content;
-  // }
+  public byte[] getSecondaryStructureVisualizationSVG() {
+    return this.secondaryStructureVisualizationSVG;
+  }
 
   public void setFilteredSequence(String sequence) {
     this.filteredSequence = sequence;
@@ -127,10 +121,6 @@ public class StructureModelEntity {
   public byte[] getContent() {
     return content;
   }
-
-  // public byte[] getFilteredContent() {
-  //   return filteredContent;
-  // }
 
   public String getFilename() {
     return filename;

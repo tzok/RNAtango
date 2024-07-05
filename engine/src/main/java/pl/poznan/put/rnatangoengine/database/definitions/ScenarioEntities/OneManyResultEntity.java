@@ -24,7 +24,9 @@ public class OneManyResultEntity {
   private String model;
   private String chain;
 
+  @Column(length = 5000)
   protected String errorLog;
+
   protected String userErrorLog;
   protected Status status;
 
@@ -53,6 +55,8 @@ public class OneManyResultEntity {
     this.status = Status.SETTING;
     this.removeAfter = Date.valueOf(LocalDate.now().plus(1, ChronoUnit.WEEKS));
     this.discontinuousResiduesSequence = false;
+    this.errorLog = "";
+    this.userErrorLog = "";
   }
 
   public OneManyResultEntity() {

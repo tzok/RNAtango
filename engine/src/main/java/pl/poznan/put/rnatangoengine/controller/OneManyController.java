@@ -1,7 +1,10 @@
 package pl.poznan.put.rnatangoengine.controller;
 
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,5 +66,27 @@ public class OneManyController {
   @GetMapping("/one-many/{taskId}/result")
   public OneManyOutput oneManyResult(@PathVariable String taskId) {
     return oneManyService.oneManyResult(taskId);
+  }
+
+  @GetMapping(value = "/one-many/secondary/structure/{modelId}")
+  public ResponseEntity<String> oneManySecondaryStructureModel(@PathVariable String modelId) {
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType("image/svg+xml"))
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + modelId + ".svg" + "\"")
+        .body(
+            new String(
+                oneManyService.oneManySecondaryStructureModel(modelId), StandardCharsets.UTF_8));
+  }
+
+  @GetMapping(value = "/one-many/tertiary/structure/{modelId}")
+  public ResponseEntity<String> oneManyTertiaryStructureModel(@PathVariable String modelId) {
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType("chemical/x-mmcif"))
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + modelId + ".cif" + "\"")
+        .body(
+            new String(
+                oneManyService.oneManyTertiaryStructureModel(modelId), StandardCharsets.UTF_8));
   }
 }

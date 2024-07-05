@@ -3,15 +3,12 @@ package pl.poznan.put.rnatangoengine.service;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
@@ -53,12 +50,11 @@ public class OneManyService {
   @Autowired CompareStructures compareStructures;
   @Autowired OneManyUtils oneManyUtils;
   @Autowired OneManyProcessing oneManyProcessing;
-  private static final Logger LOGGER = LoggerFactory.getLogger(TextWebSocketHandler.class);
 
   public OneManySetFormResponse oneManyFormAddModel(String taskId, MultipartFile file) {
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
-    if (_oneManyResultEntity.getStatus() != Status.SETTING) {
+    if (!_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can not modify processed task");
     }
     if (_oneManyResultEntity.getModels().size() >= 10) {
@@ -154,7 +150,7 @@ public class OneManyService {
 
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
-    if (_oneManyResultEntity.getStatus() != Status.SETTING) {
+    if (!_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
     }
     _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
@@ -263,11 +259,14 @@ public class OneManyService {
     try {
       OneManyResultEntity _oneManyResultEntity =
           oneManyRepository.getByHashId(UUID.fromString(taskId));
-
+      if (_oneManyResultEntity == null
+          || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
+        throw new Exception("task does not exist");
+      }
       return oneManyUtils.buildFormStateResponse(_oneManyResultEntity);
     } catch (Exception e) {
       e.printStackTrace();
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task does not exit");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task does not exist");
     }
   }
 
@@ -298,7 +297,7 @@ public class OneManyService {
   public OneManyOutput oneManyResult(String taskId) {
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
-    if (_oneManyResultEntity.getStatus().equals(Status.SUCCESS)) {
+    if (_oneManyResultEntity != null && _oneManyResultEntity.getStatus().equals(Status.SUCCESS)) {
       return ImmutableOneManyOutput.builder()
           .model(_oneManyResultEntity.getModelNumber())
           .chain(_oneManyResultEntity.getChain())
@@ -325,6 +324,35 @@ public class OneManyService {
           .build();
     } else {
       throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Task not available");
+    }
+  }
+
+  public byte[] oneManySecondaryStructureModel(String modelId) {
+    StructureModelEntity structureModelEntity =
+        structureModelRepository.getByHashId(UUID.fromString(modelId));
+    if (structureModelEntity != null) {
+      byte[] structureSVG = structureModelEntity.getSecondaryStructureVisualizationSVG();
+      if (structureSVG.length == 0) {
+        throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Model not available");
+      }
+      return structureSVG;
+
+    } else {
+      throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Model not available");
+    }
+  }
+
+  public byte[] oneManyTertiaryStructureModel(String modelId) {
+    StructureModelEntity structureModelEntity =
+        structureModelRepository.getByHashId(UUID.fromString(modelId));
+    if (structureModelEntity != null) {
+      byte[] structureSVG = structureModelEntity.getContent();
+      if (structureSVG.length == 0) {
+        throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Model not available");
+      }
+      return structureSVG;
+    } else {
+      throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Model not available");
     }
   }
 }
