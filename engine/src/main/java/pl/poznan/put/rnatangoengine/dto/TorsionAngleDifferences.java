@@ -22,5 +22,5 @@ public interface TorsionAngleDifferences {
 
   List<Double> residueMCQs();
 
-  LCS modelLCS();
+  LCSResult modelLCS();
 }

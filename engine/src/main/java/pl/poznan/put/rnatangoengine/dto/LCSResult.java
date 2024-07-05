@@ -6,9 +6,9 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @Value.Style(privateNoargConstructor = true)
-@JsonSerialize(as = ImmutableLCS.class)
-@JsonDeserialize(as = ImmutableLCS.class)
-public interface LCS {
+@JsonSerialize(as = ImmutableLCSResult.class)
+@JsonDeserialize(as = ImmutableLCSResult.class)
+public interface LCSResult {
   NucleotideRange targetNucleotideRange();
 
   NucleotideRange modelNucleotideRange();
@@ -16,4 +16,6 @@ public interface LCS {
   double validResidues();
 
   double coveragePercent();
+
+  double fragmentMCQ();
 }

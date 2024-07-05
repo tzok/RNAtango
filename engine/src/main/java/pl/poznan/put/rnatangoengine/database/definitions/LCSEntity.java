@@ -1,12 +1,9 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import pl.poznan.put.rnatangoengine.dto.ImmutableLCS;
+import pl.poznan.put.rnatangoengine.dto.ImmutableLCSResult;
 import pl.poznan.put.rnatangoengine.dto.ImmutableNucleotideRange;
-import pl.poznan.put.rnatangoengine.dto.LCS;
+import pl.poznan.put.rnatangoengine.dto.LCSResult;
 
 @Entity
 @Table(name = "LCS")
@@ -20,6 +17,7 @@ public class LCSEntity {
   int modelFromInclusive;
   int modelToInclusive;
 
+  double mcqValue;
   double coveragePercent;
   double validResidues;
 
@@ -43,8 +41,12 @@ public class LCSEntity {
     this.validResidues = validResiduesCount;
   }
 
-  public LCS getConvertedToLCSImmutable() {
-    return ImmutableLCS.builder()
+  public void setMcqValue(double mcq) {
+    this.mcqValue = mcq;
+  }
+
+  public LCSResult getConvertedToLCSImmutable() {
+    return ImmutableLCSResult.builder()
         .coveragePercent(coveragePercent)
         .validResidues(validResidues)
         .modelNucleotideRange(
@@ -57,6 +59,7 @@ public class LCSEntity {
                 .fromInclusive(targetFromInclusive)
                 .toInclusive(targetToInclusive)
                 .build())
+        .fragmentMCQ(this.mcqValue)
         .build();
   }
 }

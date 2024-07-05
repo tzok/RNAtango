@@ -67,6 +67,7 @@ public class LcsProcessing {
     lcsEntity.setCoveragePercent(coverage);
     lcsEntity.setModelRange(modelStart.residueNumber(), modelEnd.residueNumber());
     lcsEntity.setTargetRange(targetStart.residueNumber(), targetEnd.residueNumber());
+    lcsEntity.setMcqValue(result.meanDirection().degrees());
     return lcsRepository.saveAndFlush(lcsEntity);
   }
 }
