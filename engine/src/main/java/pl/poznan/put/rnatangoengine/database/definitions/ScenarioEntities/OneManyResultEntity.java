@@ -35,8 +35,6 @@ public class OneManyResultEntity {
   private String finalSequence;
   private String finalStructure;
 
-  private Double mcq;
-
   @Convert(converter = AngleListConverter.class)
   private List<Angle> anglesToAnalyze;
 
@@ -78,8 +76,12 @@ public class OneManyResultEntity {
     return this.anglesToAnalyze;
   }
 
-  public void setTreshold(Double treshold) {
+  public void setThreshold(Double treshold) {
     this.threshold = treshold;
+  }
+
+  public Double getThreshold() {
+    return threshold;
   }
 
   public String getChain() {

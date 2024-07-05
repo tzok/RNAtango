@@ -14,5 +14,7 @@ public interface OneManyOutput {
 
   String chain();
 
+  Double lcsThreshold();
+
   List<TorsionAngleDifferences> differences();
 }

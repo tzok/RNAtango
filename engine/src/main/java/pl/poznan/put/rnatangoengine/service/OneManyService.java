@@ -241,7 +241,7 @@ public class OneManyService {
     if (_oneManyResultEntity.getStatus() != Status.SETTING) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
     }
-    _oneManyResultEntity.setTreshold(input.threshold());
+    _oneManyResultEntity.setThreshold(input.threshold());
     _oneManyResultEntity.setAnglesToAnalyze(input.angles());
     _oneManyResultEntity.setStatus(Status.WAITING);
     _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
@@ -301,6 +301,7 @@ public class OneManyService {
       return ImmutableOneManyOutput.builder()
           .model(_oneManyResultEntity.getModelNumber())
           .chain(_oneManyResultEntity.getChain())
+          .lcsThreshold(_oneManyResultEntity.getThreshold())
           .addAllDifferences(
               _oneManyResultEntity.getModels().stream()
                   .map(
@@ -318,7 +319,10 @@ public class OneManyService {
                                   model.getTorsionAngleEntities().stream()
                                       .map((residue) -> residue.getConvertedToResidueImmutable())
                                       .collect(Collectors.toList()))
-                              // .chainLCS(ImmutableLCS.builder().build())
+                              .modelLCS(
+                                  model.getLcsResult() != null
+                                      ? model.getLcsResult().getConvertedToLCSImmutable()
+                                      : null)
                               .build())
                   .collect(Collectors.toList()))
           .build();

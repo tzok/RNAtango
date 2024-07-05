@@ -58,6 +58,10 @@ public class StructureModelEntity {
   @JoinColumn(name = "model_sequence_selection_id", nullable = true)
   private SelectionEntity selection; // it means filtered selection
 
+  @OneToOne
+  @JoinColumn(name = "model_lcs_id", nullable = true)
+  private LCSEntity lcsResult; // it means filtered selection
+
   @ManyToOne
   @JoinColumn(name = "source_sequence_selection_id", nullable = true)
   private SelectionEntity sourceSelection; // it means original selection
@@ -84,6 +88,14 @@ public class StructureModelEntity {
 
   public void setMcqValue(Double mcq) {
     this.mcq = mcq;
+  }
+
+  public void setLcsResult(LCSEntity lcs) {
+    this.lcsResult = lcs;
+  }
+
+  public LCSEntity getLcsResult() {
+    return this.lcsResult;
   }
 
   public Double getMcqValue() {

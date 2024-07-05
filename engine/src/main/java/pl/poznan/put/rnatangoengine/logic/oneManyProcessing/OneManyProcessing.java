@@ -48,6 +48,7 @@ public class OneManyProcessing {
   @Autowired StructureModelRepository structureModelRepository;
   @Autowired SelectionChainRepository selectionChainRepository;
   @Autowired ResidueTorsionAngleRepository residueTorsionAngleRepository;
+  @Autowired LcsProcessing lcsProcessing;
 
   public void startTask(UUID taskHashId) throws Exception {
 
@@ -159,6 +160,8 @@ public class OneManyProcessing {
         FragmentMatch fragmentMatch = compareResult.fragmentMatches().get(j);
         StructureModelEntity structureModelEntity = structureModels.get(j);
         DotBracket dotBracket = fragmentMatch.getTargetDotBracket();
+        structureModelEntity.setLcsResult(
+            lcsProcessing.calculate(target, models.get(j), oneManyResultEntity.getThreshold()));
         List<ResidueTorsionAngleEntity> residueTorsionAngleEntities = new ArrayList<>();
         for (int k = 0;
             k < fragmentMatch.getFragmentComparison().getResidueComparisons().size();

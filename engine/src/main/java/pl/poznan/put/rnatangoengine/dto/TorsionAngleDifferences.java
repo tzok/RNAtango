@@ -16,17 +16,11 @@ public interface TorsionAngleDifferences {
 
   String model();
 
-  // List<TorsionAngleDifferencesInChain> differences();
-
   double modelMCQ();
 
   List<Residue> residues();
 
-  // List<List<Double>> values();
-
   List<Double> residueMCQs();
 
-  // double chainMCQ();
-
-  // LCS chainLCS();
+  LCS modelLCS();
 }
