@@ -6,9 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.SelectionChainEntity;
-import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
+import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionChainRepository;
+import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
 import pl.poznan.put.rnatangoengine.dto.ImmutableOneManySetFormResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
@@ -21,8 +22,11 @@ import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
 public class OneManyUtils {
   @Autowired SelectionChainRepository selectionChainRepository;
   @Autowired StructureModelRepository structureModelRepository;
+  @Autowired OneManyRepository oneManyRepository;
+  @Autowired SelectionRepository selectionRepository;
 
-  public void applyCommonSubsequenceToTarget(OneManyResultEntity _oneManyResultEntity) {
+  public OneManyResultEntity applyCommonSubsequenceToTarget(
+      OneManyResultEntity _oneManyResultEntity) {
     StructureModelEntity target = _oneManyResultEntity.getTargetEntity();
     List<StructureModelEntity> models = _oneManyResultEntity.getModels();
     IndexPair localModelIndexes;
@@ -41,23 +45,20 @@ public class OneManyUtils {
         indexPair.fromInclusive = localModelIndexes.fromInclusive;
       }
     }
-    SelectionEntity targetSelectionEntity = target.getSelection();
-    SelectionEntity targetSourceSelectionEntity = target.getSourceSelection();
-    SelectionChainEntity selectionChainEntity = targetSelectionEntity.getSelectionChains().get(0);
+    SelectionChainEntity selectionChainEntity = target.getSelection().getSelectionChains().get(0);
+
     SelectionChainEntity sourceSelectionChainEntity =
-        targetSourceSelectionEntity.getSelectionChains().get(0);
+        target.getSourceSelection().getSelectionChains().get(0);
     selectionChainEntity.setToInclusive(
         sourceSelectionChainEntity.getFromInclusive() + indexPair.toInclusive);
     selectionChainEntity.setFromInclusive(
         sourceSelectionChainEntity.getFromInclusive() + indexPair.fromInclusive);
     target.setFilteredSequence(
         target.getSourceSequence().substring(indexPair.fromInclusive, indexPair.toInclusive));
-    // selectionChainEntity.setSequence(
-    // target.getSourceSequence().substring(indexPair.fromInclusive,
-    // indexPair.toInclusive));
 
     selectionChainRepository.saveAndFlush(selectionChainEntity);
     structureModelRepository.saveAndFlush(target);
+    return oneManyRepository.saveAndFlush(_oneManyResultEntity);
   }
 
   public OneManySetFormResponse buildFormStateResponse(OneManyResultEntity _oneManyResultEntity) {

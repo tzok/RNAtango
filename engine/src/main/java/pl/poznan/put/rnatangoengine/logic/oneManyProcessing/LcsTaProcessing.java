@@ -17,7 +17,7 @@ import pl.poznan.put.rnatangoengine.database.definitions.LCSEntity;
 import pl.poznan.put.rnatangoengine.database.repository.LCSRepository;
 
 @Service
-public class LcsProcessing {
+public class LcsTaProcessing {
   @Autowired LCSRepository lcsRepository;
 
   public LCSEntity calculate(

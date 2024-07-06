@@ -1,4 +1,4 @@
-package pl.poznan.put.rnatangoengine.service;
+package pl.poznan.put.rnatangoengine.service.manyMany;
 
 import org.springframework.stereotype.Service;
 import pl.poznan.put.rnatangoengine.dto.ManyManyInput;

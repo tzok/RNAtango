@@ -17,7 +17,7 @@ public class SelectionEntity {
 
   private String modelName;
 
-  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(
       name = "selection_selection_chain",
       joinColumns = @JoinColumn(name = "selection_chain_id"),
@@ -31,6 +31,10 @@ public class SelectionEntity {
   }
 
   public SelectionEntity(Selection selection) {
+    setSelection(selection);
+  }
+
+  public void setSelection(Selection selection) {
     this.modelName = selection.modelName();
     this.selectionChains = new ArrayList<>();
     selectionChains.addAll(

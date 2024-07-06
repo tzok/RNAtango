@@ -8,7 +8,7 @@ import pl.poznan.put.rnatangoengine.dto.SingleInput;
 import pl.poznan.put.rnatangoengine.dto.SingleOutput;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
-import pl.poznan.put.rnatangoengine.service.SingleService;
+import pl.poznan.put.rnatangoengine.service.single.SingleService;
 
 @RestController
 public class SingleController {

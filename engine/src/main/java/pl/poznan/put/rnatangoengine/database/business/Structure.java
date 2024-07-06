@@ -343,7 +343,7 @@ public class Structure {
     return filteredContent;
   }
 
-  public String getModelSequence() throws Exception {
+  public String getFirstSequence() throws Exception {
     if (this.structureModels.size() == 1 && this.structureModels.get(0).chains().size() == 1) {
       return this.structureModels.get(0).chains().get(0).sequence();
     }

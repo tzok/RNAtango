@@ -16,10 +16,16 @@ public class QueueService {
   @Autowired private AmqpTemplate rabbitTemplate;
   @Autowired private Queue queue;
 
-  private static Logger logger = LogManager.getLogger(QueueService.class.toString());
+  private static Logger logger = LogManager.getLogger(QueueService.class);
 
   public void sendSingle(UUID hashId) throws Exception {
     Task task = ImmutableTask.builder().taskHashId(hashId).type(TaskType.Single).build();
+    rabbitTemplate.convertAndSend(queue.getName(), task);
+    logger.info("Sending Message to the Queue : " + task);
+  }
+
+  public void sendOneMany(UUID hashId) throws Exception {
+    Task task = ImmutableTask.builder().taskHashId(hashId).type(TaskType.OneMany).build();
     rabbitTemplate.convertAndSend(queue.getName(), task);
     logger.info("Sending Message to the Queue : " + task);
   }

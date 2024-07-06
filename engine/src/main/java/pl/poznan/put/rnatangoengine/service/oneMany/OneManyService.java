@@ -1,6 +1,5 @@
-package pl.poznan.put.rnatangoengine.service;
+package pl.poznan.put.rnatangoengine.service.oneMany;
 
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,34 +8,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
-import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
-import pl.poznan.put.rnatangoengine.dto.ImmutableNucleotideRange;
 import pl.poznan.put.rnatangoengine.dto.ImmutableOneManyOutput;
-import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
-import pl.poznan.put.rnatangoengine.dto.ImmutableSelectionChain;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTaskIdResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTorsionAngleDifferences;
-import pl.poznan.put.rnatangoengine.dto.IndexPair;
 import pl.poznan.put.rnatangoengine.dto.OneManyOutput;
 import pl.poznan.put.rnatangoengine.dto.OneManySetFormInput;
 import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
 import pl.poznan.put.rnatangoengine.dto.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
-import pl.poznan.put.rnatangoengine.dto.StructureChainSequence;
-import pl.poznan.put.rnatangoengine.dto.StructureComparingResult;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
-import pl.poznan.put.rnatangoengine.logic.CompareStructures;
+import pl.poznan.put.rnatangoengine.logic.StructureLcs;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
 import pl.poznan.put.rnatangoengine.logic.oneManyProcessing.OneManyProcessing;
+import pl.poznan.put.rnatangoengine.service.StructureModelService;
 import pl.poznan.put.rnatangoengine.utils.ModelTargetMatchingException;
 import pl.poznan.put.rnatangoengine.utils.OneManyUtils;
 
@@ -47,14 +39,16 @@ public class OneManyService {
   @Autowired SelectionRepository selectionRepository;
   @Autowired StructureProcessingService structureProcessingService;
   @Autowired StructureModelRepository structureModelRepository;
-  @Autowired CompareStructures compareStructures;
+  @Autowired StructureLcs compareStructures;
   @Autowired OneManyUtils oneManyUtils;
   @Autowired OneManyProcessing oneManyProcessing;
+  @Autowired OneManyTaskService oneManyTaskService;
+  @Autowired StructureModelService structureModelService;
 
   public OneManySetFormResponse oneManyFormAddModel(String taskId, MultipartFile file) {
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
-    if (!_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
+    if (_oneManyResultEntity == null || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can not modify processed task");
     }
     if (_oneManyResultEntity.getModels().size() >= 10) {
@@ -62,84 +56,13 @@ public class OneManyService {
           HttpStatus.NOT_ACCEPTABLE, "Number of models is limited to 10");
     }
     try {
-      Structure structure =
-          structureProcessingService.process(
-              new String(file.getBytes(), StandardCharsets.UTF_8), file.getOriginalFilename());
-
-      String structureFilteredContent =
-          structure.filterParseCif("1", _oneManyResultEntity.getChain());
-
-      StructureComparingResult comparingResult =
-          compareStructures.compareTargetAndModelSequences(
-              _oneManyResultEntity.getTargetEntity().getSourceSequence(),
-              structure
-                  .getContinuousSequences()
-                  .getChainSubsequence(_oneManyResultEntity.getChain()));
-
-      StructureChainSequence bestSubsequence = comparingResult.getModel();
-      SelectionEntity selectionEntity =
-          new SelectionEntity(
-              ImmutableSelection.builder()
-                  .modelName("1")
-                  .addChains(
-                      ImmutableSelectionChain.builder()
-                          .name(_oneManyResultEntity.getChain())
-                          .nucleotideRange(
-                              ImmutableNucleotideRange.builder()
-                                  .fromInclusive(
-                                      bestSubsequence.getFrom()
-                                          + comparingResult.getModelFromInclusiveRelative())
-                                  .toInclusive(
-                                      bestSubsequence.getFrom()
-                                          + comparingResult.getModelToInclusiveRelative()
-                                          + comparingResult.getModelFromInclusiveRelative())
-                                  .build())
-                          .build())
-                  .build());
-      SelectionEntity sourceSelectionEntity =
-          new SelectionEntity(
-              ImmutableSelection.builder()
-                  .modelName("1")
-                  .addChains(
-                      ImmutableSelectionChain.builder()
-                          .name(_oneManyResultEntity.getChain())
-                          .nucleotideRange(
-                              ImmutableNucleotideRange.builder()
-                                  .fromInclusive(bestSubsequence.getFrom())
-                                  .toInclusive(bestSubsequence.getTo())
-                                  .build())
-                          .build())
-                  .build());
-      selectionEntity = selectionRepository.saveAndFlush(selectionEntity);
-      sourceSelectionEntity = selectionRepository.saveAndFlush(sourceSelectionEntity);
-      StructureModelEntity model =
-          new StructureModelEntity(
-              structureFilteredContent.getBytes(),
-              file.getOriginalFilename(),
-              selectionEntity,
-              sourceSelectionEntity);
-      model.setTargetRangeRelative(
-          new IndexPair(
-              comparingResult.getTargetFromInclusiveRelative(),
-              comparingResult.getTargetToInclusiveRelative()));
-      model.setFilteredSequence(comparingResult.getSequence());
-      model.setSourceSequence(bestSubsequence.getSequence());
-      model.setStructureMolecule(structure.getStructureMoleculeName());
-      model = structureModelRepository.saveAndFlush(model);
-      _oneManyResultEntity.addModel(model);
-      _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
-
-      oneManyUtils.applyCommonSubsequenceToTarget(_oneManyResultEntity);
-
-      _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
-
-      return oneManyUtils.buildFormStateResponse(_oneManyResultEntity);
-
+      return oneManyUtils.buildFormStateResponse(
+          oneManyTaskService.addModel(
+              file.getBytes(), file.getOriginalFilename(), UUID.fromString(taskId)));
     } catch (ModelTargetMatchingException e) {
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "No matching");
     } catch (Exception e) {
       e.printStackTrace();
-
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Error during comparing model to target");
     }
@@ -150,83 +73,30 @@ public class OneManyService {
 
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
-    if (!_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
+    if (_oneManyResultEntity == null || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
     }
-    _oneManyResultEntity = oneManyRepository.getByHashId(UUID.fromString(taskId));
-    _oneManyResultEntity.removeModel(
-        structureModelRepository.getByHashId(UUID.fromString(modelId)));
-    _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
-    structureModelRepository.deleteByHashId(UUID.fromString(modelId));
-    oneManyUtils.applyCommonSubsequenceToTarget(_oneManyResultEntity);
-
-    return oneManyUtils.buildFormStateResponse(_oneManyResultEntity);
+    try {
+      return oneManyUtils.buildFormStateResponse(
+          oneManyTaskService.removeModel(UUID.fromString(modelId), UUID.fromString(taskId)));
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error during processing request");
+    }
   }
 
   public TaskIdResponse oneMany(OneManySetFormInput input) {
     try {
-      Structure structure = structureProcessingService.process(input.targetHashId());
-      byte[] structureFilteredContent =
-          structure.filterParseCif(input.selection(), false).getBytes();
-      StructureChainSequence chainSequence =
-          structure
-              .getContinuousSequences()
-              .getChainSubsequence(input.selection().chains().get(0).name())
-              .get(0);
-      SelectionEntity sourceSelection =
-          selectionRepository.saveAndFlush(
-              new SelectionEntity(
-                  ImmutableSelection.builder()
-                      .modelName(input.selection().modelName())
-                      .addChains(
-                          ImmutableSelectionChain.builder()
-                              .name(input.selection().chains().get(0).name())
-                              .nucleotideRange(
-                                  ImmutableNucleotideRange.builder()
-                                      .fromInclusive(chainSequence.getFrom())
-                                      .toInclusive(chainSequence.getTo())
-                                      .build())
-                              .build())
-                      .build()));
-      SelectionEntity selection =
-          selectionRepository.saveAndFlush(
-              new SelectionEntity(
-                  ImmutableSelection.builder()
-                      .modelName(input.selection().modelName())
-                      .addChains(
-                          ImmutableSelectionChain.builder()
-                              .name(input.selection().chains().get(0).name())
-                              .nucleotideRange(
-                                  ImmutableNucleotideRange.builder()
-                                      .fromInclusive(chainSequence.getFrom())
-                                      .toInclusive(chainSequence.getTo())
-                                      .build())
-                              .build())
-                      .build()));
-      StructureModelEntity target =
-          structureModelRepository.saveAndFlush(
-              new StructureModelEntity(
-                  structureFilteredContent, structure.getStructureName(), sourceSelection));
-      target.setSelection(selection);
-      OneManyResultEntity _oneManyResultEntity =
-          oneManyRepository.saveAndFlush(
-              new OneManyResultEntity(
-                  target,
-                  selection.getModelName(),
-                  selection.getSelectionChains().get(0).getName()));
-      try {
-        fileRepository.deleteByHashId(UUID.fromString(input.targetHashId()));
-      } catch (Exception e) {
-      }
-      target.setStructureMolecule(structure.getStructureMoleculeName());
-      target.setContent(structureFilteredContent);
-      target.setSourceSequence(structure.getModelSequence());
-      target.setFilteredSequence(structure.getModelSequence());
-      target = structureModelRepository.saveAndFlush(target);
-      _oneManyResultEntity.setTargetEntity(target);
-      _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
       return ImmutableTaskIdResponse.builder()
-          .taskId(_oneManyResultEntity.getHashId().toString())
+          .taskId(
+              oneManyTaskService
+                  .setTask(
+                      structureModelService.createModelFromUpload(
+                          input.targetHashId(), input.selection()),
+                      input.selection().modelName(),
+                      input.selection().chains().get(0).name())
+                  .getHashId()
+                  .toString())
           .build();
     } catch (Exception e) {
       e.printStackTrace();
@@ -237,22 +107,28 @@ public class OneManyService {
   public TaskIdResponse oneMany(OneManySubmitFormInput input) {
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(input.taskHashId()));
-
+    if (_oneManyResultEntity == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task does not exist");
+    }
     if (_oneManyResultEntity.getStatus() != Status.SETTING) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
     }
-    _oneManyResultEntity.setThreshold(input.threshold());
-    _oneManyResultEntity.setAnglesToAnalyze(input.angles());
-    _oneManyResultEntity.setStatus(Status.WAITING);
-    _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
-    try {
-      oneManyProcessing.startTask(UUID.fromString(input.taskHashId()));
-    } catch (Exception e) {
-      e.printStackTrace();
+    if (_oneManyResultEntity.getModels().size() == 0) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You need to add at least one model");
     }
-    return ImmutableTaskIdResponse.builder()
-        .taskId(_oneManyResultEntity.getHashId().toString())
-        .build();
+    ;
+    try {
+      return ImmutableTaskIdResponse.builder()
+          .taskId(
+              oneManyTaskService
+                  .submitTask(
+                      UUID.fromString(input.taskHashId()), input.angles(), input.threshold())
+                  .getHashId()
+                  .toString())
+          .build();
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task does not exist");
+    }
   }
 
   public OneManySetFormResponse oneManyFormState(String taskId) {
@@ -329,7 +205,7 @@ public class OneManyService {
                   .collect(Collectors.toList()))
           .build();
     } else {
-      throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Task not available");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task not available");
     }
   }
 

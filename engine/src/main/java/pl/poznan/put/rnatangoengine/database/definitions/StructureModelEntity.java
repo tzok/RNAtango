@@ -31,16 +31,17 @@ public class StructureModelEntity {
 
   public StructureModelEntity() {}
 
-  public StructureModelEntity(FileEntity file, SelectionEntity selection) {
+  public StructureModelEntity(FileEntity file, SelectionEntity sourceSelection) {
     this.content = file.getContent();
     this.filename = file.getFilename();
-    this.sourceSelection = selection;
+    this.sourceSelection = sourceSelection;
   }
 
-  public StructureModelEntity(byte[] structureContent, String filename, SelectionEntity selection) {
+  public StructureModelEntity(
+      byte[] structureContent, String filename, SelectionEntity sourceSelection) {
     this.content = structureContent;
     this.filename = filename;
-    this.sourceSelection = selection;
+    this.sourceSelection = sourceSelection;
   }
 
   public StructureModelEntity(
@@ -54,16 +55,14 @@ public class StructureModelEntity {
     this.selection = selection;
   }
 
-  @ManyToOne
-  @JoinColumn(name = "model_sequence_selection_id", nullable = true)
+  @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   private SelectionEntity selection; // it means filtered selection
 
   @OneToOne
   @JoinColumn(name = "model_lcs_id", nullable = true)
   private LCSEntity lcsResult; // it means filtered selection
 
-  @ManyToOne
-  @JoinColumn(name = "source_sequence_selection_id", nullable = true)
+  @OneToOne(fetch = FetchType.EAGER)
   private SelectionEntity sourceSelection; // it means original selection
 
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -143,7 +142,11 @@ public class StructureModelEntity {
   }
 
   public SelectionEntity getSelection() {
-    return selection;
+    if (selection == null) {
+      this.selection =
+          new SelectionEntity(this.getSourceSelection().getConvertedToSelectionImmutable());
+    }
+    return this.selection;
   }
 
   public void setSourceSelection(SelectionEntity selectionEntity) {

@@ -25,14 +25,14 @@ public class SingleResultEntity {
   private String fileStructureMolecule;
   private String fileId;
 
-  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(
       name = "result_selection",
       joinColumns = @JoinColumn(name = "selection_id"),
       inverseJoinColumns = @JoinColumn(name = "result_id"))
   private List<SelectionEntity> selections;
 
-  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(
       name = "result_chain_torsion_angle",
       joinColumns = @JoinColumn(name = "chain_torsion_angle_id"),

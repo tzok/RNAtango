@@ -14,7 +14,7 @@ import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
 import pl.poznan.put.rnatangoengine.dto.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
-import pl.poznan.put.rnatangoengine.service.OneManyService;
+import pl.poznan.put.rnatangoengine.service.oneMany.OneManyService;
 
 @RestController
 public class OneManyController {

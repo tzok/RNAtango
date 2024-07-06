@@ -1,6 +1,8 @@
 package pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities;
 
 import jakarta.persistence.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -24,7 +26,7 @@ public class OneManyResultEntity {
   private String model;
   private String chain;
 
-  @Column(length = 5000)
+  @Column(length = 1000)
   protected String errorLog;
 
   protected String userErrorLog;
@@ -38,11 +40,11 @@ public class OneManyResultEntity {
   @Convert(converter = AngleListConverter.class)
   private List<Angle> anglesToAnalyze;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @OneToOne
   @JoinColumn(name = "structure_target_id", insertable = true, updatable = true, nullable = true)
   private StructureModelEntity target;
 
-  @ManyToMany
+  @OneToMany(fetch = FetchType.EAGER)
   @JoinTable(
       name = "onemany_models",
       joinColumns = @JoinColumn(name = "onemany_id"),
@@ -97,7 +99,14 @@ public class OneManyResultEntity {
   }
 
   public void setErrorLog(String errorLog) {
-    this.errorLog = errorLog;
+    this.errorLog = errorLog.substring(0, Math.min(errorLog.length(), 1000));
+  }
+
+  public void setErrorLog(Exception e) {
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    setErrorLog(sw.toString());
   }
 
   public void setUserErrorLog(String userErrorLog) {

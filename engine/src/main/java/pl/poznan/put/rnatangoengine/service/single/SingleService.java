@@ -1,4 +1,4 @@
-package pl.poznan.put.rnatangoengine.service;
+package pl.poznan.put.rnatangoengine.service.single;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
+import pl.poznan.put.rnatangoengine.service.QueueService;
 
 @Service
 public class SingleService {

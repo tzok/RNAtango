@@ -8,7 +8,7 @@ import pl.poznan.put.rnatangoengine.dto.ManyManyInput;
 import pl.poznan.put.rnatangoengine.dto.ManyManyOutput;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
-import pl.poznan.put.rnatangoengine.service.ManyManyService;
+import pl.poznan.put.rnatangoengine.service.manyMany.ManyManyService;
 
 @RestController
 public class ManyManyController {

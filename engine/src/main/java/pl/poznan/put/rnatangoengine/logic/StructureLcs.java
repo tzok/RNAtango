@@ -8,7 +8,7 @@ import pl.poznan.put.rnatangoengine.dto.StructureComparingResult;
 import pl.poznan.put.rnatangoengine.utils.ModelTargetMatchingException;
 
 @Service
-public class CompareStructures {
+public class StructureLcs {
 
   class LCSResult {
     public int targetBeginIndex;
