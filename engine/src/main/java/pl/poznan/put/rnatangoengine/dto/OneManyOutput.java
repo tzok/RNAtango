@@ -12,9 +12,13 @@ import org.immutables.value.Value;
 public interface OneManyOutput {
   String model();
 
+  String targetHashId();
+
   String chain();
 
   Double lcsThreshold();
+
+  List<Angle> requestedAngles();
 
   List<TorsionAngleDifferences> differences();
 }

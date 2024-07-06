@@ -300,6 +300,8 @@ public class OneManyService {
     if (_oneManyResultEntity != null && _oneManyResultEntity.getStatus().equals(Status.SUCCESS)) {
       return ImmutableOneManyOutput.builder()
           .model(_oneManyResultEntity.getModelNumber())
+          .targetHashId(_oneManyResultEntity.getTargetEntity().getHashId().toString())
+          .addAllRequestedAngles(_oneManyResultEntity.getAnglesToAnalyze())
           .chain(_oneManyResultEntity.getChain())
           .lcsThreshold(_oneManyResultEntity.getThreshold())
           .addAllDifferences(
