@@ -176,6 +176,7 @@ public class OneManyService {
       return ImmutableOneManyOutput.builder()
           .model(_oneManyResultEntity.getModelNumber())
           .targetHashId(_oneManyResultEntity.getTargetEntity().getHashId().toString())
+          .targetFileName(_oneManyResultEntity.getTargetEntity().getFilename())
           .addAllRequestedAngles(_oneManyResultEntity.getAnglesToAnalyze())
           .chain(_oneManyResultEntity.getChain())
           .lcsThreshold(_oneManyResultEntity.getThreshold())

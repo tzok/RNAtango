@@ -110,6 +110,17 @@ public class TargetModelsComparsionService {
     return residueTorsionAngleRepository.saveAndFlush(residueTorsionAngleEntity);
   }
 
+  private byte[] removeSvgViewBox(byte content[]) {
+
+    String contentString = new String(content, StandardCharsets.UTF_8);
+    String[] lines = contentString.split("\\n");
+    lines[2] = lines[2].substring(0, lines[2].indexOf("width=") - 1);
+    lines[5] = lines[5].substring(0, lines[5].indexOf("viewBox=") - 1);
+    lines[6] = lines[6].substring(lines[6].indexOf("preserveAspectRatio=") - 1);
+
+    return String.join(System.lineSeparator(), lines).getBytes();
+  }
+
   public void compareModel(
       FragmentMatch fragmentMatch,
       StructureModelEntity structureModelEntity,
@@ -128,9 +139,11 @@ public class TargetModelsComparsionService {
 
     try {
       structureModelEntity.setSecondaryStructureVisualizationSVG(
-          SVGHelper.export(
-              SecondaryStructureVisualizer.visualize(fragmentMatch, AngleDeltaMapper.getInstance()),
-              Format.SVG));
+          removeSvgViewBox(
+              SVGHelper.export(
+                  SecondaryStructureVisualizer.visualize(
+                      fragmentMatch, AngleDeltaMapper.getInstance()),
+                  Format.SVG)));
     } catch (Exception el) {
       el.printStackTrace();
     }

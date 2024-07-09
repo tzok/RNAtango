@@ -82,6 +82,7 @@ public class StructureProcessingService {
         parsedStructure =
             parseStructureFile(structureFileContent, FileFormat.PDB, filenameElements[0]);
       }
+      parsedStructure.setStructureName(file.getFilename());
     }
     if (parsedStructure == null) {
       throw new FileNotFoundException("Structure file could not be found");

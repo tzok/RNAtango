@@ -90,6 +90,7 @@ public class OneManyUtils {
                         ImmutableStructureModelResponse.builder()
                             .fileId(modelI.getHashId().toString())
                             .sequence(modelI.getFilteredSequence())
+                            .fileName(modelI.getFilename())
                             .sourceSelection(
                                 ImmutableSelection.builder()
                                     .from(

@@ -12,6 +12,8 @@ public interface StructureModelResponse {
 
   String fileId();
 
+  String fileName();
+
   String sequence();
 
   Selection selection();

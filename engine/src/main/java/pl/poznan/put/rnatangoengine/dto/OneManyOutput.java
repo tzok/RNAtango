@@ -14,6 +14,8 @@ public interface OneManyOutput {
 
   String targetHashId();
 
+  String targetFileName();
+
   String chain();
 
   Double lcsThreshold();
