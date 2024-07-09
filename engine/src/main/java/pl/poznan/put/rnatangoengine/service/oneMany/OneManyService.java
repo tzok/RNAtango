@@ -91,8 +91,7 @@ public class OneManyService {
           .taskId(
               oneManyTaskService
                   .setTask(
-                      structureModelService.createModelFromUpload(
-                          input.targetHashId(), input.selection()),
+                      structureModelService.createModel(input.targetHashId(), input.selection()),
                       input.selection().modelName(),
                       input.selection().chains().get(0).name())
                   .getHashId()

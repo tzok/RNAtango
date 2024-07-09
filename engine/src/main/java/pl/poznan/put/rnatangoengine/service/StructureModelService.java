@@ -39,13 +39,14 @@ public class StructureModelService {
   @Autowired QueueService queueService;
   @Autowired SelectionChainRepository selectionChainRepository;
 
-  public StructureModelEntity createModelFromUpload(String fileHashId, Selection residueSelection)
+  public StructureModelEntity createModel(String fileHashId, Selection residueSelection)
       throws Exception {
 
     Structure structure = structureProcessingService.process(fileHashId);
-
-    fileRepository.deleteByHashId(UUID.fromString(fileHashId));
-
+    try {
+      fileRepository.deleteByHashId(UUID.fromString(fileHashId));
+    } catch (Exception e) {
+    }
     byte[] structureFilteredContent = structure.filterParseCif(residueSelection, false).getBytes();
     StructureChainSequence chainSequence =
         structure
