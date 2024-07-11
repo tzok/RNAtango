@@ -33,6 +33,13 @@ public class SelectionChainEntity {
     this.sequence = "";
   }
 
+  public SelectionChainEntity(String name, String sequence, int fromInclusive, int toInclusive) {
+    this.name = name;
+    this.fromInclusive = fromInclusive;
+    this.toInclusive = toInclusive;
+    this.sequence = sequence;
+  }
+
   public String getName() {
     return this.name;
   }
@@ -64,6 +71,7 @@ public class SelectionChainEntity {
   public SelectionChain getConvertedToSelectionChainImmutable() {
     return ImmutableSelectionChain.builder()
         .name(this.name)
+        .sequence(this.sequence)
         .nucleotideRange(
             ImmutableNucleotideRange.builder()
                 .fromInclusive(this.fromInclusive)

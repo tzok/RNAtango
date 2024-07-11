@@ -16,19 +16,19 @@ services:
       - rabbit_network
     volumes:
       - .:/opt/rnatango
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    #restart: always
-    ports:
-     - "5050:5050"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@rnapolis.pl
-      PGADMIN_DEFAULT_PASSWORD: zaq1@WSXcde3
-      PGADMIN_LISTEN_PORT: 5050
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-    networks:
-      - db_network
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   #restart: always
+  #   ports:
+  #    - "5050:5050"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@rnapolis.pl
+  #     PGADMIN_DEFAULT_PASSWORD: zaq1@WSXcde3
+  #     PGADMIN_LISTEN_PORT: 5050
+  #   volumes:
+  #     - pgadmin-data:/var/lib/pgadmin
+  #   networks:
+  #     - db_network
   nginx:
     build:
       context: ./nginx

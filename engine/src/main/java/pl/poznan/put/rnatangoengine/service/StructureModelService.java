@@ -155,6 +155,23 @@ public class StructureModelService {
     return structureModelRepository.saveAndFlush(structureModelEntity);
   }
 
+  public StructureModelEntity createInitalModelFromBytes(byte[] content, String filename)
+      throws Exception {
+
+    Structure structure =
+        structureProcessingService.process(new String(content, StandardCharsets.UTF_8), filename);
+    content =
+        structure
+            .filterParseCif(ImmutableSelection.builder().modelName("1").build(), true)
+            .getBytes();
+    SelectionEntity sourceSelectionEntity =
+        selectionRepository.saveAndFlush(
+            new SelectionEntity(structure.getContinuousSequences().convertToSelection()));
+    StructureModelEntity structureModelEntity =
+        new StructureModelEntity(content, filename, sourceSelectionEntity);
+    return structureModelRepository.saveAndFlush(structureModelEntity);
+  }
+
   public StructureModelEntity createModelFromBytes(byte[] content, String filename, String chain)
       throws Exception {
     Structure structure =

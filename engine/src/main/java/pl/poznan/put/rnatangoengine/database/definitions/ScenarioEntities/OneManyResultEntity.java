@@ -44,7 +44,7 @@ public class OneManyResultEntity {
   @JoinColumn(name = "structure_target_id", insertable = true, updatable = true, nullable = true)
   private StructureModelEntity target;
 
-  @OneToMany(fetch = FetchType.EAGER)
+  @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   @JoinTable(
       name = "onemany_models",
       joinColumns = @JoinColumn(name = "onemany_id"),

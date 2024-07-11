@@ -3,6 +3,7 @@ package pl.poznan.put.rnatangoengine.dto;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.*;
 
 public class StructureSequences {
   String modelName;
@@ -26,5 +27,29 @@ public class StructureSequences {
   public List<StructureChainSequence> getChainSubsequence(String chain) throws Exception {
     if (chains.get(chain).size() == 0) throw new Exception("No sequences was found");
     return chains.get(chain);
+  }
+
+  public Selection convertToSelection() {
+
+    return ImmutableSelection.builder()
+        .modelName(this.modelName)
+        .addAllChains(
+            this.chains.entrySet().stream()
+                .flatMap(
+                    entry ->
+                        entry.getValue().stream()
+                            .map(
+                                chain ->
+                                    ImmutableSelectionChain.builder()
+                                        .name(entry.getKey())
+                                        .sequence(chain.getSequence())
+                                        .nucleotideRange(
+                                            ImmutableNucleotideRange.builder()
+                                                .fromInclusive(chain.getFrom())
+                                                .toInclusive(chain.getTo())
+                                                .build())
+                                        .build()))
+                .collect(Collectors.toList()))
+        .build();
   }
 }

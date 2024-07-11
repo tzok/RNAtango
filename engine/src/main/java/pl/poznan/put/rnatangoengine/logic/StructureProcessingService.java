@@ -16,6 +16,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -66,7 +67,7 @@ public class StructureProcessingService {
 
     } else if (structureCode.length() > 4) {
       FileEntity file = fileRepository.getByHashId(UUID.fromString(structureCode));
-      if (file == null) {
+      if (Objects.equals(file, null)) {
         throw new ResponseStatusException(HttpStatus.GONE, "Structure file could not be found");
       }
       structureFileContent = new String(file.getContent(), StandardCharsets.UTF_8);
@@ -84,7 +85,7 @@ public class StructureProcessingService {
       }
       parsedStructure.setStructureName(file.getFilename());
     }
-    if (parsedStructure == null) {
+    if (Objects.equals(parsedStructure, null)) {
       throw new FileNotFoundException("Structure file could not be found");
     } else {
       return parsedStructure;
@@ -173,7 +174,7 @@ public class StructureProcessingService {
     ClassLoader classLoader = getClass().getClassLoader();
     InputStream inputStream = classLoader.getResourceAsStream("exampleStructure/" + exampleName);
 
-    if (inputStream == null) {
+    if (Objects.equals(inputStream, null)) {
       throw new IllegalArgumentException("example not found! " + exampleName);
     } else {
       InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);

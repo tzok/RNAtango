@@ -43,6 +43,7 @@ public class SelectionEntity {
                 (selectionChain) ->
                     new SelectionChainEntity(
                         selectionChain.name(),
+                        selectionChain.sequence().orElse(""),
                         selectionChain.nucleotideRange().fromInclusive(),
                         selectionChain.nucleotideRange().toInclusive()))
             .collect(Collectors.toList()));

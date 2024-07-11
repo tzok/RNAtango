@@ -8,12 +8,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import pl.poznan.put.rnatangoengine.dto.OneManyOutput;
-import pl.poznan.put.rnatangoengine.dto.OneManySetFormInput;
-import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
-import pl.poznan.put.rnatangoengine.dto.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManyOutput;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySetFormInput;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySetFormResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.service.oneMany.OneManyService;
 
 @RestController

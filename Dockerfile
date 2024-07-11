@@ -7,6 +7,8 @@ RUN  apk update \
   && apk add maven \
   && apk add git \
   && apk add bash \ 
+  && apk add build-base \
+  && apk add libc6-compat \ 
   && apk add --update ttf-dejavu && rm -rf /var/cache/apk/*
 
 RUN mkdir -p /opt/rnatango

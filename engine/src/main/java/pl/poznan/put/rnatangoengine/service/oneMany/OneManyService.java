@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.service.oneMany;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,17 +15,17 @@ import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
-import pl.poznan.put.rnatangoengine.dto.ImmutableOneManyOutput;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTaskIdResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTorsionAngleDifferences;
-import pl.poznan.put.rnatangoengine.dto.OneManyOutput;
-import pl.poznan.put.rnatangoengine.dto.OneManySetFormInput;
-import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
-import pl.poznan.put.rnatangoengine.dto.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.ImmutableOneManyOutput;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManyOutput;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySetFormInput;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySetFormResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.logic.StructureLcs;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
 import pl.poznan.put.rnatangoengine.logic.oneManyProcessing.OneManyProcessing;
@@ -48,7 +49,8 @@ public class OneManyService {
   public OneManySetFormResponse oneManyFormAddModel(String taskId, MultipartFile file) {
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
-    if (_oneManyResultEntity == null || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
+    if (Objects.equals(_oneManyResultEntity, null)
+        || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can not modify processed task");
     }
     if (_oneManyResultEntity.getModels().size() >= 10) {
@@ -73,7 +75,8 @@ public class OneManyService {
 
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
-    if (_oneManyResultEntity == null || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
+    if (Objects.equals(_oneManyResultEntity, null)
+        || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
     }
     try {
@@ -106,7 +109,7 @@ public class OneManyService {
   public TaskIdResponse oneMany(OneManySubmitFormInput input) {
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(input.taskHashId()));
-    if (_oneManyResultEntity == null) {
+    if (Objects.equals(_oneManyResultEntity, null)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task does not exist");
     }
     if (_oneManyResultEntity.getStatus() != Status.SETTING) {
@@ -134,7 +137,7 @@ public class OneManyService {
     try {
       OneManyResultEntity _oneManyResultEntity =
           oneManyRepository.getByHashId(UUID.fromString(taskId));
-      if (_oneManyResultEntity == null
+      if (Objects.equals(_oneManyResultEntity, null)
           || !_oneManyResultEntity.getStatus().equals(Status.SETTING)) {
         throw new Exception("task does not exist");
       }

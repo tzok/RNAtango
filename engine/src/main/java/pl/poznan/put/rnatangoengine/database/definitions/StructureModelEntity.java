@@ -2,6 +2,7 @@ package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.dto.IndexPair;
 
@@ -142,7 +143,7 @@ public class StructureModelEntity {
   }
 
   public SelectionEntity getSelection() {
-    if (selection == null) {
+    if (Objects.equals(selection, null)) {
       this.selection =
           new SelectionEntity(this.getSourceSelection().getConvertedToSelectionImmutable());
     }
