@@ -12,6 +12,9 @@ import pl.poznan.put.rnatangoengine.dto.TorsionAngleDifferences;
 @JsonSerialize(as = ImmutableOneManyOutput.class)
 @JsonDeserialize(as = ImmutableOneManyOutput.class)
 public interface OneManyOutput {
+
+  String resultRemovedAfter();
+
   String model();
 
   String targetHashId();

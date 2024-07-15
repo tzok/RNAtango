@@ -15,6 +15,8 @@ public class SelectionChainEntity {
   protected Long id;
 
   private String name;
+
+  @Column(length = 5000)
   private String sequence;
 
   private int fromInclusive;

@@ -19,7 +19,10 @@ public class StructureModelEntity {
   private String fileStructureName;
   private String fileStructureMolecule;
 
+  @Column(length = 5000)
   private String sourceSequence;
+
+  @Column(length = 5000)
   private String filteredSequence;
 
   private Integer toInclusiveTargetRelative;

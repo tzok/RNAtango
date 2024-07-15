@@ -310,8 +310,7 @@ public class Structure {
         discontinuousMemory.put(
             chain.identifier(),
             discontinuousMemory.getOrDefault(chain.identifier(), 0)
-                + chain.residueIdentifiers().size()
-                + 1);
+                + chain.residueIdentifiers().size());
       }
     }
     this.filteredContent =

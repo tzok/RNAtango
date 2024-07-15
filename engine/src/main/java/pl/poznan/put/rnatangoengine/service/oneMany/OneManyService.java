@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.service.oneMany;
 
+import java.text.SimpleDateFormat;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -178,6 +179,10 @@ public class OneManyService {
     if (_oneManyResultEntity != null && _oneManyResultEntity.getStatus().equals(Status.SUCCESS)) {
       return ImmutableOneManyOutput.builder()
           .model(_oneManyResultEntity.getModelNumber())
+          .resultRemovedAfter(
+              _oneManyResultEntity.getRemoveAfter() != null
+                  ? new SimpleDateFormat("dd-MM-yyyy").format(_oneManyResultEntity.getRemoveAfter())
+                  : "")
           .targetHashId(_oneManyResultEntity.getTargetEntity().getHashId().toString())
           .targetFileName(_oneManyResultEntity.getTargetEntity().getFilename())
           .addAllRequestedAngles(_oneManyResultEntity.getAnglesToAnalyze())
