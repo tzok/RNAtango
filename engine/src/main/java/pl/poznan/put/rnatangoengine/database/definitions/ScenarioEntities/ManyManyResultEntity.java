@@ -26,6 +26,8 @@ public class ManyManyResultEntity {
   @Convert(converter = AngleListConverter.class)
   private List<Angle> anglesToAnalyze;
 
+  private Double threshold;
+
   @Column(length = 1000)
   protected String errorLog;
 
@@ -33,6 +35,11 @@ public class ManyManyResultEntity {
 
   protected String userErrorLog;
   protected Status status;
+
+  private String chain;
+
+  @Column(length = 5000)
+  private String finalSequence;
 
   @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   @JoinTable(
@@ -64,6 +71,10 @@ public class ManyManyResultEntity {
     this.removeAfter = Date.valueOf(LocalDate.now().plus(1, ChronoUnit.WEEKS));
     this.errorLog = "";
     this.userErrorLog = "";
+  }
+
+  public void removeModel(StructureModelEntity model) {
+    models.remove(model);
   }
 
   public void setCommonSequences(List<CommonChainSequenceEntity> commonSequences) {
@@ -115,5 +126,37 @@ public class ManyManyResultEntity {
 
   public void setUserErrorLog(String userErrorLog) {
     this.userErrorLog = userErrorLog;
+  }
+
+  public void setAnglesToAnalyze(List<Angle> angle) {
+    this.anglesToAnalyze = angle;
+  }
+
+  public List<Angle> getAnglesToAnalyze() {
+    return this.anglesToAnalyze;
+  }
+
+  public void setThreshold(Double treshold) {
+    this.threshold = treshold;
+  }
+
+  public Double getThreshold() {
+    return threshold;
+  }
+
+  public void setChainToAnalyze(String chain) {
+    this.chain = chain;
+  }
+
+  public String getChainToAnalyze() {
+    return chain;
+  }
+
+  public void setSequenceToAnalyze(String sequence) {
+    this.finalSequence = sequence;
+  }
+
+  public String getSequenceToAnalyze() {
+    return finalSequence;
   }
 }

@@ -7,10 +7,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import pl.poznan.put.rnatangoengine.database.definitions.CommonChainSequenceEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.ManyManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.SelectionChainEntity;
@@ -19,7 +22,10 @@ import pl.poznan.put.rnatangoengine.database.repository.CommonChainSequenceRepos
 import pl.poznan.put.rnatangoengine.database.repository.ManyManyRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
+import pl.poznan.put.rnatangoengine.dto.Angle;
+import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
+import pl.poznan.put.rnatangoengine.service.QueueService;
 import pl.poznan.put.rnatangoengine.service.StructureModelService;
 
 @Service
@@ -30,31 +36,39 @@ public class ManyManyTaskService {
   @Autowired StructureModelRepository structureModelRepository;
   @Autowired CommonChainSequenceRepository commonChainSequenceRepository;
   @Autowired StructureModelService structureModelService;
-  private static Logger logger = LogManager.getLogger(ManyManyTaskService.class);
+  @Autowired QueueService queueService;
 
-  // public OneManyResultEntity submitTask(
-  //     UUID oneManyEntityHashId, List<Angle> angles, Double threshold) throws Exception {
-  //   OneManyResultEntity _oneManyResultEntity =
-  // oneManyRepository.getByHashId(oneManyEntityHashId);
-  //   if (_oneManyResultEntity.equals(null)) {
-  //     throw new Exception("task does not exist");
-  //   }
-  //   _oneManyResultEntity.setThreshold(threshold);
-  //   _oneManyResultEntity.setAnglesToAnalyze(angles);
-  //   _oneManyResultEntity.setStatus(Status.WAITING);
-  //   _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
+  public ManyManyResultEntity submitTask(
+      UUID manyManyEntityHashId, List<Angle> angles, Double threshold, String chain)
+      throws Exception {
+    ManyManyResultEntity _manyManyResultEntity =
+        manyManyRepository.getByHashId(manyManyEntityHashId);
+    if (Objects.equals(_manyManyResultEntity, null)) {
+      throw new Exception("task does not exist");
+    }
+    _manyManyResultEntity.setThreshold(threshold);
+    _manyManyResultEntity.setAnglesToAnalyze(angles);
+    _manyManyResultEntity.setStatus(Status.WAITING);
+    _manyManyResultEntity.setChainToAnalyze(chain);
+    _manyManyResultEntity.setSequenceToAnalyze(
+        _manyManyResultEntity.getCommonSequences().stream()
+            .filter(chainE -> chainE.getChain() != chain)
+            .map(chainE -> chainE.getSequence())
+            .collect(Collectors.toList())
+            .get(0));
+    _manyManyResultEntity = manyManyRepository.saveAndFlush(_manyManyResultEntity);
 
-  //   try {
-  //     queueService.sendOneMany(_oneManyResultEntity.getHashId());
-  //   } catch (Exception e) {
-  //     _oneManyResultEntity.setStatus(Status.FAILED);
-  //     _oneManyResultEntity.setUserErrorLog("Error during setting task");
-  //     _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
+    try {
+      queueService.sendManyMany(_manyManyResultEntity.getHashId());
+    } catch (Exception e) {
+      _manyManyResultEntity.setStatus(Status.FAILED);
+      _manyManyResultEntity.setUserErrorLog("Error during setting task");
+      _manyManyResultEntity = manyManyRepository.saveAndFlush(_manyManyResultEntity);
 
-  //     e.printStackTrace();
-  //   }
-  //   return _oneManyResultEntity;
-  // }
+      e.printStackTrace();
+    }
+    return _manyManyResultEntity;
+  }
 
   public ManyManyResultEntity setTask(StructureModelEntity model) {
 
@@ -83,7 +97,13 @@ public class ManyManyTaskService {
 
   public void calculateCommonChainSequeces(ManyManyResultEntity manyManyResultEntity) {
     HashMap<String, List<List<String>>> sequenceCollection = new HashMap<>();
-    for (StructureModelEntity model : manyManyResultEntity.getModels()) {
+    List<StructureModelEntity> models = manyManyResultEntity.getModels();
+    if (models.size() <= 1) {
+      manyManyResultEntity.setCommonSequences(new ArrayList<>());
+      manyManyRepository.saveAndFlush(manyManyResultEntity);
+      return;
+    }
+    for (StructureModelEntity model : models) {
       HashMap<String, List<String>> localSequences = new HashMap<>();
       for (SelectionChainEntity sequence : model.getSelection().getSelectionChains()) {
         List<String> sequences = localSequences.getOrDefault(sequence.getName(), new ArrayList<>());
@@ -146,34 +166,34 @@ public class ManyManyTaskService {
     }
   }
 
-  // public OneManyResultEntity addModel(byte[] content, String filename, UUID oneManyEntityHashId)
-  //     throws Exception, ModelTargetMatchingException {
-  //   OneManyResultEntity _oneManyResultEntity =
-  // oneManyRepository.getByHashId(oneManyEntityHashId);
-  //   if (_oneManyResultEntity == null) {
-  //     throw new Exception("task does not exist");
-  //   }
-  //   StructureModelEntity model =
-  //       structureModelService.createModelFromBytes(
-  //           content, filename, _oneManyResultEntity.getChain());
+  public ManyManyResultEntity addModel(byte[] content, String filename, UUID manyManyEntityHashId)
+      throws Exception {
+    StructureModelEntity structureModelEntity =
+        structureModelService.createInitalModelFromBytes(content, filename);
+    ManyManyResultEntity manyManyResultEntity =
+        manyManyRepository.getByHashId(manyManyEntityHashId);
+    if (Objects.equals(manyManyResultEntity, null)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error during processing file");
+    }
 
-  //   _oneManyResultEntity.addModel(
-  //       structureModelService.applyModelTargetCommonSequence(
-  //           model, _oneManyResultEntity.getTargetEntity().getSourceSequence()));
-  //   _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
-  //   return oneManyUtils.applyCommonSubsequenceToTarget(_oneManyResultEntity);
-  // }
+    manyManyResultEntity.addModel(structureModelEntity);
+    manyManyResultEntity = manyManyRepository.saveAndFlush(manyManyResultEntity);
+    calculateCommonChainSequeces(manyManyResultEntity);
+    return manyManyRepository.getByHashId(manyManyEntityHashId);
+  }
 
-  // public OneManyResultEntity removeModel(UUID modelhashId, UUID oneManyEntityHashId)
-  //     throws Exception {
-  //   OneManyResultEntity _oneManyResultEntity =
-  // oneManyRepository.getByHashId(oneManyEntityHashId);
-  //   if (_oneManyResultEntity == null) {
-  //     throw new Exception("task does not exist");
-  //   }
-  //   _oneManyResultEntity.removeModel(structureModelRepository.getByHashId(modelhashId));
-  //   _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
-  //   structureModelRepository.deleteByHashId(modelhashId);
-  //   return oneManyUtils.applyCommonSubsequenceToTarget(_oneManyResultEntity);
-  // }
+  public ManyManyResultEntity removeModel(UUID modelhashId, UUID manyManyEntityHashId)
+      throws Exception {
+    ManyManyResultEntity _manyManyResultEntity =
+        manyManyRepository.getByHashId(manyManyEntityHashId);
+    if (_manyManyResultEntity == null) {
+      throw new Exception("task does not exist");
+    }
+    _manyManyResultEntity.removeModel(structureModelRepository.getByHashId(modelhashId));
+    _manyManyResultEntity = manyManyRepository.saveAndFlush(_manyManyResultEntity);
+    structureModelRepository.deleteByHashId(modelhashId);
+    calculateCommonChainSequeces(_manyManyResultEntity);
+
+    return _manyManyResultEntity;
+  }
 }

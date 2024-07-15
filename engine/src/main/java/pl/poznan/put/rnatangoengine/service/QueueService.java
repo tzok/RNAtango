@@ -29,4 +29,10 @@ public class QueueService {
     rabbitTemplate.convertAndSend(queue.getName(), task);
     logger.info("Sending Message to the Queue : " + task);
   }
+
+  public void sendManyMany(UUID hashId) throws Exception {
+    Task task = ImmutableTask.builder().taskHashId(hashId).type(TaskType.ManyMany).build();
+    rabbitTemplate.convertAndSend(queue.getName(), task);
+    logger.info("Sending Message to the Queue : " + task);
+  }
 }

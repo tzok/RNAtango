@@ -119,7 +119,7 @@ public class OneManyService {
     if (_oneManyResultEntity.getModels().size() == 0) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You need to add at least one model");
     }
-    ;
+
     try {
       return ImmutableTaskIdResponse.builder()
           .taskId(
@@ -130,7 +130,7 @@ public class OneManyService {
                   .toString())
           .build();
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task does not exist");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task preparation failed");
     }
   }
 

@@ -14,6 +14,8 @@ public class CommonChainSequenceEntity {
 
   private String sequence;
 
+  public CommonChainSequenceEntity() {}
+
   public CommonChainSequenceEntity(String chain, String sequence) {
     this.chain = chain;
     this.sequence = sequence;
