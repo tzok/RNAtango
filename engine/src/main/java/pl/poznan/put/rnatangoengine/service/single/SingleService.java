@@ -93,6 +93,7 @@ public class SingleService {
                   : "")
           .structureMolecule(_singleResultEntity.getStructureMolecule())
           .structureName(_singleResultEntity.getStructureName().toUpperCase())
+          .structureTitle(_singleResultEntity.getStrucutreTitle())
           .containDiscontinuousSequences(_singleResultEntity.isDiscontinuousResiduesSequence())
           .build();
     } else {

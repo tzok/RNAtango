@@ -20,4 +20,6 @@ public interface SingleOutput {
   @Nullable String structureName();
 
   @Nullable String structureMolecule();
+
+  @Nullable String structureTitle();
 }

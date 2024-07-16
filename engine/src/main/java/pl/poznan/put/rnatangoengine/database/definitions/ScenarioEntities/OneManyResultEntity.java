@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.database.converters.AngleListConverter;
@@ -57,6 +58,7 @@ public class OneManyResultEntity {
     this.discontinuousResiduesSequence = false;
     this.errorLog = "";
     this.userErrorLog = "";
+    this.models = new ArrayList<>();
   }
 
   public OneManyResultEntity() {
@@ -151,6 +153,10 @@ public class OneManyResultEntity {
 
   public void addModel(StructureModelEntity model) {
     models.add(model);
+  }
+
+  public void addAllModels(List<StructureModelEntity> models) {
+    models.addAll(models);
   }
 
   public StructureModelEntity getTargetEntity() {

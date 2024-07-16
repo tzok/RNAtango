@@ -1,10 +1,13 @@
 package pl.poznan.put.rnatangoengine.logic;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.io.CifFileReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.comparison.ImmutableMCQ;
@@ -76,8 +79,27 @@ public class TargetModelsComparsionService {
   public LCSEntity lcs(StructureModelEntity target, StructureModelEntity model, Double threshold)
       throws IOException {
 
-    return lcsProcessing.calculate(
-        parseStructureSelection(target), parseStructureSelection(model), threshold);
+    LCSEntity lcsEntity =
+        lcsProcessing.calculate(
+            parseStructureSelection(target), parseStructureSelection(model), threshold);
+
+    CifFileReader parser = new CifFileReader();
+    try {
+      Structure modelStructure = parser.getStructure(new ByteArrayInputStream(model.getContent()));
+      Structure targetStructure =
+          parser.getStructure(new ByteArrayInputStream(target.getContent()));
+      superpose(
+          targetStructure.getChains().get(0).getAtomGroup(0).getAtoms().stream()
+              .map((atom) -> atom.getCoordsAsPoint3d())
+              .collect(Collectors.toList()),
+          modelStructure.getChains().get(0).getAtomGroup(0).getAtoms().stream()
+              .map((atom) -> atom.getCoordsAsPoint3d())
+              .collect(Collectors.toList()));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return lcsEntity;
   }
 
   public ResidueTorsionAngleEntity compareResidues(

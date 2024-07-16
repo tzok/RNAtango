@@ -25,6 +25,7 @@ import pl.poznan.put.rnatangoengine.dto.StructureSequences;
 public class Structure {
   List<CifModel> structureModels;
   Boolean containDiscontinuousScopes;
+  String title;
   String name;
   Molecule molecule;
   String filteredContent;
@@ -36,6 +37,7 @@ public class Structure {
     this.molecule = Molecule.NA;
     this.filteredContent = "";
     this.continuousSequences = null;
+    this.title = structureModels.get(0).title();
   }
 
   /**
@@ -215,7 +217,6 @@ public class Structure {
             .toCif();
     final CifParser parser = new CifParser();
     structureModels = parser.parse(this.filteredContent);
-
     return filteredContent;
   }
 
@@ -402,6 +403,14 @@ public class Structure {
 
   public void setStructureName(String name) {
     this.name = name;
+  }
+
+  public void setStructureTitle(String title) {
+    this.title = title;
+  }
+
+  public String getStrucutreTitle() {
+    return this.title;
   }
 
   public String getStructureName() {

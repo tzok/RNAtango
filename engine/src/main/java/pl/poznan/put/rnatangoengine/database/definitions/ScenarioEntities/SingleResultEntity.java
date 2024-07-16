@@ -23,6 +23,7 @@ public class SingleResultEntity {
 
   private String fileStructureName;
   private String fileStructureMolecule;
+  private String fileStructureTitle;
   private String fileId;
 
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -148,6 +149,14 @@ public class SingleResultEntity {
 
   public String getStructureMolecule() {
     return this.fileStructureMolecule;
+  }
+
+  public void setStructureTitle(String title) {
+    this.fileStructureTitle = title;
+  }
+
+  public String getStrucutreTitle() {
+    return this.fileStructureTitle;
   }
 
   public Boolean isDiscontinuousResiduesSequence() {

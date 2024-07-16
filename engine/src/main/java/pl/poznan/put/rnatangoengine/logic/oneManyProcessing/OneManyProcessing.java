@@ -37,7 +37,7 @@ public class OneManyProcessing {
     process(oneManyResultEntity);
   }
 
-  private void process(OneManyResultEntity oneManyResultEntity) {
+  public void process(OneManyResultEntity oneManyResultEntity) {
     try {
       StructureModelEntity target =
           structureModelService.filterModelContent(oneManyResultEntity.getTargetEntity());

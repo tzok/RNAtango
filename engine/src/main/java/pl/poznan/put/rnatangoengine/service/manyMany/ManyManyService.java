@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.service.manyMany;
 
+import java.text.SimpleDateFormat;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -16,9 +17,12 @@ import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStructureModelResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.ImmutableTorsionAngleDifferences;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.manyMany.ImmutableManyManyOneInstance;
+import pl.poznan.put.rnatangoengine.dto.manyMany.ImmutableManyManyOutput;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ImmutableManyManySetFormResponse;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ManyManyOutput;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ManyManySetFormResponse;
@@ -116,7 +120,7 @@ public class ManyManyService {
     }
     CommonChainSequenceEntity commonChain = null;
     for (CommonChainSequenceEntity localCommonChain : _manyManyResultEntity.getCommonSequences()) {
-      if (localCommonChain.getChain() == input.chain()) {
+      if (localCommonChain.getChain().equals(input.chain())) {
         commonChain = localCommonChain;
         break;
       }
@@ -137,7 +141,9 @@ public class ManyManyService {
                   .getHashId()
                   .toString())
           .build();
+
     } catch (Exception e) {
+      e.printStackTrace();
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "task preparation failed");
     }
   }
@@ -167,6 +173,65 @@ public class ManyManyService {
   }
 
   public ManyManyOutput manyManyResult(String taskId) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    ManyManyResultEntity _manyManyResultEntity =
+        manyManyRepository.getByHashId(UUID.fromString(taskId));
+    if (_manyManyResultEntity != null && _manyManyResultEntity.getStatus().equals(Status.SUCCESS)) {
+      return ImmutableManyManyOutput.builder()
+          .model("1")
+          .requestedAngles(_manyManyResultEntity.getAnglesToAnalyze())
+          .resultRemovedAfter(
+              _manyManyResultEntity.getRemoveAfter() != null
+                  ? new SimpleDateFormat("dd-MM-yyyy")
+                      .format(_manyManyResultEntity.getRemoveAfter())
+                  : "")
+          .chain(_manyManyResultEntity.getChainToAnalyze())
+          .addAllStructureModels(
+              _manyManyResultEntity.getModels().stream()
+                  .map((model) -> model.getFilename())
+                  .collect(Collectors.toList()))
+          .addAllOneManyResults(
+              _manyManyResultEntity.getAllComparations().stream()
+                  .map(
+                      (_oneManyResultEntity) ->
+                          ImmutableManyManyOneInstance.builder()
+                              .targetHashId(
+                                  _oneManyResultEntity.getTargetEntity().getHashId().toString())
+                              .targetFileName(_oneManyResultEntity.getTargetEntity().getFilename())
+                              .lcsThreshold(_oneManyResultEntity.getThreshold())
+                              .addAllDifferences(
+                                  _oneManyResultEntity.getModels().stream()
+                                      .map(
+                                          (model) ->
+                                              ImmutableTorsionAngleDifferences.builder()
+                                                  .model("1")
+                                                  .modelMCQ(model.getMcqValue())
+                                                  .modelName(model.getFilename())
+                                                  .modelHashId(model.getHashId().toString())
+                                                  .addAllResidueMCQs(
+                                                      model.getTorsionAngleEntities().stream()
+                                                          .map((residue) -> residue.getMcqValue())
+                                                          .collect(Collectors.toList()))
+                                                  .residues(
+                                                      model.getTorsionAngleEntities().stream()
+                                                          .map(
+                                                              (residue) ->
+                                                                  residue
+                                                                      .getConvertedToResidueImmutable())
+                                                          .collect(Collectors.toList()))
+                                                  .modelLCS(
+                                                      model.getLcsResult() != null
+                                                          ? model
+                                                              .getLcsResult()
+                                                              .getConvertedToLCSImmutable()
+                                                          : null)
+                                                  .build())
+                                      .collect(Collectors.toList()))
+                              .build())
+                  .collect(Collectors.toList()))
+          .build();
+
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task not available");
+    }
   }
 }

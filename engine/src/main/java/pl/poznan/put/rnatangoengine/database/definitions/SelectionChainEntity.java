@@ -1,7 +1,6 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
-import java.util.List;
 import pl.poznan.put.rnatangoengine.dto.ImmutableNucleotideRange;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelectionChain;
 import pl.poznan.put.rnatangoengine.dto.SelectionChain;
@@ -23,8 +22,8 @@ public class SelectionChainEntity {
 
   private int toInclusive;
 
-  @ManyToMany(mappedBy = "selectionChains")
-  List<SelectionEntity> selection;
+  // @ManyToMany(mappedBy = "selectionChains")
+  // List<SelectionEntity> selection;
 
   public SelectionChainEntity() {}
 

@@ -67,6 +67,15 @@ public class SelectionEntity {
     return modelName;
   }
 
+  public void setModelName(String modelName) {
+    this.modelName = modelName;
+  }
+
+  public void setAllChains(List<SelectionChainEntity> chains) {
+    this.selectionChains = new ArrayList<>();
+    this.selectionChains.addAll(chains);
+  }
+
   public Long getId() {
     return id;
   }

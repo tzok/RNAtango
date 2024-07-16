@@ -159,4 +159,16 @@ public class ManyManyResultEntity {
   public String getSequenceToAnalyze() {
     return finalSequence;
   }
+
+  public void addOneManyInstance(OneManyResultEntity oneManyResultEntity) {
+    this.oneManyCompares.add(oneManyResultEntity);
+  }
+
+  public List<OneManyResultEntity> getAllComparations() {
+    return this.oneManyCompares;
+  }
+
+  public Date getRemoveAfter() {
+    return this.removeAfter;
+  }
 }

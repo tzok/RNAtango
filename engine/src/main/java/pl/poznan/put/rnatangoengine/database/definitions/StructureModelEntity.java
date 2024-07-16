@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -35,10 +36,21 @@ public class StructureModelEntity {
 
   public StructureModelEntity() {}
 
+  public StructureModelEntity(StructureModelEntity structureModelEntity) {
+    this.content = structureModelEntity.getContent();
+    this.filename = structureModelEntity.getFilename();
+    this.sourceSequence = structureModelEntity.getSourceSequence();
+    this.filteredSequence = structureModelEntity.getFilteredSequence();
+    this.fromInclusiveTargetRelative = structureModelEntity.getTargetRangeRelative().fromInclusive;
+    this.toInclusiveTargetRelative = structureModelEntity.getTargetRangeRelative().toInclusive;
+    this.residuesTorsionAngleEntities = new ArrayList<>();
+  }
+
   public StructureModelEntity(FileEntity file, SelectionEntity sourceSelection) {
     this.content = file.getContent();
     this.filename = file.getFilename();
     this.sourceSelection = sourceSelection;
+    this.residuesTorsionAngleEntities = new ArrayList<>();
   }
 
   public StructureModelEntity(
@@ -46,6 +58,7 @@ public class StructureModelEntity {
     this.content = structureContent;
     this.filename = filename;
     this.sourceSelection = sourceSelection;
+    this.residuesTorsionAngleEntities = new ArrayList<>();
   }
 
   public StructureModelEntity(
@@ -57,6 +70,7 @@ public class StructureModelEntity {
     this.filename = filename;
     this.sourceSelection = sourceSelection;
     this.selection = selection;
+    this.residuesTorsionAngleEntities = new ArrayList<>();
   }
 
   @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)

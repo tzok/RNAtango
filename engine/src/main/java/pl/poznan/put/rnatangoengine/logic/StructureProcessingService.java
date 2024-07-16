@@ -118,6 +118,7 @@ public class StructureProcessingService {
     switch (format) {
       case CIF:
         structureModels = parser.parse(structureFileContent);
+
         break;
 
       case PDB:
@@ -163,6 +164,7 @@ public class StructureProcessingService {
 
     Structure structure = parseStructureFile(structureFileContent, format);
     structure.setStructureName(name);
+
     return structure;
   }
 

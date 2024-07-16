@@ -25,6 +25,7 @@ import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository
 import pl.poznan.put.rnatangoengine.dto.Angle;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.logic.StructureProcessingService;
+import pl.poznan.put.rnatangoengine.logic.manyManyProcessing.ManyManyProcessing;
 import pl.poznan.put.rnatangoengine.service.QueueService;
 import pl.poznan.put.rnatangoengine.service.StructureModelService;
 
@@ -37,6 +38,7 @@ public class ManyManyTaskService {
   @Autowired CommonChainSequenceRepository commonChainSequenceRepository;
   @Autowired StructureModelService structureModelService;
   @Autowired QueueService queueService;
+  @Autowired ManyManyProcessing processing;
 
   public ManyManyResultEntity submitTask(
       UUID manyManyEntityHashId, List<Angle> angles, Double threshold, String chain)
@@ -57,7 +59,6 @@ public class ManyManyTaskService {
             .collect(Collectors.toList())
             .get(0));
     _manyManyResultEntity = manyManyRepository.saveAndFlush(_manyManyResultEntity);
-
     try {
       queueService.sendManyMany(_manyManyResultEntity.getHashId());
     } catch (Exception e) {

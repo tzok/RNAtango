@@ -21,14 +21,7 @@ public class ChainTorsionAngleEntity {
   @Column(length = 5000)
   private String sequence;
 
-  // @ManyToMany(mappedBy = "chainTorsionAngleEntities")
-  // List<SingleResultEntity> singleResults;
-
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  // @JoinTable(
-  //     name = "chain_residue_torsion_angle",
-  //     joinColumns = @JoinColumn(name = "residue_torsion_angle_id"),
-  //     inverseJoinColumns = @JoinColumn(name = "chain_id"))
   List<ResidueTorsionAngleEntity> residuesTorsionAngleEntities;
 
   public ChainTorsionAngleEntity() {}
