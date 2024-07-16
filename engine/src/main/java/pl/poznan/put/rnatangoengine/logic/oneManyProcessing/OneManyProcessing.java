@@ -39,6 +39,7 @@ public class OneManyProcessing {
 
   public void process(OneManyResultEntity oneManyResultEntity) {
     try {
+      oneManyResultEntity = oneManyRepository.getByHashId(oneManyResultEntity.getHashId());
       StructureModelEntity target =
           structureModelService.filterModelContent(oneManyResultEntity.getTargetEntity());
       List<StructureModelEntity> models =

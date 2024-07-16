@@ -111,7 +111,9 @@ public class ManyManyProcessing {
     OneManyResultEntity oneManyResultEntity =
         oneManyRepository.saveAndFlush(
             new OneManyResultEntity(
-                targetDetached, "1", targetDetached.getSelection().getModelName()));
+                structureModelRepository.saveAndFlush(targetDetached),
+                "1",
+                targetDetached.getSelection().getModelName()));
 
     for (StructureModelEntity model : models) {
       StructureModelEntity m =
@@ -153,13 +155,16 @@ public class ManyManyProcessing {
                 manyManyResultEntity));
       }
       manyManyRepository.saveAndFlush(manyManyResultEntity);
+      manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
       for (OneManyResultEntity oneManyResultEntity : manyManyResultEntity.getAllComparations()) {
         oneManyProcessing.process(oneManyResultEntity);
       }
+      manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
       manyManyResultEntity.setStatus(Status.SUCCESS);
       manyManyRepository.saveAndFlush(manyManyResultEntity);
 
     } catch (Exception e) {
+      manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
       manyManyResultEntity.setStatus(Status.FAILED);
       manyManyResultEntity.setErrorLog(e);
       manyManyResultEntity.setUserErrorLog("Error during proecessing request");

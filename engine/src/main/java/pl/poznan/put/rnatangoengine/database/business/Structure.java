@@ -425,6 +425,10 @@ public class Structure {
     return this.molecule;
   }
 
+  public String getFirstChainName() {
+    return this.structureModels.get(0).chains().get(0).identifier();
+  }
+
   public String getStructureMoleculeName() {
     switch (this.molecule) {
       case NMR:
