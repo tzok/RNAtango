@@ -76,7 +76,7 @@ public class Structure {
         chains.add(
             ImmutableChain.builder()
                 .name(chain.identifier())
-                .sequence(chain.sequence())
+                .sequence(chain.sequence().toUpperCase())
                 .residuesWithoutAtoms(
                     missingResidues.getOrDefault(chain.identifier(), new ArrayList<>()))
                 .build());

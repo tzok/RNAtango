@@ -59,13 +59,13 @@ public class OneManyController {
   }
 
   @GetMapping("/one-many/{taskId}")
-  public StatusResponse oneManyStatus(@PathVariable String taskId) {
-    return oneManyService.oneManyStatus(taskId);
+  public ResponseEntity<StatusResponse> oneManyStatus(@PathVariable String taskId) {
+    return new ResponseEntity<>(oneManyService.oneManyStatus(taskId), HttpStatus.ACCEPTED);
   }
 
   @GetMapping("/one-many/{taskId}/result")
-  public OneManyOutput oneManyResult(@PathVariable String taskId) {
-    return oneManyService.oneManyResult(taskId);
+  public ResponseEntity<OneManyOutput> oneManyResult(@PathVariable String taskId) {
+    return new ResponseEntity<>(oneManyService.oneManyResult(taskId), HttpStatus.ACCEPTED);
   }
 
   @GetMapping(value = "/one-many/secondary/structure/{modelId}")
@@ -88,5 +88,10 @@ public class OneManyController {
         .body(
             new String(
                 oneManyService.oneManyTertiaryStructureModel(modelId), StandardCharsets.UTF_8));
+  }
+
+  @GetMapping(value = "/one-many/example/{example}")
+  public ResponseEntity<TaskIdResponse> oneManyExample(@PathVariable String example) {
+    return new ResponseEntity<>(oneManyService.oneManyExample(example), HttpStatus.ACCEPTED);
   }
 }

@@ -58,7 +58,7 @@ public class SelectionChainEntity {
   }
 
   public void setSequence(String sequence) {
-    this.sequence = sequence;
+    this.sequence = sequence.toUpperCase();
   }
 
   public void setFromInclusive(int fromInclusive) {

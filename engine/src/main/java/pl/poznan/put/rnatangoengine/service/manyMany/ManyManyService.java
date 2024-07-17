@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.service.manyMany;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -101,7 +102,18 @@ public class ManyManyService {
   }
 
   public ManyManySetFormResponse manyManyFormState(String taskId) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    ManyManyResultEntity manyManyResultEntity =
+        manyManyRepository.getByHashId(UUID.fromString(taskId));
+    if (Objects.equals(manyManyResultEntity, null)
+        || !manyManyResultEntity.getStatus().equals(Status.SETTING)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can not modify processed task");
+    }
+    if (manyManyResultEntity.getModels().size() >= 10) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Number of models is limited to 10");
+    }
+
+    return manyManyUtils.buildFormStateResponse(manyManyResultEntity);
   }
 
   public ManyManySetFormResponse manyManyFormAddModel(String taskId, MultipartFile file) {
@@ -270,6 +282,59 @@ public class ManyManyService {
 
     } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task not available");
+    }
+  }
+
+  public TaskIdResponse manyManyExample(String example) {
+    ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+
+    try {
+      List<String> examples = new ArrayList<>();
+      ;
+      byte[] model;
+      String modelName;
+
+      switch (example) {
+        case "1":
+          examples.addAll(
+              List.of(
+                  "18_solution_0.pdb", "18_Szachniuk_1.pdb", "18_Lee_1.pdb", "18_YagoubAli_1.pdb"));
+          break;
+        case "2":
+          examples.addAll(
+              List.of("18_Ding_1.pdb", "18_Chen_1.pdb", "18_Das_1.pdb", "18_YagoubAli_1.pdb"));
+
+          break;
+        case "3":
+        default:
+          examples.addAll(
+              List.of(
+                  "18_Chen_1.pdb",
+                  "18_Szachniuk_1.pdb",
+                  "18_Dokholyan_1.pdb",
+                  "18_YagoubAli_1.pdb"));
+
+          break;
+      }
+      StructureModelEntity structureModelEntity;
+      structureModelEntity =
+          structureModelService.createInitalModelFromBytes(
+              classloader.getResourceAsStream(examples.get(0)).readAllBytes(), examples.get(0));
+
+      ManyManyResultEntity manyManyResultEntity = manyManyTaskService.setTask(structureModelEntity);
+
+      for (int i = 1; i < 4; i++) {
+        manyManyTaskService.addModel(
+            classloader.getResourceAsStream(examples.get(i)).readAllBytes(),
+            examples.get(i),
+            manyManyResultEntity.getHashId());
+      }
+      return ImmutableTaskIdResponse.builder()
+          .taskId(manyManyResultEntity.getHashId().toString())
+          .build();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "could not set the task");
     }
   }
 }

@@ -108,7 +108,7 @@ public class ManyManyTaskService {
       HashMap<String, List<String>> localSequences = new HashMap<>();
       for (SelectionChainEntity sequence : model.getSelection().getSelectionChains()) {
         List<String> sequences = localSequences.getOrDefault(sequence.getName(), new ArrayList<>());
-        sequences.add(sequence.getSequence());
+        sequences.add(sequence.getSequence().toUpperCase());
         localSequences.put(sequence.getName(), sequences);
       }
       for (String chain : localSequences.keySet()) {

@@ -10,15 +10,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import pl.poznan.put.rnatangoengine.database.definitions.FileEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
+import pl.poznan.put.rnatangoengine.dto.ImmutableNucleotideRange;
+import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
+import pl.poznan.put.rnatangoengine.dto.ImmutableSelectionChain;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTaskIdResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableTorsionAngleDifferences;
+import pl.poznan.put.rnatangoengine.dto.Selection;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
@@ -243,6 +248,90 @@ public class OneManyService {
       return structureSVG;
     } else {
       throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Model not available");
+    }
+  }
+
+  public TaskIdResponse oneManyExample(String example) {
+    Selection selection =
+        ImmutableSelection.builder()
+            .modelName("1")
+            .addChains(
+                ImmutableSelectionChain.builder()
+                    .sequence("")
+                    .name("A")
+                    .nucleotideRange(
+                        ImmutableNucleotideRange.builder().fromInclusive(0).toInclusive(70).build())
+                    .build())
+            .build();
+    try {
+      ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+      FileEntity _targetFileEntity;
+      byte[] modelOne;
+      String modelOneName;
+      byte[] modelTwo;
+      String modelTwoName;
+      byte[] modelThree;
+      String modelThreeName;
+
+      switch (example) {
+        case "1":
+          _targetFileEntity =
+              fileRepository.saveAndFlush(
+                  new FileEntity(
+                      "18_solution_0.pdb",
+                      classloader.getResourceAsStream("18_solution_0.pdb").readAllBytes()));
+          modelOne = classloader.getResourceAsStream("18_Szachniuk_1.pdb").readAllBytes();
+          modelOneName = "18_Szachniuk_1.pdb";
+          modelTwo = classloader.getResourceAsStream("18_Lee_1.pdb").readAllBytes();
+          modelTwoName = "18_Lee_1.pdb";
+          modelThree = classloader.getResourceAsStream("18_YagoubAli_1.pdb").readAllBytes();
+          modelThreeName = "18_YagoubAli_1.pdb";
+
+          break;
+        case "2":
+          _targetFileEntity =
+              fileRepository.saveAndFlush(
+                  new FileEntity(
+                      "18_Ding_1.pdb",
+                      classloader.getResourceAsStream("18_Ding_1.pdb").readAllBytes()));
+          modelOne = classloader.getResourceAsStream("18_Chen_1.pdb").readAllBytes();
+          modelOneName = "18_Chen_1.pdb";
+          modelTwo = classloader.getResourceAsStream("18_Das_1.pdb").readAllBytes();
+          modelTwoName = "18_Das_1.pdb";
+          modelThree = classloader.getResourceAsStream("18_YagoubAli_1.pdb").readAllBytes();
+          modelThreeName = "18_YagoubAli_1.pdb";
+          break;
+        case "3":
+        default:
+          _targetFileEntity =
+              fileRepository.saveAndFlush(
+                  new FileEntity(
+                      "18_Chen_1.pdb",
+                      classloader.getResourceAsStream("18_Chen_1.pdb").readAllBytes()));
+          modelOne = classloader.getResourceAsStream("18_Szachniuk_1.pdb").readAllBytes();
+          modelOneName = "18_Szachniuk_1.pdb";
+          modelTwo = classloader.getResourceAsStream("18_Dokholyan_1.pdb").readAllBytes();
+          modelTwoName = "18_Dokholyan_1.pdb";
+          modelThree = classloader.getResourceAsStream("18_YagoubAli_1.pdb").readAllBytes();
+          modelThreeName = "18_YagoubAli_1.pdb";
+          break;
+      }
+
+      OneManyResultEntity oneManyResultEntity =
+          oneManyTaskService.setTask(
+              structureModelService.createModel(
+                  _targetFileEntity.getHashId().toString(), selection),
+              "1",
+              "A");
+      oneManyTaskService.addModel(modelOne, modelOneName, oneManyResultEntity.getHashId());
+      oneManyTaskService.addModel(modelTwo, modelTwoName, oneManyResultEntity.getHashId());
+      oneManyTaskService.addModel(modelThree, modelThreeName, oneManyResultEntity.getHashId());
+      return ImmutableTaskIdResponse.builder()
+          .taskId(oneManyResultEntity.getHashId().toString())
+          .build();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "could not set the task");
     }
   }
 }

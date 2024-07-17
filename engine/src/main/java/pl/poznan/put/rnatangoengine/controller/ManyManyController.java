@@ -84,4 +84,9 @@ public class ManyManyController {
         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + taskId + ".svg" + "\"")
         .body(new String(manyManyService.manyManyDendrogram(taskId), StandardCharsets.UTF_8));
   }
+
+  @GetMapping(value = "/many-many/example/{example}")
+  public ResponseEntity<TaskIdResponse> oneManyExample(@PathVariable String example) {
+    return new ResponseEntity<>(manyManyService.manyManyExample(example), HttpStatus.ACCEPTED);
+  }
 }

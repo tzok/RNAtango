@@ -22,7 +22,8 @@ public class StructureLcs {
   }
 
   public LCSResult longestCommonSubstring(String targetSequence, String modelSequence) {
-
+    targetSequence = targetSequence.toUpperCase();
+    modelSequence = modelSequence.toUpperCase();
     int n = targetSequence.length();
     int m = modelSequence.length();
     int[][] op = new int[n + 1][m + 1];
