@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.database.converters.AngleListConverter;
+import pl.poznan.put.rnatangoengine.database.definitions.ClusteringResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.CommonChainSequenceEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.dto.Angle;
@@ -41,6 +42,8 @@ public class ManyManyResultEntity {
   @Column(length = 5000)
   private String finalSequence;
 
+  @Lob private byte[] dendrogram;
+
   @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   @JoinTable(
       name = "common_sequence",
@@ -62,11 +65,19 @@ public class ManyManyResultEntity {
       inverseJoinColumns = @JoinColumn(name = "model_id"))
   private List<OneManyResultEntity> oneManyCompares;
 
+  @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+  @JoinTable(
+      name = "manymany_clustering",
+      joinColumns = @JoinColumn(name = "manymany_id"),
+      inverseJoinColumns = @JoinColumn(name = "clusters_id"))
+  private List<ClusteringResultEntity> clusters;
+
   public ManyManyResultEntity() {
     this.models = new ArrayList<>();
     this.oneManyCompares = new ArrayList<>();
     this.commonSequences = new ArrayList<>();
     this.anglesToAnalyze = new ArrayList<>();
+    this.clusters = new ArrayList<>();
     this.status = Status.SETTING;
     this.removeAfter = Date.valueOf(LocalDate.now().plus(1, ChronoUnit.WEEKS));
     this.errorLog = "";
@@ -170,5 +181,21 @@ public class ManyManyResultEntity {
 
   public Date getRemoveAfter() {
     return this.removeAfter;
+  }
+
+  public void addClustering(ClusteringResultEntity clusteringResultEntity) {
+    this.clusters.add(clusteringResultEntity);
+  }
+
+  public void setDendrogram(byte[] content) {
+    this.dendrogram = content;
+  }
+
+  public byte[] getDendrogram() {
+    return this.dendrogram;
+  }
+
+  public List<ClusteringResultEntity> getClustering() {
+    return this.clusters;
   }
 }

@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.service.manyMany;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import pl.poznan.put.rnatangoengine.database.definitions.CommonChainSequenceEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.ManyManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
+import pl.poznan.put.rnatangoengine.database.repository.ClusteringResultRepository;
 import pl.poznan.put.rnatangoengine.database.repository.ManyManyRepository;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStatusResponse;
@@ -21,6 +23,7 @@ import pl.poznan.put.rnatangoengine.dto.ImmutableTorsionAngleDifferences;
 import pl.poznan.put.rnatangoengine.dto.Status;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.manyMany.ClusteringResult;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ImmutableManyManyOneInstance;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ImmutableManyManyOutput;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ImmutableManyManySetFormResponse;
@@ -36,6 +39,32 @@ public class ManyManyService {
   @Autowired ManyManyTaskService manyManyTaskService;
   @Autowired ManyManyRepository manyManyRepository;
   @Autowired ManyManyUtils manyManyUtils;
+  @Autowired ClusteringResultRepository clusteringResultRepository;
+
+  public List<ClusteringResult> manyManyClusteringResult(String taskId) {
+    ManyManyResultEntity manyManyResultEntity =
+        manyManyRepository.getByHashId(UUID.fromString(taskId));
+    if (Objects.equals(manyManyResultEntity, null)
+        || !manyManyResultEntity.getStatus().equals(Status.SUCCESS)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "");
+    }
+    return manyManyResultEntity.getClustering().stream()
+        .map((cluster) -> cluster.getClusteringResultImmutable())
+        .collect(Collectors.toList());
+  }
+
+  public byte[] manyManyDendrogram(String taskId) {
+    ManyManyResultEntity manyManyResultEntity =
+        manyManyRepository.getByHashId(UUID.fromString(taskId));
+    if (Objects.equals(manyManyResultEntity, null)
+        || !manyManyResultEntity.getStatus().equals(Status.SUCCESS)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "");
+    }
+    if (manyManyResultEntity.getDendrogram().length == 0) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "");
+    }
+    return manyManyResultEntity.getDendrogram();
+  }
 
   public ManyManySetFormResponse manyMany(MultipartFile file) {
     StructureModelEntity structureModelEntity;
@@ -76,7 +105,16 @@ public class ManyManyService {
   }
 
   public ManyManySetFormResponse manyManyFormAddModel(String taskId, MultipartFile file) {
-    ManyManyResultEntity manyManyResultEntity;
+    ManyManyResultEntity manyManyResultEntity =
+        manyManyRepository.getByHashId(UUID.fromString(taskId));
+    if (Objects.equals(manyManyResultEntity, null)
+        || !manyManyResultEntity.getStatus().equals(Status.SETTING)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can not modify processed task");
+    }
+    if (manyManyResultEntity.getModels().size() >= 10) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Number of models is limited to 10");
+    }
     try {
       manyManyResultEntity =
           manyManyTaskService.addModel(
@@ -114,9 +152,9 @@ public class ManyManyService {
     if (_manyManyResultEntity.getStatus() != Status.SETTING) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not modify processed task");
     }
-    if (_manyManyResultEntity.getModels().size() < 2) {
+    if (_manyManyResultEntity.getModels().size() < 3) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "You need to add at least two models");
+          HttpStatus.FORBIDDEN, "You need to add at least three models");
     }
     CommonChainSequenceEntity commonChain = null;
     for (CommonChainSequenceEntity localCommonChain : _manyManyResultEntity.getCommonSequences()) {

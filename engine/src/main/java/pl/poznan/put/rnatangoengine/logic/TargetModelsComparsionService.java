@@ -62,7 +62,8 @@ public class TargetModelsComparsionService {
   @Autowired ResidueTorsionAngleRepository residueTorsionAngleRepository;
   @Autowired LcsTaProcessing lcsProcessing;
 
-  public StructureSelection parseStructureSelection(StructureModelEntity model) throws IOException {
+  private StructureSelection parseStructureSelection(StructureModelEntity model)
+      throws IOException {
     return StructureSelection.divideIntoCompactFragments(
         model.getFilename(),
         structureProcessingService

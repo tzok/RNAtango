@@ -1,12 +1,17 @@
 package pl.poznan.put.rnatangoengine.controller;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.manyMany.ClusteringResult;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ManyManyOutput;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ManyManySetFormResponse;
 import pl.poznan.put.rnatangoengine.dto.manyMany.ManyManySubmitFormInput;
@@ -52,18 +57,31 @@ public class ManyManyController {
   }
 
   @PostMapping("/many-many/submit")
-  public ResponseEntity<TaskIdResponse> oneManySubmitForm(
+  public ResponseEntity<TaskIdResponse> manyManySubmitForm(
       @RequestBody ManyManySubmitFormInput input) {
     return new ResponseEntity<>(manyManyService.manyMany(input), HttpStatus.ACCEPTED);
   }
 
   @GetMapping("/many-many/{taskId}")
-  public StatusResponse oneManyStatus(@PathVariable String taskId) {
+  public StatusResponse manyManyStatus(@PathVariable String taskId) {
     return manyManyService.manyManyStatus(taskId);
   }
 
   @GetMapping("/many-many/{taskId}/result")
-  public ManyManyOutput oneManyResult(@PathVariable String taskId) {
+  public ManyManyOutput manyManyResult(@PathVariable String taskId) {
     return manyManyService.manyManyResult(taskId);
+  }
+
+  @GetMapping("/many-many/{taskId}/clustering")
+  public List<ClusteringResult> manyManyClusteringResult(@PathVariable String taskId) {
+    return manyManyService.manyManyClusteringResult(taskId);
+  }
+
+  @GetMapping("/many-many/{taskId}/dendrogram")
+  public ResponseEntity<String> manyManyDendrogram(@PathVariable String taskId) {
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType("image/svg+xml"))
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + taskId + ".svg" + "\"")
+        .body(new String(manyManyService.manyManyDendrogram(taskId), StandardCharsets.UTF_8));
   }
 }
