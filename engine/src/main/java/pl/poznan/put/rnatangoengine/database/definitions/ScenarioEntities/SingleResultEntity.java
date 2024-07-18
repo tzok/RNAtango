@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.database.definitions.ChainTorsionAngleEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
+import pl.poznan.put.rnatangoengine.database.definitions.WebPushSubscription;
 import pl.poznan.put.rnatangoengine.dto.Status;
 
 @Entity
@@ -40,6 +41,8 @@ public class SingleResultEntity {
       inverseJoinColumns = @JoinColumn(name = "result_id"))
   private List<ChainTorsionAngleEntity> chainTorsionAngleEntities;
 
+  @ManyToMany private List<WebPushSubscription> webPushSubscriptions;
+
   private Date removeAfter;
   private Boolean discontinuousResiduesSequence;
 
@@ -53,6 +56,7 @@ public class SingleResultEntity {
     this.fileStructureName = "";
     this.fileStructureMolecule = "";
     this.chainTorsionAngleEntities = new ArrayList<>();
+    this.webPushSubscriptions = new ArrayList<>();
     this.status = Status.WAITING;
     this.removeAfter = Date.valueOf(LocalDate.now().plus(1, ChronoUnit.WEEKS));
     this.discontinuousResiduesSequence = false;
@@ -161,5 +165,14 @@ public class SingleResultEntity {
 
   public Boolean isDiscontinuousResiduesSequence() {
     return this.discontinuousResiduesSequence;
+  }
+
+  public List<WebPushSubscription> getSubscibers() {
+    return this.webPushSubscriptions;
+  }
+
+  public void setSubscribers(List<WebPushSubscription> subscribers) {
+    this.webPushSubscriptions = new ArrayList<>();
+    this.webPushSubscriptions = subscribers;
   }
 }

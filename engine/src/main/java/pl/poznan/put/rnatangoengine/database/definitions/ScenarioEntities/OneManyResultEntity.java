@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.database.converters.AngleListConverter;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
+import pl.poznan.put.rnatangoengine.database.definitions.WebPushSubscription;
 import pl.poznan.put.rnatangoengine.dto.Angle;
 import pl.poznan.put.rnatangoengine.dto.Status;
 
@@ -52,12 +53,16 @@ public class OneManyResultEntity {
       inverseJoinColumns = @JoinColumn(name = "model_id"))
   private List<StructureModelEntity> models;
 
+  @ManyToMany private List<WebPushSubscription> webPushSubscriptions;
+
   private void setDefaultValues() {
     this.status = Status.SETTING;
     this.removeAfter = Date.valueOf(LocalDate.now().plus(1, ChronoUnit.WEEKS));
     this.discontinuousResiduesSequence = false;
     this.errorLog = "";
     this.userErrorLog = "";
+    this.webPushSubscriptions = new ArrayList<>();
+
     this.models = new ArrayList<>();
   }
 
@@ -173,5 +178,14 @@ public class OneManyResultEntity {
 
   public Boolean isDiscontinuousResiduesSequence() {
     return this.discontinuousResiduesSequence;
+  }
+
+  public List<WebPushSubscription> getSubscibers() {
+    return this.webPushSubscriptions;
+  }
+
+  public void setSubscribers(List<WebPushSubscription> subscribers) {
+    this.webPushSubscriptions = new ArrayList<>();
+    this.webPushSubscriptions = subscribers;
   }
 }

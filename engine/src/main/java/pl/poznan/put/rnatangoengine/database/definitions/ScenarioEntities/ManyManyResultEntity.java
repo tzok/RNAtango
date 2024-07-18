@@ -13,6 +13,7 @@ import pl.poznan.put.rnatangoengine.database.converters.AngleListConverter;
 import pl.poznan.put.rnatangoengine.database.definitions.ClusteringResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.CommonChainSequenceEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
+import pl.poznan.put.rnatangoengine.database.definitions.WebPushSubscription;
 import pl.poznan.put.rnatangoengine.dto.Angle;
 import pl.poznan.put.rnatangoengine.dto.Status;
 
@@ -72,11 +73,15 @@ public class ManyManyResultEntity {
       inverseJoinColumns = @JoinColumn(name = "clusters_id"))
   private List<ClusteringResultEntity> clusters;
 
+  @ManyToMany private List<WebPushSubscription> webPushSubscriptions;
+
   public ManyManyResultEntity() {
     this.models = new ArrayList<>();
     this.oneManyCompares = new ArrayList<>();
     this.commonSequences = new ArrayList<>();
     this.anglesToAnalyze = new ArrayList<>();
+    this.webPushSubscriptions = new ArrayList<>();
+
     this.clusters = new ArrayList<>();
     this.status = Status.SETTING;
     this.removeAfter = Date.valueOf(LocalDate.now().plus(1, ChronoUnit.WEEKS));
@@ -197,5 +202,14 @@ public class ManyManyResultEntity {
 
   public List<ClusteringResultEntity> getClustering() {
     return this.clusters;
+  }
+
+  public List<WebPushSubscription> getSubscibers() {
+    return this.webPushSubscriptions;
+  }
+
+  public void setSubscribers(List<WebPushSubscription> subscribers) {
+    this.webPushSubscriptions = new ArrayList<>();
+    this.webPushSubscriptions = subscribers;
   }
 }

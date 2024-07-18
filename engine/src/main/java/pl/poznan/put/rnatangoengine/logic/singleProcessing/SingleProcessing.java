@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.pdb.analysis.*;
 import pl.poznan.put.rna.NucleotideTorsionAngle;
+import pl.poznan.put.rnatangoengine.WebPushService;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
 import pl.poznan.put.rnatangoengine.database.definitions.ChainTorsionAngleEntity;
@@ -37,6 +38,7 @@ public class SingleProcessing {
   @Autowired SelectionRepository selectionRepository;
   @Autowired StructureProcessingService structureProcessingService;
   @Autowired FileRepository fileRepository;
+  @Autowired WebPushService webPushService;
 
   public SingleProcessing() {}
 
@@ -141,14 +143,30 @@ public class SingleProcessing {
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());
       singleResultEntity.setUserErrorLog("Error during structure processing");
-
+      singleResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s,
+                      "Single model task "
+                          + singleResultEntity.getHashId().toString()
+                          + " completed"));
       singleRepository.save(singleResultEntity);
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());
       singleResultEntity.setUserErrorLog("Residues does not have atoms coordinates");
-
+      singleResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s,
+                      "Single model task "
+                          + singleResultEntity.getHashId().toString()
+                          + " processing failed"));
       singleRepository.save(singleResultEntity);
     }
   }
