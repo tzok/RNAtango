@@ -119,7 +119,8 @@ public class ManyManyTaskService {
       }
     }
     List<InnerCommonSequenceInput> programInput = new ArrayList<>();
-    for (String chain : sequenceCollection.keySet()) {
+    List<String> chains = new ArrayList<>(sequenceCollection.keySet());
+    for (String chain : chains) {
       if (sequenceCollection.get(chain).size() != manyManyResultEntity.getModels().size()) {
         sequenceCollection.remove(chain);
       } else {
