@@ -157,7 +157,7 @@ public class StructureModelService {
 
   public StructureModelEntity createInitalModelFromBytes(byte[] content, String filename)
       throws Exception {
-
+    filename = filename.split("/")[filename.split("/").length - 1];
     Structure structure =
         structureProcessingService.process(new String(content, StandardCharsets.UTF_8), filename);
     content =
@@ -174,6 +174,8 @@ public class StructureModelService {
 
   public StructureModelEntity createModelFromBytes(byte[] content, String filename, String chain)
       throws Exception {
+    filename = filename.split("/")[filename.split("/").length - 1];
+
     Structure structure =
         structureProcessingService.process(new String(content, StandardCharsets.UTF_8), filename);
 
@@ -220,11 +222,14 @@ public class StructureModelService {
   }
 
   public List<StructureModelEntity> intersectModelsSelectionWithTarget(
-      List<StructureModelEntity> models, String targetSequence) {
+      List<StructureModelEntity> models, String targetSequence) throws Exception {
 
     for (int i = 0; i < models.size(); i++) {
       StructureModelEntity model = models.get(i);
       int startIndex = model.getFilteredSequence().indexOf(targetSequence);
+      if (startIndex < 0) {
+        throw new Exception("Not found subsequence");
+      }
       SelectionChainEntity selectionChain = model.getSelection().getSelectionChains().get(0);
       selectionChain.setFromInclusive(selectionChain.getFromInclusive() + startIndex);
       selectionChain.setToInclusive(

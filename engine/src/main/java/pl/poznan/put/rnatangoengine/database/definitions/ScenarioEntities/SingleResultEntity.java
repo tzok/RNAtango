@@ -41,7 +41,8 @@ public class SingleResultEntity {
       inverseJoinColumns = @JoinColumn(name = "result_id"))
   private List<ChainTorsionAngleEntity> chainTorsionAngleEntities;
 
-  @ManyToMany private List<WebPushSubscription> webPushSubscriptions;
+  @ManyToMany(fetch = FetchType.EAGER)
+  private List<WebPushSubscription> webPushSubscriptions;
 
   private Date removeAfter;
   private Boolean discontinuousResiduesSequence;

@@ -125,7 +125,8 @@ public class Structure {
         sequenceResidues.stream()
             .map((r) -> r.oneLetterName())
             .map(String::valueOf)
-            .collect(Collectors.joining()),
+            .collect(Collectors.joining())
+            .toUpperCase(),
         sequenceResidues.get(0).residueNumber(),
         sequenceResidues.get(sequenceResidues.size() - 1).residueNumber());
   }
@@ -388,7 +389,7 @@ public class Structure {
 
   public String getFirstSequence() throws Exception {
     if (this.structureModels.size() == 1 && this.structureModels.get(0).chains().size() == 1) {
-      return this.structureModels.get(0).chains().get(0).sequence();
+      return this.structureModels.get(0).chains().get(0).sequence().toUpperCase();
     }
     throw new Exception("The structure has not filtered yet");
   }

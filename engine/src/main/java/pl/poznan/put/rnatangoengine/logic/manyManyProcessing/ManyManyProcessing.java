@@ -21,6 +21,7 @@ import pl.poznan.put.comparison.ImmutableMCQ;
 import pl.poznan.put.matching.StructureSelection;
 import pl.poznan.put.pdb.analysis.MoleculeType;
 import pl.poznan.put.rna.NucleotideTorsionAngle;
+import pl.poznan.put.rnatangoengine.WebPushService;
 import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
 import pl.poznan.put.rnatangoengine.database.definitions.ClusteredModelEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ClusteringResultEntity;
@@ -67,6 +68,7 @@ public class ManyManyProcessing {
   @Autowired TargetModelsComparsionService targetModelsComparsionService;
   @Autowired ClusteringResultRepository clusteringResultRepository;
   @Autowired ClusteredModelRepository clusteredModelRepository;
+  @Autowired WebPushService webPushService;
 
   public void startTask(UUID taskHashId) {
 
@@ -86,7 +88,7 @@ public class ManyManyProcessing {
     for (SelectionChainEntity selectionChainEntity :
         structureModelEntity.getSourceSelection().getSelectionChains()) {
       if (selectionChainEntity.getName().equals(chain)) {
-        int index = selectionChainEntity.getSequence().indexOf(sequence);
+        int index = selectionChainEntity.getSequence().toUpperCase().indexOf(sequence);
         if (index > -1) {
           Selection selection =
               ImmutableSelection.builder()
@@ -275,6 +277,8 @@ public class ManyManyProcessing {
   }
 
   private void process(ManyManyResultEntity manyManyResultEntity) {
+    UUID hashId = manyManyResultEntity.getHashId();
+    manyManyResultEntity = manyManyRepository.getByHashId(hashId);
     try {
       for (StructureModelEntity structureModelEntity : manyManyResultEntity.getModels()) {
         applyCommonSequence(
@@ -284,7 +288,7 @@ public class ManyManyProcessing {
         structureModelService.filterModelContent(
             structureModelRepository.getByHashId(structureModelEntity.getHashId()));
       }
-      manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
+      manyManyResultEntity = manyManyRepository.getByHashId(hashId);
       List<StructureModelEntity> modelEntities = manyManyResultEntity.getModels();
       for (int i = 0; i < modelEntities.size(); i++) {
         final int e = i;
@@ -300,19 +304,31 @@ public class ManyManyProcessing {
       manyManyResultEntity = manyManyRepository.saveAndFlush(manyManyResultEntity);
 
       for (OneManyResultEntity oneManyResultEntity :
-          manyManyRepository.getByHashId(manyManyResultEntity.getHashId()).getAllComparations()) {
+          manyManyRepository.getByHashId(hashId).getAllComparations()) {
         oneManyProcessing.process(oneManyResultEntity);
       }
-      globalProcessing(manyManyRepository.getByHashId(manyManyResultEntity.getHashId()));
-      manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
+      globalProcessing(manyManyRepository.getByHashId(hashId));
+      manyManyResultEntity = manyManyRepository.getByHashId(hashId);
       manyManyResultEntity.setStatus(Status.SUCCESS);
       manyManyRepository.saveAndFlush(manyManyResultEntity);
+      manyManyResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s, "Models vs models task " + hashId.toString() + " completed"));
     } catch (Exception e) {
       manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
       manyManyResultEntity.setStatus(Status.FAILED);
       manyManyResultEntity.setErrorLog(e);
       manyManyResultEntity.setUserErrorLog("Error during proecessing request");
       manyManyRepository.saveAndFlush(manyManyResultEntity);
+      manyManyResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s, "Models vs models task " + hashId.toString() + " processing failed"));
       e.printStackTrace();
     }
   }

@@ -132,11 +132,11 @@ public class StructureModelEntity {
   }
 
   public void setFilteredSequence(String sequence) {
-    this.filteredSequence = sequence;
+    this.filteredSequence = sequence.toUpperCase();
   }
 
   public void setSourceSequence(String sequence) {
-    this.sourceSequence = sequence;
+    this.sourceSequence = sequence.toUpperCase();
   }
 
   public String getSourceSequence() {

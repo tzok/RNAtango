@@ -38,7 +38,7 @@ public class SelectionChainEntity {
     this.name = name;
     this.fromInclusive = fromInclusive;
     this.toInclusive = toInclusive;
-    this.sequence = sequence;
+    this.sequence = sequence.toUpperCase();
   }
 
   public String getName() {

@@ -18,7 +18,7 @@ public class CommonChainSequenceEntity {
 
   public CommonChainSequenceEntity(String chain, String sequence) {
     this.chain = chain;
-    this.sequence = sequence;
+    this.sequence = sequence.toUpperCase();
   }
 
   public String getSequence() {

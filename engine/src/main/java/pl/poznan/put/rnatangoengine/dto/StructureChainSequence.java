@@ -9,7 +9,7 @@ public class StructureChainSequence {
   public StructureChainSequence(
       String name, String sequence, Integer fromInclusive, Integer toInclusive) {
     this.name = name;
-    this.sequence = sequence;
+    this.sequence = sequence.toUpperCase();
     this.fromInclusive = fromInclusive;
     this.toInclusive = toInclusive;
   }

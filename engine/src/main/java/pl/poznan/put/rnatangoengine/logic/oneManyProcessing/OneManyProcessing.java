@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.comparison.local.ModelsComparisonResult;
+import pl.poznan.put.rnatangoengine.WebPushService;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
@@ -24,6 +25,7 @@ public class OneManyProcessing {
   @Autowired SelectionChainRepository selectionChainRepository;
   @Autowired StructureModelService structureModelService;
   @Autowired TargetModelsComparsionService targetModelsComparsionService;
+  @Autowired WebPushService webPushService;
 
   public void startTask(UUID taskHashId) {
 
@@ -33,18 +35,22 @@ public class OneManyProcessing {
     }
     oneManyResultEntity.setStatus(Status.PROCESSING);
     oneManyRepository.save(oneManyResultEntity);
-
-    process(oneManyResultEntity);
+    try {
+      process(oneManyResultEntity);
+    } catch (Exception e) {
+    }
   }
 
-  public void process(OneManyResultEntity oneManyResultEntity) {
+  public void process(OneManyResultEntity oneManyResultEntity) throws Exception {
+    UUID hashId = oneManyRepository.saveAndFlush(oneManyResultEntity).getHashId();
+
     try {
-      oneManyResultEntity = oneManyRepository.getByHashId(oneManyResultEntity.getHashId());
+      oneManyResultEntity = oneManyRepository.getByHashId(hashId);
       StructureModelEntity target =
           structureModelService.filterModelContent(oneManyResultEntity.getTargetEntity());
       List<StructureModelEntity> models =
           structureModelService.intersectModelsSelectionWithTarget(
-              oneManyResultEntity.getModels(), target.getFilteredSequence().toUpperCase());
+              oneManyResultEntity.getModels(), target.getFilteredSequence());
 
       for (int i = 0; i < models.size(); i++) {
         models.set(i, structureModelService.filterModelContent(models.get(i)));
@@ -54,7 +60,7 @@ public class OneManyProcessing {
           targetModelsComparsionService.compare(
               target, models, oneManyResultEntity.getAnglesToAnalyze());
 
-      oneManyResultEntity = oneManyRepository.getByHashId(oneManyResultEntity.getHashId());
+      oneManyResultEntity = oneManyRepository.getByHashId(hashId);
       models = oneManyResultEntity.getModels();
       for (int i = 0; i < models.size(); i++) {
         StructureModelEntity model = models.get(i);
@@ -68,13 +74,25 @@ public class OneManyProcessing {
       oneManyResultEntity.setFinalStructure(
           comparisonResult.fragmentMatches().get(0).getTargetDotBracket().structure());
       oneManyResultEntity.setStatus(Status.SUCCESS);
-      oneManyRepository.saveAndFlush(oneManyResultEntity);
+      oneManyResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s, "Target vs models task " + hashId + " completed"));
     } catch (Exception e) {
       oneManyResultEntity.setStatus(Status.FAILED);
       oneManyResultEntity.setErrorLog(e);
       oneManyResultEntity.setUserErrorLog("Error during proecessing request");
       oneManyRepository.saveAndFlush(oneManyResultEntity);
       e.printStackTrace();
+      oneManyResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s, "Target vs models task " + hashId + " processing failed"));
+      throw new Exception("OneManyProcessing error");
     }
   }
 }

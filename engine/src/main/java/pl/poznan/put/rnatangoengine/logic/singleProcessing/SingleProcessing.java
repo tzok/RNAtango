@@ -132,6 +132,15 @@ public class SingleProcessing {
       singleResultEntity.setIsDiscontinuousResiduesSequence(
           structure.getContainDiscontinuousScopes());
       singleRepository.save(singleResultEntity);
+      singleResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s,
+                      "Single model task "
+                          + singleResultEntity.getHashId().toString()
+                          + " completed"));
       tempFile.deleteOnExit();
       try {
         fileRepository.deleteByHashId(UUID.fromString(singleResultEntity.getFileId()));
@@ -151,7 +160,7 @@ public class SingleProcessing {
                       s,
                       "Single model task "
                           + singleResultEntity.getHashId().toString()
-                          + " completed"));
+                          + " processing failed"));
       singleRepository.save(singleResultEntity);
     } catch (IllegalArgumentException e) {
       e.printStackTrace();

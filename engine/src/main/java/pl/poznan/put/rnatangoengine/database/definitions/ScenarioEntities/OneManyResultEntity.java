@@ -53,7 +53,8 @@ public class OneManyResultEntity {
       inverseJoinColumns = @JoinColumn(name = "model_id"))
   private List<StructureModelEntity> models;
 
-  @ManyToMany private List<WebPushSubscription> webPushSubscriptions;
+  @ManyToMany(fetch = FetchType.EAGER)
+  private List<WebPushSubscription> webPushSubscriptions;
 
   private void setDefaultValues() {
     this.status = Status.SETTING;

@@ -108,7 +108,7 @@ public class ManyManyService {
         || !manyManyResultEntity.getStatus().equals(Status.SETTING)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can not modify processed task");
     }
-    if (manyManyResultEntity.getModels().size() >= 10) {
+    if (manyManyResultEntity.getModels().size() > 10) {
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE, "Number of models is limited to 10");
     }
@@ -290,20 +290,42 @@ public class ManyManyService {
 
     try {
       List<String> examples = new ArrayList<>();
-      ;
-      byte[] model;
-      String modelName;
+      List<String> examplesNames = new ArrayList<>();
 
       switch (example) {
         case "1":
           examples.addAll(
               List.of(
                   "18_solution_0.pdb", "18_Szachniuk_1.pdb", "18_Lee_1.pdb", "18_YagoubAli_1.pdb"));
+          examplesNames.addAll(
+              List.of(
+                  "PZ18_model00.pdb", "PZ18_model01.pdb", "PZ18_model02.pdb", "PZ18_model03.pdb"));
           break;
         case "2":
           examples.addAll(
-              List.of("18_Ding_1.pdb", "18_Chen_1.pdb", "18_Das_1.pdb", "18_YagoubAli_1.pdb"));
-
+              List.of(
+                  "manyMany/1a9nR.pdb",
+                  "manyMany/1a9nR_M1.pdb",
+                  "manyMany/1a9nR_M2.pdb",
+                  "manyMany/1a9nR_M3.pdb",
+                  "manyMany/1a9nR_M4.pdb",
+                  "manyMany/1a9nR_M5.pdb",
+                  "manyMany/1a9nR_M6.pdb",
+                  "manyMany/1a9nR_M7.pdb",
+                  "manyMany/1a9nR_M8.pdb",
+                  "manyMany/1a9nR_M9.pdb"));
+          examplesNames.addAll(
+              List.of(
+                  "1a9nR.pdb",
+                  "1a9nR_M1.pdb",
+                  "1a9nR_M2.pdb",
+                  "1a9nR_M3.pdb",
+                  "1a9nR_M4.pdb",
+                  "1a9nR_M5.pdb",
+                  "1a9nR_M6.pdb",
+                  "1a9nR_M7.pdb",
+                  "1a9nR_M8.pdb",
+                  "1a9nR_M9.pdb"));
           break;
         case "3":
         default:
@@ -313,20 +335,23 @@ public class ManyManyService {
                   "18_Szachniuk_1.pdb",
                   "18_Dokholyan_1.pdb",
                   "18_YagoubAli_1.pdb"));
-
+          examplesNames.addAll(
+              List.of(
+                  "PZ18_model05.pdb", "PZ18_model01.pdb", "PZ18_model07.pdb", "PZ18_model03.pdb"));
           break;
       }
       StructureModelEntity structureModelEntity;
       structureModelEntity =
           structureModelService.createInitalModelFromBytes(
-              classloader.getResourceAsStream(examples.get(0)).readAllBytes(), examples.get(0));
+              classloader.getResourceAsStream(examples.get(0)).readAllBytes(),
+              examplesNames.get(0));
 
       ManyManyResultEntity manyManyResultEntity = manyManyTaskService.setTask(structureModelEntity);
 
-      for (int i = 1; i < 4; i++) {
+      for (int i = 1; i < examples.size(); i++) {
         manyManyTaskService.addModel(
             classloader.getResourceAsStream(examples.get(i)).readAllBytes(),
-            examples.get(i),
+            examplesNames.get(i),
             manyManyResultEntity.getHashId());
       }
       return ImmutableTaskIdResponse.builder()

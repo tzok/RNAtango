@@ -28,7 +28,7 @@ public class ChainTorsionAngleEntity {
 
   public ChainTorsionAngleEntity(String name, String sequence) {
     this.name = name;
-    this.sequence = sequence;
+    this.sequence = sequence.toUpperCase();
     this.residuesTorsionAngleEntities = new ArrayList<>();
   }
 

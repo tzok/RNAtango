@@ -73,7 +73,8 @@ public class ManyManyResultEntity {
       inverseJoinColumns = @JoinColumn(name = "clusters_id"))
   private List<ClusteringResultEntity> clusters;
 
-  @ManyToMany private List<WebPushSubscription> webPushSubscriptions;
+  @ManyToMany(fetch = FetchType.EAGER)
+  private List<WebPushSubscription> webPushSubscriptions;
 
   public ManyManyResultEntity() {
     this.models = new ArrayList<>();
@@ -169,7 +170,7 @@ public class ManyManyResultEntity {
   }
 
   public void setSequenceToAnalyze(String sequence) {
-    this.finalSequence = sequence;
+    this.finalSequence = sequence.toUpperCase();
   }
 
   public String getSequenceToAnalyze() {

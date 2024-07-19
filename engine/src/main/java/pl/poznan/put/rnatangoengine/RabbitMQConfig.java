@@ -103,8 +103,8 @@ public class RabbitMQConfig {
     final SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
     factory.setConnectionFactory(connectionFactory());
     factory.setMessageConverter(jsonMessageConverter());
-    factory.setConcurrentConsumers(concurrentConsumers);
-    factory.setMaxConcurrentConsumers(maxConcurrentConsumers);
+    factory.setConcurrentConsumers(4);
+    factory.setMaxConcurrentConsumers(4);
     factory.setErrorHandler(errorHandler());
     return factory;
   }

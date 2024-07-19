@@ -278,42 +278,42 @@ public class OneManyService {
           _targetFileEntity =
               fileRepository.saveAndFlush(
                   new FileEntity(
-                      "18_solution_0.pdb",
+                      "PZ18_model00.pdb",
                       classloader.getResourceAsStream("18_solution_0.pdb").readAllBytes()));
           modelOne = classloader.getResourceAsStream("18_Szachniuk_1.pdb").readAllBytes();
-          modelOneName = "18_Szachniuk_1.pdb";
+          modelOneName = "PZ18_model01.pdb";
           modelTwo = classloader.getResourceAsStream("18_Lee_1.pdb").readAllBytes();
-          modelTwoName = "18_Lee_1.pdb";
+          modelTwoName = "PZ18_model02.pdb";
           modelThree = classloader.getResourceAsStream("18_YagoubAli_1.pdb").readAllBytes();
-          modelThreeName = "18_YagoubAli_1.pdb";
+          modelThreeName = "PZ18_model03.pdb";
 
           break;
         case "2":
           _targetFileEntity =
               fileRepository.saveAndFlush(
                   new FileEntity(
-                      "18_Ding_1.pdb",
+                      "PZ18_model04.pdb",
                       classloader.getResourceAsStream("18_Ding_1.pdb").readAllBytes()));
           modelOne = classloader.getResourceAsStream("18_Chen_1.pdb").readAllBytes();
-          modelOneName = "18_Chen_1.pdb";
+          modelOneName = "PZ18_model05.pdb";
           modelTwo = classloader.getResourceAsStream("18_Das_1.pdb").readAllBytes();
-          modelTwoName = "18_Das_1.pdb";
+          modelTwoName = "PZ18_model06.pdb";
           modelThree = classloader.getResourceAsStream("18_YagoubAli_1.pdb").readAllBytes();
-          modelThreeName = "18_YagoubAli_1.pdb";
+          modelThreeName = "PZ18_model03.pdb";
           break;
         case "3":
         default:
           _targetFileEntity =
               fileRepository.saveAndFlush(
                   new FileEntity(
-                      "18_Chen_1.pdb",
+                      "PZ18_model05.pdb",
                       classloader.getResourceAsStream("18_Chen_1.pdb").readAllBytes()));
           modelOne = classloader.getResourceAsStream("18_Szachniuk_1.pdb").readAllBytes();
-          modelOneName = "18_Szachniuk_1.pdb";
+          modelOneName = "PZ18_model01.pdb";
           modelTwo = classloader.getResourceAsStream("18_Dokholyan_1.pdb").readAllBytes();
-          modelTwoName = "18_Dokholyan_1.pdb";
+          modelTwoName = "PZ18_model07.pdb";
           modelThree = classloader.getResourceAsStream("18_YagoubAli_1.pdb").readAllBytes();
-          modelThreeName = "18_YagoubAli_1.pdb";
+          modelThreeName = "PZ18_model03.pdb";
           break;
       }
 
