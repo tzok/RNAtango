@@ -44,6 +44,7 @@ public class StructureModelEntity {
     this.fromInclusiveTargetRelative = structureModelEntity.getTargetRangeRelative().fromInclusive;
     this.toInclusiveTargetRelative = structureModelEntity.getTargetRangeRelative().toInclusive;
     this.residuesTorsionAngleEntities = new ArrayList<>();
+    this.mcq = 0.0;
   }
 
   public StructureModelEntity(FileEntity file, SelectionEntity sourceSelection) {
@@ -51,6 +52,7 @@ public class StructureModelEntity {
     this.filename = file.getFilename();
     this.sourceSelection = sourceSelection;
     this.residuesTorsionAngleEntities = new ArrayList<>();
+    this.mcq = 0.0;
   }
 
   public StructureModelEntity(
@@ -59,6 +61,7 @@ public class StructureModelEntity {
     this.filename = filename;
     this.sourceSelection = sourceSelection;
     this.residuesTorsionAngleEntities = new ArrayList<>();
+    this.mcq = 0.0;
   }
 
   public StructureModelEntity(
@@ -71,6 +74,7 @@ public class StructureModelEntity {
     this.sourceSelection = sourceSelection;
     this.selection = selection;
     this.residuesTorsionAngleEntities = new ArrayList<>();
+    this.mcq = 0.0;
   }
 
   @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)

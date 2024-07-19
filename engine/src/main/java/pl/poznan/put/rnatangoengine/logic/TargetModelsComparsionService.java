@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
@@ -133,85 +134,86 @@ public class TargetModelsComparsionService {
     LCSEntity lcsEntity =
         lcsProcessing.calculate(
             parseStructureSelection(target), parseStructureSelection(model), threshold);
+    if (!Objects.equals(lcsEntity, null)) {
+      LCSResult lcsResult = lcsEntity.getConvertedToLCSImmutable();
+      try {
+        final List<PdbAtomLine> modifiedAtoms = new ArrayList<>();
+        org.biojava.nbio.structure.Structure modelStructure =
+            getBioJavaStructure(model.getContent(), lcsResult.modelNucleotideRange());
+        org.biojava.nbio.structure.Structure targetStructure =
+            getBioJavaStructure(target.getContent(), lcsResult.targetNucleotideRange());
 
-    LCSResult lcsResult = lcsEntity.getConvertedToLCSImmutable();
-    try {
-      final List<PdbAtomLine> modifiedAtoms = new ArrayList<>();
-      org.biojava.nbio.structure.Structure modelStructure =
-          getBioJavaStructure(model.getContent(), lcsResult.modelNucleotideRange());
-      org.biojava.nbio.structure.Structure targetStructure =
-          getBioJavaStructure(target.getContent(), lcsResult.targetNucleotideRange());
-
-      List<Point3d> targetPoints =
-          targetStructure.getChains().get(0).getAtomGroups(GroupType.NUCLEOTIDE).stream()
-              .flatMap(
-                  (group) ->
-                      group.getAtoms().stream()
-                          .filter((atom) -> atom.getName().equals("P"))
-                          .map((atom) -> atom.getCoordsAsPoint3d()))
-              .collect(Collectors.toList());
-      List<Point3d> modelPoints =
-          modelStructure.getChains().get(0).getAtomGroups(GroupType.NUCLEOTIDE).stream()
-              .flatMap(
-                  (group) ->
-                      group.getAtoms().stream()
-                          .filter((atom) -> atom.getName().equals("P"))
-                          .map((atom) -> atom.getCoordsAsPoint3d()))
-              .collect(Collectors.toList());
-      final Point3d[] pointsTarget = new Point3d[targetPoints.size()];
-      final Point3d[] pointsModel = new Point3d[modelPoints.size()];
-      for (int i = 0, size = targetPoints.size(); i < size; i++) {
-        pointsTarget[i] = new Point3d(targetPoints.get(i));
-      }
-      for (int i = 0, size = targetPoints.size(); i < size; i++) {
-        pointsModel[i] = new Point3d(modelPoints.get(i));
-      }
-      Matrix4d modelMatrix = SuperPositions.superposeAndTransform(pointsTarget, pointsModel);
-      modelStructure = getBioJavaStructure(model.getContent());
-      CifModel transformedStructureModel =
-          structureProcessingService
-              .parseStructureFile(
-                  new String(model.getContent(), StandardCharsets.UTF_8), FileFormat.CIF)
-              .getCifModels()
-              .get(0);
-      for (final PdbResidue residue : transformedStructureModel.residues()) {
-
-        final List<PdbAtomLine> atoms = residue.atoms();
-        final Point3d[] points = new Point3d[atoms.size()];
-
-        for (int i = 0, size = atoms.size(); i < size; i++) {
-          final PdbAtomLine atom = atoms.get(i);
-          points[i] = new Point3d(atom.x(), atom.y(), atom.z());
+        List<Point3d> targetPoints =
+            targetStructure.getChains().get(0).getAtomGroups(GroupType.NUCLEOTIDE).stream()
+                .flatMap(
+                    (group) ->
+                        group.getAtoms().stream()
+                            .filter((atom) -> atom.getName().equals("P"))
+                            .map((atom) -> atom.getCoordsAsPoint3d()))
+                .collect(Collectors.toList());
+        List<Point3d> modelPoints =
+            modelStructure.getChains().get(0).getAtomGroups(GroupType.NUCLEOTIDE).stream()
+                .flatMap(
+                    (group) ->
+                        group.getAtoms().stream()
+                            .filter((atom) -> atom.getName().equals("P"))
+                            .map((atom) -> atom.getCoordsAsPoint3d()))
+                .collect(Collectors.toList());
+        final Point3d[] pointsTarget = new Point3d[targetPoints.size()];
+        final Point3d[] pointsModel = new Point3d[modelPoints.size()];
+        for (int i = 0, size = targetPoints.size(); i < size; i++) {
+          pointsTarget[i] = new Point3d(targetPoints.get(i));
         }
-        CalcPoint.transform(modelMatrix, points);
-
-        for (int i = 0, size = atoms.size(); i < size; i++) {
-          final PdbAtomLine atom = atoms.get(i);
-          modifiedAtoms.add(
-              ImmutablePdbAtomLine.copyOf(atom)
-                  .withX(points[i].x)
-                  .withY(points[i].y)
-                  .withZ(points[i].z));
+        for (int i = 0, size = targetPoints.size(); i < size; i++) {
+          pointsModel[i] = new Point3d(modelPoints.get(i));
         }
-      }
+        Matrix4d modelMatrix = SuperPositions.superposeAndTransform(pointsTarget, pointsModel);
+        modelStructure = getBioJavaStructure(model.getContent());
+        CifModel transformedStructureModel =
+            structureProcessingService
+                .parseStructureFile(
+                    new String(model.getContent(), StandardCharsets.UTF_8), FileFormat.CIF)
+                .getCifModels()
+                .get(0);
+        for (final PdbResidue residue : transformedStructureModel.residues()) {
 
-      model.setContent(
-          ImmutableDefaultCifModel.of(
-                  transformedStructureModel.header(),
-                  transformedStructureModel.experimentalData(),
-                  transformedStructureModel.resolution(),
-                  transformedStructureModel.modelNumber(),
-                  modifiedAtoms,
-                  transformedStructureModel.modifiedResidues(),
-                  transformedStructureModel.missingResidues(),
-                  transformedStructureModel.title(),
-                  transformedStructureModel.chainTerminatedAfter(),
-                  transformedStructureModel.basePairs())
-              .toCif()
-              .getBytes());
-      structureModelRepository.saveAndFlush(model);
-    } catch (Exception e) {
-      e.printStackTrace();
+          final List<PdbAtomLine> atoms = residue.atoms();
+          final Point3d[] points = new Point3d[atoms.size()];
+
+          for (int i = 0, size = atoms.size(); i < size; i++) {
+            final PdbAtomLine atom = atoms.get(i);
+            points[i] = new Point3d(atom.x(), atom.y(), atom.z());
+          }
+          CalcPoint.transform(modelMatrix, points);
+
+          for (int i = 0, size = atoms.size(); i < size; i++) {
+            final PdbAtomLine atom = atoms.get(i);
+            modifiedAtoms.add(
+                ImmutablePdbAtomLine.copyOf(atom)
+                    .withX(points[i].x)
+                    .withY(points[i].y)
+                    .withZ(points[i].z));
+          }
+        }
+
+        model.setContent(
+            ImmutableDefaultCifModel.of(
+                    transformedStructureModel.header(),
+                    transformedStructureModel.experimentalData(),
+                    transformedStructureModel.resolution(),
+                    transformedStructureModel.modelNumber(),
+                    modifiedAtoms,
+                    transformedStructureModel.modifiedResidues(),
+                    transformedStructureModel.missingResidues(),
+                    transformedStructureModel.title(),
+                    transformedStructureModel.chainTerminatedAfter(),
+                    transformedStructureModel.basePairs())
+                .toCif()
+                .getBytes());
+        structureModelRepository.saveAndFlush(model);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
 
     return lcsEntity;

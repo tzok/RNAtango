@@ -26,8 +26,8 @@ RUN mvn install
 WORKDIR /opt/varna-tz 
 RUN mvn install
 
-RUN mvn install:install-file -Dfile=/opt/mcq4structures/mcq-cli/target/mcq-cli-1.8.2.jar -DgroupId=pl.poznan.put.mcq -DartifactId=mcq-core -Dversion=1.8.2 -Dpackaging=jar
-RUN mvn install:install-file -Dfile=/opt/mcq4structures/mcq-clustering/target/mcq-clustering-1.8.2.jar -DgroupId=pl.poznan.put.mcq -DartifactId=mcq-clustering -Dversion=1.8.2 -Dpackaging=jar
+RUN mvn install:install-file -Dfile=/opt/mcq4structures/mcq-cli/target/mcq-cli-1.8.3.jar -DgroupId=pl.poznan.put.mcq -DartifactId=mcq-core -Dversion=1.8.3 -Dpackaging=jar
+RUN mvn install:install-file -Dfile=/opt/mcq4structures/mcq-clustering/target/mcq-clustering-1.8.3.jar -DgroupId=pl.poznan.put.mcq -DartifactId=mcq-clustering -Dversion=1.8.3 -Dpackaging=jar
 RUN mvn install:install-file -Dfile=/opt/varna-tz/target/varna-tz-1.2.1.jar -DgroupId=com.github.tzok -DartifactId=varna-tz -Dversion=1.2.1 -Dpackaging=jar
 WORKDIR /opt/rnatango/engine
 #ENTRYPOINT ["mvn", "spring-boot:run"]

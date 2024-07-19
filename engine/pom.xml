@@ -89,7 +89,7 @@
 		<dependency>
 			<groupId>pl.poznan.put.mcq</groupId>
 			<artifactId>mcq-core</artifactId>
-			<version>1.8.2</version>
+			<version>1.8.3</version>
 		</dependency> 
 		<dependency>
 			<groupId>nl.martijndwars</groupId>
@@ -104,7 +104,7 @@
 		<dependency>
 			<groupId>pl.poznan.put.mcq</groupId>
 			<artifactId>mcq-clustering</artifactId> 
-			<version>1.8.2</version>
+			<version>1.8.3</version>
 		</dependency>
 
       <dependency>

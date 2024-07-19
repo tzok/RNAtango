@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import pl.poznan.put.rnatangoengine.database.definitions.CommonChainSequenceEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.ManyManyResultEntity;
@@ -183,6 +184,7 @@ public class ManyManyTaskService {
     return manyManyRepository.getByHashId(manyManyEntityHashId);
   }
 
+  @Transactional
   public ManyManyResultEntity removeModel(UUID modelhashId, UUID manyManyEntityHashId)
       throws Exception {
     ManyManyResultEntity _manyManyResultEntity =

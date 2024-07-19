@@ -22,52 +22,56 @@ public class LcsTaProcessing {
 
   public LCSEntity calculate(
       StructureSelection target, StructureSelection model, Double threshold) {
-    LCSEntity lcsEntity = new LCSEntity();
-    final LCS lcs = new LCS(MoleculeType.RNA, ImmutableAngle.of(FastMath.toRadians(threshold)));
-    final LCSGlobalResult result = (LCSGlobalResult) lcs.compareGlobally(target, model);
-    SelectionMatch selectionMatch = result.selectionMatch();
-    new MatchCollectionDeltaIterator(selectionMatch);
-    int validCount = selectionMatch.getResidueLabels().size();
-    int length = target.getResidues().size();
-    double coverage = (double) validCount / (double) length * 100.0;
-    PdbResidue targetStart =
-        ((ResidueComparison)
-                ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
-                    .getResidueComparisons()
-                    .get(0))
-            .target();
-    PdbResidue targetEnd =
-        ((ResidueComparison)
-                ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
-                    .getResidueComparisons()
-                    .get(
-                        ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
-                                .getResidueComparisons()
-                                .size()
-                            - 1))
-            .target();
-    PdbResidue modelStart =
-        ((ResidueComparison)
-                ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
-                    .getResidueComparisons()
-                    .get(0))
-            .model();
-    PdbResidue modelEnd =
-        ((ResidueComparison)
-                ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
-                    .getResidueComparisons()
-                    .get(
-                        ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
-                                .getResidueComparisons()
-                                .size()
-                            - 1))
-            .model();
-    // e1.residueNumber()
-    lcsEntity.setValidResidues(validCount);
-    lcsEntity.setCoveragePercent(coverage);
-    lcsEntity.setModelRange(modelStart.residueNumber(), modelEnd.residueNumber());
-    lcsEntity.setTargetRange(targetStart.residueNumber(), targetEnd.residueNumber());
-    lcsEntity.setMcqValue(result.meanDirection().degrees());
-    return lcsRepository.saveAndFlush(lcsEntity);
+    try {
+      LCSEntity lcsEntity = new LCSEntity();
+      final LCS lcs = new LCS(MoleculeType.RNA, ImmutableAngle.of(FastMath.toRadians(threshold)));
+      final LCSGlobalResult result = (LCSGlobalResult) lcs.compareGlobally(target, model);
+      SelectionMatch selectionMatch = result.selectionMatch();
+      new MatchCollectionDeltaIterator(selectionMatch);
+      int validCount = selectionMatch.getResidueLabels().size();
+      int length = target.getResidues().size();
+      double coverage = (double) validCount / (double) length * 100.0;
+      PdbResidue targetStart =
+          ((ResidueComparison)
+                  ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
+                      .getResidueComparisons()
+                      .get(0))
+              .target();
+      PdbResidue targetEnd =
+          ((ResidueComparison)
+                  ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
+                      .getResidueComparisons()
+                      .get(
+                          ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
+                                  .getResidueComparisons()
+                                  .size()
+                              - 1))
+              .target();
+      PdbResidue modelStart =
+          ((ResidueComparison)
+                  ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
+                      .getResidueComparisons()
+                      .get(0))
+              .model();
+      PdbResidue modelEnd =
+          ((ResidueComparison)
+                  ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
+                      .getResidueComparisons()
+                      .get(
+                          ((FragmentMatch) selectionMatch.getFragmentMatches().get(0))
+                                  .getResidueComparisons()
+                                  .size()
+                              - 1))
+              .model();
+      // e1.residueNumber()
+      lcsEntity.setValidResidues(validCount);
+      lcsEntity.setCoveragePercent(coverage);
+      lcsEntity.setModelRange(modelStart.residueNumber(), modelEnd.residueNumber());
+      lcsEntity.setTargetRange(targetStart.residueNumber(), targetEnd.residueNumber());
+      lcsEntity.setMcqValue(result.meanDirection().degrees());
+      return lcsRepository.saveAndFlush(lcsEntity);
+    } catch (Exception e) {
+      return null;
+    }
   }
 }

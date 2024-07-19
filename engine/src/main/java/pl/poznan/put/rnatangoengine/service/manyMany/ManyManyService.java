@@ -269,11 +269,11 @@ public class ManyManyService {
                                                                       .getConvertedToResidueImmutable())
                                                           .collect(Collectors.toList()))
                                                   .modelLCS(
-                                                      model.getLcsResult() != null
-                                                          ? model
+                                                      Objects.equals(model.getLcsResult(), null)
+                                                          ? null
+                                                          : model
                                                               .getLcsResult()
-                                                              .getConvertedToLCSImmutable()
-                                                          : null)
+                                                              .getConvertedToLCSImmutable())
                                                   .build())
                                       .collect(Collectors.toList()))
                               .build())

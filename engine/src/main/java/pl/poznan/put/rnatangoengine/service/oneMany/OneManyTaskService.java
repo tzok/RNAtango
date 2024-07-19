@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
@@ -85,6 +86,7 @@ public class OneManyTaskService {
     return oneManyUtils.applyCommonSubsequenceToTarget(_oneManyResultEntity);
   }
 
+  @Transactional
   public OneManyResultEntity removeModel(UUID modelhashId, UUID oneManyEntityHashId)
       throws Exception {
     OneManyResultEntity _oneManyResultEntity = oneManyRepository.getByHashId(oneManyEntityHashId);

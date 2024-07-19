@@ -44,7 +44,7 @@ public class OneManyProcessing {
           structureModelService.filterModelContent(oneManyResultEntity.getTargetEntity());
       List<StructureModelEntity> models =
           structureModelService.intersectModelsSelectionWithTarget(
-              oneManyResultEntity.getModels(), target.getFilteredSequence());
+              oneManyResultEntity.getModels(), target.getFilteredSequence().toUpperCase());
 
       for (int i = 0; i < models.size(); i++) {
         models.set(i, structureModelService.filterModelContent(models.get(i)));

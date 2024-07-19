@@ -3,6 +3,7 @@ package pl.poznan.put.rnatangoengine.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -22,5 +23,5 @@ public interface TorsionAngleDifferences {
 
   List<Double> residueMCQs();
 
-  LCSResult modelLCS();
+  @Nullable LCSResult modelLCS();
 }

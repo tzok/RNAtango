@@ -281,8 +281,10 @@ public class ManyManyProcessing {
             structureModelEntity,
             manyManyResultEntity.getSequenceToAnalyze(),
             manyManyResultEntity.getChainToAnalyze());
-        structureModelService.filterModelContent(structureModelEntity);
+        structureModelService.filterModelContent(
+            structureModelRepository.getByHashId(structureModelEntity.getHashId()));
       }
+      manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
       List<StructureModelEntity> modelEntities = manyManyResultEntity.getModels();
       for (int i = 0; i < modelEntities.size(); i++) {
         final int e = i;
@@ -295,9 +297,10 @@ public class ManyManyProcessing {
                     .collect(Collectors.toList()),
                 manyManyResultEntity));
       }
-      manyManyRepository.saveAndFlush(manyManyResultEntity);
-      manyManyResultEntity = manyManyRepository.getByHashId(manyManyResultEntity.getHashId());
-      for (OneManyResultEntity oneManyResultEntity : manyManyResultEntity.getAllComparations()) {
+      manyManyResultEntity = manyManyRepository.saveAndFlush(manyManyResultEntity);
+
+      for (OneManyResultEntity oneManyResultEntity :
+          manyManyRepository.getByHashId(manyManyResultEntity.getHashId()).getAllComparations()) {
         oneManyProcessing.process(oneManyResultEntity);
       }
       globalProcessing(manyManyRepository.getByHashId(manyManyResultEntity.getHashId()));
