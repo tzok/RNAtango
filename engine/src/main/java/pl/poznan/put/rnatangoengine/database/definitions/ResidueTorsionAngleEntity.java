@@ -44,7 +44,7 @@ public class ResidueTorsionAngleEntity {
   public ResidueTorsionAngleEntity() {}
 
   public ResidueTorsionAngleEntity(String name, int number, String icode) {
-    this.name = name;
+    this.name = name.toUpperCase();
     this.number = number;
     this.icode = icode;
     this.mcq = 0.0;

@@ -80,6 +80,8 @@ public class OneManyProcessing {
               (s) ->
                   webPushService.sendNotificationToClient(
                       s, "Target vs models task " + hashId + " completed"));
+      oneManyRepository.saveAndFlush(oneManyResultEntity);
+
     } catch (Exception e) {
       oneManyResultEntity.setStatus(Status.FAILED);
       oneManyResultEntity.setErrorLog(e);
