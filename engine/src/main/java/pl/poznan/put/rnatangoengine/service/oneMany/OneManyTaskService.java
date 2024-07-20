@@ -1,9 +1,11 @@
 package pl.poznan.put.rnatangoengine.service.oneMany;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.OneManyResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
 import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
@@ -64,7 +66,7 @@ public class OneManyTaskService {
 
     target = structureModelRepository.saveAndFlush(target);
     _oneManyResultEntity.setTargetEntity(target);
-    return _oneManyResultEntity = oneManyRepository.saveAndFlush(_oneManyResultEntity);
+    return oneManyRepository.saveAndFlush(_oneManyResultEntity);
   }
 
   public OneManyResultEntity addModel(byte[] content, String filename, UUID oneManyEntityHashId)
@@ -84,10 +86,11 @@ public class OneManyTaskService {
     return oneManyUtils.applyCommonSubsequenceToTarget(_oneManyResultEntity);
   }
 
+  @Transactional
   public OneManyResultEntity removeModel(UUID modelhashId, UUID oneManyEntityHashId)
       throws Exception {
     OneManyResultEntity _oneManyResultEntity = oneManyRepository.getByHashId(oneManyEntityHashId);
-    if (_oneManyResultEntity == null) {
+    if (Objects.equals(_oneManyResultEntity, null)) {
       throw new Exception("task does not exist");
     }
     _oneManyResultEntity.removeModel(structureModelRepository.getByHashId(modelhashId));

@@ -13,10 +13,11 @@
 	</parent>
 	<groupId>pl.poznan.put</groupId>
 	<artifactId>rnatango-engine</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-RELEASE</version>
 	<name>rnatango-engine</name>
 	<description>RNAtango engine</description>
 	<properties>
+		<start.class>pl.poznan.put.rnatangoengine.RnatangoEngineApplication</start.class>
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
@@ -40,6 +41,17 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+        <groupId>org.biojava</groupId>
+        <artifactId>biojava-core</artifactId>
+        <version>6.1.0</version>
+      </dependency>
+	  <dependency>
+                        <groupId>org.biojava</groupId>
+                        <artifactId>biojava-structure</artifactId>
+                        <version>6.1.0</version>
+                </dependency>
+				
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -73,21 +85,37 @@
             <groupId>org.springframework.amqp</groupId>
             <artifactId>spring-rabbit</artifactId>
             <version>3.1.0</version>
-        </dependency>
+        </dependency> 
 		<dependency>
 			<groupId>pl.poznan.put.mcq</groupId>
 			<artifactId>mcq-core</artifactId>
-			<version>1.8.2</version>
-			<scope>system</scope>
-			<systemPath>/opt/mcq4structures/mcq-core/target/mcq-core-1.8.2.jar</systemPath>
-      <!-- <systemPath>/mnt/disk/Projekty/mcq4structures/mcq-core/target/mcq-core-1.8.2.jar</systemPath> -->
-	</dependency>
+			<version>1.8.3</version>
+		</dependency> 
+		<dependency>
+			<groupId>nl.martijndwars</groupId>
+			<artifactId>web-push</artifactId>
+			<version>5.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>1.70</version>
+		</dependency>
+		<dependency>
+			<groupId>pl.poznan.put.mcq</groupId>
+			<artifactId>mcq-clustering</artifactId> 
+			<version>1.8.3</version>
+		</dependency>
+
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.34</version>
+      </dependency>
 	<dependency>
         	<groupId>com.github.tzok</groupId>
         	<artifactId>varna-tz</artifactId>
         	<version>1.2.1</version>
-			<scope>system</scope>
-			<systemPath>/opt/varna-tz/target/varna-tz-1.2.1.jar</systemPath>
      	</dependency>
 		<dependency>
         <groupId>org.biojava</groupId>
@@ -115,6 +143,17 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+  				<configuration>
+				    <mainClass>pl.poznan.put.rnatangoengine.RnatangoEngineApplication</mainClass>
+					<layout>JAR</layout>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+			</executions>
 			</plugin>
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
@@ -138,6 +177,23 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- <plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+				<execution>
+					<phase>package</phase>
+					<goals>
+					<goal>single</goal>
+					</goals>
+				</execution>
+				</executions>
+				<configuration>
+				<descriptorRefs>
+					<descriptorRef>jar-with-dependencies</descriptorRef>
+				</descriptorRefs>
+				</configuration>
+			</plugin> -->
+			
 		</plugins>
 	</build>
 </project>

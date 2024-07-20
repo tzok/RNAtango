@@ -1,7 +1,6 @@
 package pl.poznan.put.rnatangoengine.database.definitions;
 
 import jakarta.persistence.*;
-import java.util.List;
 import pl.poznan.put.rnatangoengine.dto.ImmutableNucleotideRange;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelectionChain;
 import pl.poznan.put.rnatangoengine.dto.SelectionChain;
@@ -15,14 +14,16 @@ public class SelectionChainEntity {
   protected Long id;
 
   private String name;
+
+  @Column(length = 5000)
   private String sequence;
 
   private int fromInclusive;
 
   private int toInclusive;
 
-  @ManyToMany(mappedBy = "selectionChains")
-  List<SelectionEntity> selection;
+  // @ManyToMany(mappedBy = "selectionChains")
+  // List<SelectionEntity> selection;
 
   public SelectionChainEntity() {}
 
@@ -31,6 +32,13 @@ public class SelectionChainEntity {
     this.fromInclusive = fromInclusive;
     this.toInclusive = toInclusive;
     this.sequence = "";
+  }
+
+  public SelectionChainEntity(String name, String sequence, int fromInclusive, int toInclusive) {
+    this.name = name;
+    this.fromInclusive = fromInclusive;
+    this.toInclusive = toInclusive;
+    this.sequence = sequence.toUpperCase();
   }
 
   public String getName() {
@@ -50,7 +58,7 @@ public class SelectionChainEntity {
   }
 
   public void setSequence(String sequence) {
-    this.sequence = sequence;
+    this.sequence = sequence.toUpperCase();
   }
 
   public void setFromInclusive(int fromInclusive) {
@@ -64,6 +72,7 @@ public class SelectionChainEntity {
   public SelectionChain getConvertedToSelectionChainImmutable() {
     return ImmutableSelectionChain.builder()
         .name(this.name)
+        .sequence(this.sequence)
         .nucleotideRange(
             ImmutableNucleotideRange.builder()
                 .fromInclusive(this.fromInclusive)

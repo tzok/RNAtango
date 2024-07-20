@@ -25,6 +25,7 @@ import pl.poznan.put.rnatangoengine.dto.StructureSequences;
 public class Structure {
   List<CifModel> structureModels;
   Boolean containDiscontinuousScopes;
+  String title;
   String name;
   Molecule molecule;
   String filteredContent;
@@ -36,6 +37,7 @@ public class Structure {
     this.molecule = Molecule.NA;
     this.filteredContent = "";
     this.continuousSequences = null;
+    this.title = structureModels.get(0).title();
   }
 
   /**
@@ -74,7 +76,7 @@ public class Structure {
         chains.add(
             ImmutableChain.builder()
                 .name(chain.identifier())
-                .sequence(chain.sequence())
+                .sequence(chain.sequence().toUpperCase())
                 .residuesWithoutAtoms(
                     missingResidues.getOrDefault(chain.identifier(), new ArrayList<>()))
                 .build());
@@ -123,7 +125,8 @@ public class Structure {
         sequenceResidues.stream()
             .map((r) -> r.oneLetterName())
             .map(String::valueOf)
-            .collect(Collectors.joining()),
+            .collect(Collectors.joining())
+            .toUpperCase(),
         sequenceResidues.get(0).residueNumber(),
         sequenceResidues.get(sequenceResidues.size() - 1).residueNumber());
   }
@@ -153,26 +156,41 @@ public class Structure {
     List<PdbAtomLine> resultAtoms = new ArrayList<PdbAtomLine>();
     for (Selection selection : selections) {
 
-      if (selection.chains().isEmpty()) {
-        return pdbModelFiltered.toCif();
-      }
+      // if (selection.chains().isEmpty()) {
+      //   return pdbModelFiltered.toCif();
+      // }
 
       for (PdbChain chain : pdbModelFiltered.chains()) {
         List<PdbResidue> sequenceResidues = new ArrayList<PdbResidue>();
-        for (SelectionChain selectionChain : selection.chains()) {
-          if (chain.identifier().equals(selectionChain.name())) {
-            for (PdbResidue residue : chain.residues()) {
-              if (residue.residueNumber() >= selectionChain.nucleotideRange().fromInclusive()
-                  && residue.residueNumber() <= selectionChain.nucleotideRange().toInclusive()) {
-                if (residue.atoms().size() == 0) {
-                  if (sequenceResidues.size() > 0) {
-                    this.continuousSequences.insertSequence(
-                        createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
-                    sequenceResidues.clear();
+        if (selection.chains().isEmpty()) {
+          for (PdbResidue residue : chain.residues()) {
+            if (residue.atoms().size() == 0) {
+              if (sequenceResidues.size() > 0) {
+                this.continuousSequences.insertSequence(
+                    createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
+                sequenceResidues.clear();
+              }
+            } else {
+              sequenceResidues.add(residue);
+              resultAtoms.addAll(residue.atoms());
+            }
+          }
+        } else {
+          for (SelectionChain selectionChain : selection.chains()) {
+            if (chain.identifier().equals(selectionChain.name())) {
+              for (PdbResidue residue : chain.residues()) {
+                if (residue.residueNumber() >= selectionChain.nucleotideRange().fromInclusive()
+                    && residue.residueNumber() <= selectionChain.nucleotideRange().toInclusive()) {
+                  if (residue.atoms().size() == 0) {
+                    if (sequenceResidues.size() > 0) {
+                      this.continuousSequences.insertSequence(
+                          createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
+                      sequenceResidues.clear();
+                    }
+                  } else {
+                    sequenceResidues.add(residue);
+                    resultAtoms.addAll(residue.atoms());
                   }
-                } else {
-                  sequenceResidues.add(residue);
-                  resultAtoms.addAll(residue.atoms());
                 }
               }
             }
@@ -200,7 +218,6 @@ public class Structure {
             .toCif();
     final CifParser parser = new CifParser();
     structureModels = parser.parse(this.filteredContent);
-
     return filteredContent;
   }
 
@@ -219,42 +236,70 @@ public class Structure {
     List<PdbAtomLine> resultAtoms = new ArrayList<PdbAtomLine>();
     for (Selection selection : selections) {
 
-      if (selection.chains().isEmpty()) {
-        return pdbModelFiltered.toCif();
-      }
-      HashMap<String, Integer> discontinousMemory = new HashMap<>();
+      // if (selection.chains().isEmpty()) {
+      //   return pdbModelFiltered.toCif();
+      // }
+      HashMap<String, Integer> discontinuousMemory = new HashMap<>();
 
       for (PdbChain chain : pdbModelFiltered.chains()) {
         List<PdbResidue> sequenceResidues = new ArrayList<PdbResidue>();
-        for (SelectionChain selectionChain : selection.chains()) {
-          if (chain.identifier().equals(selectionChain.name())) {
-            int residue_pos = discontinousMemory.getOrDefault(chain.identifier(), 0);
-            int begin_s = -1;
-            int end_s = -1;
-            for (PdbResidue residue : chain.residues()) {
-              if (residue_pos >= selectionChain.nucleotideRange().fromInclusive()
-                  && residue_pos <= selectionChain.nucleotideRange().toInclusive()) {
-                if (residue.atoms().size() == 0) {
-                  if (sequenceResidues.size() > 0) {
-                    this.continuousSequences.insertSequence(
-                        createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
-                    sequenceResidues.clear();
-                  }
-                  if (begin_s >= 0 && end_s < 0) {
-                    end_s = residue_pos - 1;
-                  }
-                } else {
-                  if (begin_s < 0) {
-                    begin_s = residue_pos;
-                  }
-                  if (end_s >= 0) {
-                    containDiscontinuousScopes = true;
-                  }
-                  sequenceResidues.add(residue);
-                  resultAtoms.addAll(residue.atoms());
-                }
+        if (selection.chains().isEmpty()) {
+          int residue_pos = discontinuousMemory.getOrDefault(chain.identifier(), 0);
+          int begin_s = -1;
+          int end_s = -1;
+          for (PdbResidue residue : chain.residues()) {
+            if (residue.atoms().size() == 0) {
+              if (sequenceResidues.size() > 0) {
+                this.continuousSequences.insertSequence(
+                    createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
+                sequenceResidues.clear();
               }
-              residue_pos++;
+              if (begin_s >= 0 && end_s < 0) {
+                end_s = residue_pos - 1;
+              }
+            } else {
+              if (begin_s < 0) {
+                begin_s = residue_pos;
+              }
+              if (end_s >= 0) {
+                containDiscontinuousScopes = true;
+              }
+              sequenceResidues.add(residue);
+              resultAtoms.addAll(residue.atoms());
+            }
+            residue_pos++;
+          }
+        } else {
+          for (SelectionChain selectionChain : selection.chains()) {
+            if (chain.identifier().equals(selectionChain.name())) {
+              int residue_pos = discontinuousMemory.getOrDefault(chain.identifier(), 0);
+              int begin_s = -1;
+              int end_s = -1;
+              for (PdbResidue residue : chain.residues()) {
+                if (residue_pos >= selectionChain.nucleotideRange().fromInclusive()
+                    && residue_pos <= selectionChain.nucleotideRange().toInclusive()) {
+                  if (residue.atoms().size() == 0) {
+                    if (sequenceResidues.size() > 0) {
+                      this.continuousSequences.insertSequence(
+                          createStructureChainSequenceEntry(chain.identifier(), sequenceResidues));
+                      sequenceResidues.clear();
+                    }
+                    if (begin_s >= 0 && end_s < 0) {
+                      end_s = residue_pos - 1;
+                    }
+                  } else {
+                    if (begin_s < 0) {
+                      begin_s = residue_pos;
+                    }
+                    if (end_s >= 0) {
+                      containDiscontinuousScopes = true;
+                    }
+                    sequenceResidues.add(residue);
+                    resultAtoms.addAll(residue.atoms());
+                  }
+                }
+                residue_pos++;
+              }
             }
           }
         }
@@ -264,11 +309,10 @@ public class Structure {
           sequenceResidues.clear();
         }
 
-        discontinousMemory.put(
+        discontinuousMemory.put(
             chain.identifier(),
-            discontinousMemory.getOrDefault(chain.identifier(), 0)
-                + chain.residueIdentifiers().size()
-                + 1);
+            discontinuousMemory.getOrDefault(chain.identifier(), 0)
+                + chain.residueIdentifiers().size());
       }
     }
     this.filteredContent =
@@ -345,7 +389,7 @@ public class Structure {
 
   public String getFirstSequence() throws Exception {
     if (this.structureModels.size() == 1 && this.structureModels.get(0).chains().size() == 1) {
-      return this.structureModels.get(0).chains().get(0).sequence();
+      return this.structureModels.get(0).chains().get(0).sequence().toUpperCase();
     }
     throw new Exception("The structure has not filtered yet");
   }
@@ -362,6 +406,14 @@ public class Structure {
     this.name = name;
   }
 
+  public void setStructureTitle(String title) {
+    this.title = title;
+  }
+
+  public String getStrucutreTitle() {
+    return this.title;
+  }
+
   public String getStructureName() {
     return this.name;
   }
@@ -372,6 +424,10 @@ public class Structure {
 
   public Molecule getStructureMolecule() {
     return this.molecule;
+  }
+
+  public String getFirstChainName() {
+    return this.structureModels.get(0).chains().get(0).identifier();
   }
 
   public String getStructureMoleculeName() {

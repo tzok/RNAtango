@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine.logic;
 
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.rnatangoengine.dto.IndexPair;
 import pl.poznan.put.rnatangoengine.dto.StructureChainSequence;
@@ -21,7 +22,8 @@ public class StructureLcs {
   }
 
   public LCSResult longestCommonSubstring(String targetSequence, String modelSequence) {
-
+    targetSequence = targetSequence.toUpperCase();
+    modelSequence = modelSequence.toUpperCase();
     int n = targetSequence.length();
     int m = modelSequence.length();
     int[][] op = new int[n + 1][m + 1];
@@ -105,7 +107,7 @@ public class StructureLcs {
         structureComparingResult.setTargetFromInclusiveRelative(lcsResult.targetBeginIndex);
       }
     }
-    if (structureComparingResult.getModel() == null) {
+    if (Objects.equals(structureComparingResult.getModel(), null)) {
       throw new ModelTargetMatchingException("Target no match model");
     }
     return structureComparingResult;

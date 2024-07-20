@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.pdb.analysis.*;
+import pl.poznan.put.rna.NucleotideTorsionAngle;
+import pl.poznan.put.rnatangoengine.WebPushService;
 import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
 import pl.poznan.put.rnatangoengine.database.definitions.ChainTorsionAngleEntity;
@@ -36,6 +38,7 @@ public class SingleProcessing {
   @Autowired SelectionRepository selectionRepository;
   @Autowired StructureProcessingService structureProcessingService;
   @Autowired FileRepository fileRepository;
+  @Autowired WebPushService webPushService;
 
   public SingleProcessing() {}
 
@@ -54,6 +57,7 @@ public class SingleProcessing {
       structure = structureProcessingService.process(singleResultEntity.getFileId());
       singleResultEntity.setStructureName(structure.getStructureName());
       singleResultEntity.setStructureMolecule(structure.getStructureMoleculeName());
+      singleResultEntity.setStructureTitle(structure.getStrucutreTitle());
       singleResultEntity.setStructureFileContent(
           structure
               .filterParseCif(
@@ -106,6 +110,14 @@ public class SingleProcessing {
                             (residueTorsionAngles.value(residueAngle).isValid()
                                 ? residueTorsionAngles.value(residueAngle).degrees()
                                 : null)));
+            _residueTorsionAngleEntity.setAngle(
+                exportAngleNameToAngle.parse(
+                    NucleotideTorsionAngle.PSEUDOPHASE_PUCKER.exportName()),
+                residueTorsionAngles.value(NucleotideTorsionAngle.PSEUDOPHASE_PUCKER).isValid()
+                    ? residueTorsionAngles
+                        .value(NucleotideTorsionAngle.PSEUDOPHASE_PUCKER)
+                        .degrees()
+                    : null);
             residueAngles.add(_residueTorsionAngleEntity);
           }
 
@@ -120,22 +132,50 @@ public class SingleProcessing {
       singleResultEntity.setIsDiscontinuousResiduesSequence(
           structure.getContainDiscontinuousScopes());
       singleRepository.save(singleResultEntity);
+      singleResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s,
+                      "Single model task "
+                          + singleResultEntity.getHashId().toString()
+                          + " completed"));
       tempFile.deleteOnExit();
       try {
         fileRepository.deleteByHashId(UUID.fromString(singleResultEntity.getFileId()));
       } catch (Exception e) {
       }
     } catch (IOException e) {
+      e.printStackTrace();
+
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());
       singleResultEntity.setUserErrorLog("Error during structure processing");
-
+      singleResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s,
+                      "Single model task "
+                          + singleResultEntity.getHashId().toString()
+                          + " processing failed"));
       singleRepository.save(singleResultEntity);
     } catch (IllegalArgumentException e) {
+      e.printStackTrace();
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());
       singleResultEntity.setUserErrorLog("Residues does not have atoms coordinates");
-
+      singleResultEntity
+          .getSubscibers()
+          .forEach(
+              (s) ->
+                  webPushService.sendNotificationToClient(
+                      s,
+                      "Single model task "
+                          + singleResultEntity.getHashId().toString()
+                          + " processing failed"));
       singleRepository.save(singleResultEntity);
     }
   }

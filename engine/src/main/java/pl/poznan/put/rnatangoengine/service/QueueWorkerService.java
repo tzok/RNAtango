@@ -7,6 +7,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import pl.poznan.put.rnatangoengine.dto.Task;
+import pl.poznan.put.rnatangoengine.logic.manyManyProcessing.ManyManyProcessing;
 import pl.poznan.put.rnatangoengine.logic.oneManyProcessing.OneManyProcessing;
 import pl.poznan.put.rnatangoengine.logic.singleProcessing.SingleProcessing;
 
@@ -15,6 +16,7 @@ import pl.poznan.put.rnatangoengine.logic.singleProcessing.SingleProcessing;
 public class QueueWorkerService {
   @Autowired SingleProcessing singleProcessing;
   @Autowired OneManyProcessing oneManyProcessing;
+  @Autowired ManyManyProcessing manyManyProcessing;
 
   private static Logger logger = LogManager.getLogger(QueueWorkerService.class.toString());
 
@@ -26,6 +28,9 @@ public class QueueWorkerService {
         break;
       case OneMany:
         oneManyProcessing.startTask(task.taskHashId());
+        break;
+      case ManyMany:
+        manyManyProcessing.startTask(task.taskHashId());
         break;
       default:
         return;

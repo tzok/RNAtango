@@ -11,12 +11,12 @@ import pl.poznan.put.rnatangoengine.database.repository.OneManyRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionChainRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
-import pl.poznan.put.rnatangoengine.dto.ImmutableOneManySetFormResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStructureModelResponse;
 import pl.poznan.put.rnatangoengine.dto.ImmutableStructureTargetResponse;
 import pl.poznan.put.rnatangoengine.dto.IndexPair;
-import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.ImmutableOneManySetFormResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySetFormResponse;
 
 @Service
 public class OneManyUtils {

@@ -36,6 +36,7 @@ public class ResidueTorsionAngleEntity {
   private Double theta;
   private Double eta_prim;
   private Double theta_prim;
+  private Double p;
 
   private Double mcq;
   private String dotBracketSymbol;
@@ -43,7 +44,7 @@ public class ResidueTorsionAngleEntity {
   public ResidueTorsionAngleEntity() {}
 
   public ResidueTorsionAngleEntity(String name, int number, String icode) {
-    this.name = name;
+    this.name = name.toUpperCase();
     this.number = number;
     this.icode = icode;
     this.mcq = 0.0;
@@ -67,6 +68,11 @@ public class ResidueTorsionAngleEntity {
                   }
                 })
             .collect(Collectors.toList());
+    angleValues.add(
+        ImmutableAngleValue.builder()
+            .value(getAngle(exportAngleNameToAngle.parse("P")))
+            .angle(exportAngleNameToAngle.parse("P"))
+            .build());
     angleValues.removeAll(Collections.singleton(null));
     return angleValues;
   }
@@ -89,6 +95,7 @@ public class ResidueTorsionAngleEntity {
                   }
                 })
             .collect(Collectors.toList());
+
     angleValues.removeAll(Collections.singleton(null));
     return angleValues;
   }
@@ -158,6 +165,8 @@ public class ResidueTorsionAngleEntity {
         return this.eta_prim;
       case THETA_PRIM:
         return this.theta_prim;
+      case P:
+        return this.p;
       default:
         return null;
     }
@@ -201,6 +210,8 @@ public class ResidueTorsionAngleEntity {
       case THETA_PRIM:
         this.theta_prim = value;
         break;
+      case P:
+        this.p = value;
       default:
         break;
     }

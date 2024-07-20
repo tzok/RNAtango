@@ -43,6 +43,7 @@ public class SelectionEntity {
                 (selectionChain) ->
                     new SelectionChainEntity(
                         selectionChain.name(),
+                        selectionChain.sequence().orElse("").toUpperCase(),
                         selectionChain.nucleotideRange().fromInclusive(),
                         selectionChain.nucleotideRange().toInclusive()))
             .collect(Collectors.toList()));
@@ -64,6 +65,15 @@ public class SelectionEntity {
 
   public String getModelName() {
     return modelName;
+  }
+
+  public void setModelName(String modelName) {
+    this.modelName = modelName;
+  }
+
+  public void setAllChains(List<SelectionChainEntity> chains) {
+    this.selectionChains = new ArrayList<>();
+    this.selectionChains.addAll(chains);
   }
 
   public Long getId() {

@@ -8,12 +8,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import pl.poznan.put.rnatangoengine.dto.OneManyOutput;
-import pl.poznan.put.rnatangoengine.dto.OneManySetFormInput;
-import pl.poznan.put.rnatangoengine.dto.OneManySetFormResponse;
-import pl.poznan.put.rnatangoengine.dto.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.dto.StatusResponse;
 import pl.poznan.put.rnatangoengine.dto.TaskIdResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManyOutput;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySetFormInput;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySetFormResponse;
+import pl.poznan.put.rnatangoengine.dto.oneMany.OneManySubmitFormInput;
 import pl.poznan.put.rnatangoengine.service.oneMany.OneManyService;
 
 @RestController
@@ -59,13 +59,13 @@ public class OneManyController {
   }
 
   @GetMapping("/one-many/{taskId}")
-  public StatusResponse oneManyStatus(@PathVariable String taskId) {
-    return oneManyService.oneManyStatus(taskId);
+  public ResponseEntity<StatusResponse> oneManyStatus(@PathVariable String taskId) {
+    return new ResponseEntity<>(oneManyService.oneManyStatus(taskId), HttpStatus.ACCEPTED);
   }
 
   @GetMapping("/one-many/{taskId}/result")
-  public OneManyOutput oneManyResult(@PathVariable String taskId) {
-    return oneManyService.oneManyResult(taskId);
+  public ResponseEntity<OneManyOutput> oneManyResult(@PathVariable String taskId) {
+    return new ResponseEntity<>(oneManyService.oneManyResult(taskId), HttpStatus.ACCEPTED);
   }
 
   @GetMapping(value = "/one-many/secondary/structure/{modelId}")
@@ -88,5 +88,10 @@ public class OneManyController {
         .body(
             new String(
                 oneManyService.oneManyTertiaryStructureModel(modelId), StandardCharsets.UTF_8));
+  }
+
+  @GetMapping(value = "/one-many/example/{example}")
+  public ResponseEntity<TaskIdResponse> oneManyExample(@PathVariable String example) {
+    return new ResponseEntity<>(oneManyService.oneManyExample(example), HttpStatus.ACCEPTED);
   }
 }

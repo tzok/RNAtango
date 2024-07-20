@@ -6,10 +6,12 @@ import java.io.StringWriter;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import pl.poznan.put.rnatangoengine.database.converters.AngleListConverter;
 import pl.poznan.put.rnatangoengine.database.definitions.StructureModelEntity;
+import pl.poznan.put.rnatangoengine.database.definitions.WebPushSubscription;
 import pl.poznan.put.rnatangoengine.dto.Angle;
 import pl.poznan.put.rnatangoengine.dto.Status;
 
@@ -44,12 +46,15 @@ public class OneManyResultEntity {
   @JoinColumn(name = "structure_target_id", insertable = true, updatable = true, nullable = true)
   private StructureModelEntity target;
 
-  @OneToMany(fetch = FetchType.EAGER)
+  @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   @JoinTable(
       name = "onemany_models",
       joinColumns = @JoinColumn(name = "onemany_id"),
       inverseJoinColumns = @JoinColumn(name = "model_id"))
   private List<StructureModelEntity> models;
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  private List<WebPushSubscription> webPushSubscriptions;
 
   private void setDefaultValues() {
     this.status = Status.SETTING;
@@ -57,6 +62,9 @@ public class OneManyResultEntity {
     this.discontinuousResiduesSequence = false;
     this.errorLog = "";
     this.userErrorLog = "";
+    this.webPushSubscriptions = new ArrayList<>();
+
+    this.models = new ArrayList<>();
   }
 
   public OneManyResultEntity() {
@@ -153,6 +161,10 @@ public class OneManyResultEntity {
     models.add(model);
   }
 
+  public void addAllModels(List<StructureModelEntity> models) {
+    models.addAll(models);
+  }
+
   public StructureModelEntity getTargetEntity() {
     return target;
   }
@@ -167,5 +179,14 @@ public class OneManyResultEntity {
 
   public Boolean isDiscontinuousResiduesSequence() {
     return this.discontinuousResiduesSequence;
+  }
+
+  public List<WebPushSubscription> getSubscibers() {
+    return this.webPushSubscriptions;
+  }
+
+  public void setSubscribers(List<WebPushSubscription> subscribers) {
+    this.webPushSubscriptions = new ArrayList<>();
+    this.webPushSubscriptions = subscribers;
   }
 }

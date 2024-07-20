@@ -63,7 +63,7 @@ public class StructureComparingResult {
   }
 
   public void setSequence(String sequence) {
-    this.sequence = sequence;
+    this.sequence = sequence.toUpperCase();
   }
 
   public void setModel(StructureChainSequence chainSequence) {

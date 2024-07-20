@@ -1,10 +1,18 @@
 package pl.poznan.put.rnatangoengine.logic;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.vecmath.Matrix4d;
+import javax.vecmath.Point3d;
+import org.biojava.nbio.structure.*;
+import org.biojava.nbio.structure.geometry.CalcPoint;
+import org.biojava.nbio.structure.geometry.SuperPositions;
+import org.biojava.nbio.structure.io.CifFileReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.poznan.put.comparison.ImmutableMCQ;
@@ -13,10 +21,16 @@ import pl.poznan.put.comparison.mapping.AngleDeltaMapper;
 import pl.poznan.put.matching.FragmentMatch;
 import pl.poznan.put.matching.ResidueComparison;
 import pl.poznan.put.matching.StructureSelection;
+import pl.poznan.put.pdb.ImmutablePdbAtomLine;
+import pl.poznan.put.pdb.PdbAtomLine;
+import pl.poznan.put.pdb.analysis.CifModel;
+import pl.poznan.put.pdb.analysis.ImmutableDefaultCifModel;
 import pl.poznan.put.pdb.analysis.ImmutablePdbCompactFragment;
 import pl.poznan.put.pdb.analysis.MoleculeType;
 import pl.poznan.put.pdb.analysis.PdbCompactFragment;
+import pl.poznan.put.pdb.analysis.PdbResidue;
 import pl.poznan.put.rna.NucleotideTorsionAngle;
+import pl.poznan.put.rnatangoengine.database.business.Structure;
 import pl.poznan.put.rnatangoengine.database.converters.ExportAngleNameToAngle;
 import pl.poznan.put.rnatangoengine.database.definitions.LCSEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.ResidueTorsionAngleEntity;
@@ -27,6 +41,11 @@ import pl.poznan.put.rnatangoengine.database.repository.SelectionChainRepository
 import pl.poznan.put.rnatangoengine.database.repository.StructureModelRepository;
 import pl.poznan.put.rnatangoengine.dto.Angle;
 import pl.poznan.put.rnatangoengine.dto.FileFormat;
+import pl.poznan.put.rnatangoengine.dto.ImmutableNucleotideRange;
+import pl.poznan.put.rnatangoengine.dto.ImmutableSelection;
+import pl.poznan.put.rnatangoengine.dto.ImmutableSelectionChain;
+import pl.poznan.put.rnatangoengine.dto.LCSResult;
+import pl.poznan.put.rnatangoengine.dto.NucleotideRange;
 import pl.poznan.put.rnatangoengine.logic.oneManyProcessing.LcsTaProcessing;
 import pl.poznan.put.structure.formats.DotBracket;
 import pl.poznan.put.svg.SecondaryStructureVisualizer;
@@ -44,7 +63,8 @@ public class TargetModelsComparsionService {
   @Autowired ResidueTorsionAngleRepository residueTorsionAngleRepository;
   @Autowired LcsTaProcessing lcsProcessing;
 
-  public StructureSelection parseStructureSelection(StructureModelEntity model) throws IOException {
+  private StructureSelection parseStructureSelection(StructureModelEntity model)
+      throws IOException {
     return StructureSelection.divideIntoCompactFragments(
         model.getFilename(),
         structureProcessingService
@@ -73,11 +93,130 @@ public class TargetModelsComparsionService {
         .collect(Collectors.toList());
   }
 
+  private org.biojava.nbio.structure.Structure getBioJavaStructure(byte[] content)
+      throws IOException {
+    CifFileReader parser = new CifFileReader();
+    Structure structure =
+        structureProcessingService.parseStructureFile(
+            new String(content, StandardCharsets.UTF_8), FileFormat.CIF);
+    return parser.getStructure(
+        new ByteArrayInputStream(
+            structure
+                .filterAuthParseCif(ImmutableSelection.builder().modelName("1").build())
+                .getBytes()));
+  }
+
+  private org.biojava.nbio.structure.Structure getBioJavaStructure(
+      byte[] content, NucleotideRange selection) throws IOException {
+    CifFileReader parser = new CifFileReader();
+    Structure structure =
+        structureProcessingService.parseStructureFile(
+            new String(content, StandardCharsets.UTF_8), FileFormat.CIF);
+    return parser.getStructure(
+        new ByteArrayInputStream(
+            structure
+                .filterAuthParseCif(
+                    ImmutableSelection.builder()
+                        .modelName("1")
+                        .addChains(
+                            ImmutableSelectionChain.builder()
+                                .name(structure.getFirstChainName())
+                                .nucleotideRange(
+                                    ImmutableNucleotideRange.builder().from(selection).build())
+                                .build())
+                        .build())
+                .getBytes()));
+  }
+
   public LCSEntity lcs(StructureModelEntity target, StructureModelEntity model, Double threshold)
       throws IOException {
 
-    return lcsProcessing.calculate(
-        parseStructureSelection(target), parseStructureSelection(model), threshold);
+    LCSEntity lcsEntity =
+        lcsProcessing.calculate(
+            parseStructureSelection(target), parseStructureSelection(model), threshold);
+    if (!Objects.equals(lcsEntity, null)) {
+      LCSResult lcsResult = lcsEntity.getConvertedToLCSImmutable();
+      try {
+        final List<PdbAtomLine> modifiedAtoms = new ArrayList<>();
+        org.biojava.nbio.structure.Structure modelStructure =
+            getBioJavaStructure(model.getContent(), lcsResult.modelNucleotideRange());
+        org.biojava.nbio.structure.Structure targetStructure =
+            getBioJavaStructure(target.getContent(), lcsResult.targetNucleotideRange());
+
+        List<Point3d> targetPoints =
+            targetStructure.getChains().get(0).getAtomGroups(GroupType.NUCLEOTIDE).stream()
+                .flatMap(
+                    (group) ->
+                        group.getAtoms().stream()
+                            .filter((atom) -> atom.getName().equals("P"))
+                            .map((atom) -> atom.getCoordsAsPoint3d()))
+                .collect(Collectors.toList());
+        List<Point3d> modelPoints =
+            modelStructure.getChains().get(0).getAtomGroups(GroupType.NUCLEOTIDE).stream()
+                .flatMap(
+                    (group) ->
+                        group.getAtoms().stream()
+                            .filter((atom) -> atom.getName().equals("P"))
+                            .map((atom) -> atom.getCoordsAsPoint3d()))
+                .collect(Collectors.toList());
+        final Point3d[] pointsTarget = new Point3d[targetPoints.size()];
+        final Point3d[] pointsModel = new Point3d[modelPoints.size()];
+        for (int i = 0, size = targetPoints.size(); i < size; i++) {
+          pointsTarget[i] = new Point3d(targetPoints.get(i));
+        }
+        for (int i = 0, size = targetPoints.size(); i < size; i++) {
+          pointsModel[i] = new Point3d(modelPoints.get(i));
+        }
+        Matrix4d modelMatrix = SuperPositions.superposeAndTransform(pointsTarget, pointsModel);
+        modelStructure = getBioJavaStructure(model.getContent());
+        CifModel transformedStructureModel =
+            structureProcessingService
+                .parseStructureFile(
+                    new String(model.getContent(), StandardCharsets.UTF_8), FileFormat.CIF)
+                .getCifModels()
+                .get(0);
+        for (final PdbResidue residue : transformedStructureModel.residues()) {
+
+          final List<PdbAtomLine> atoms = residue.atoms();
+          final Point3d[] points = new Point3d[atoms.size()];
+
+          for (int i = 0, size = atoms.size(); i < size; i++) {
+            final PdbAtomLine atom = atoms.get(i);
+            points[i] = new Point3d(atom.x(), atom.y(), atom.z());
+          }
+          CalcPoint.transform(modelMatrix, points);
+
+          for (int i = 0, size = atoms.size(); i < size; i++) {
+            final PdbAtomLine atom = atoms.get(i);
+            modifiedAtoms.add(
+                ImmutablePdbAtomLine.copyOf(atom)
+                    .withX(points[i].x)
+                    .withY(points[i].y)
+                    .withZ(points[i].z));
+          }
+        }
+
+        model.setContent(
+            ImmutableDefaultCifModel.of(
+                    transformedStructureModel.header(),
+                    transformedStructureModel.experimentalData(),
+                    transformedStructureModel.resolution(),
+                    transformedStructureModel.modelNumber(),
+                    modifiedAtoms,
+                    transformedStructureModel.modifiedResidues(),
+                    transformedStructureModel.missingResidues(),
+                    transformedStructureModel.title(),
+                    transformedStructureModel.chainTerminatedAfter(),
+                    transformedStructureModel.basePairs())
+                .toCif()
+                .getBytes());
+        structureModelRepository.saveAndFlush(model);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    return lcsEntity;
   }
 
   public ResidueTorsionAngleEntity compareResidues(
@@ -110,17 +249,6 @@ public class TargetModelsComparsionService {
     return residueTorsionAngleRepository.saveAndFlush(residueTorsionAngleEntity);
   }
 
-  private byte[] removeSvgViewBox(byte content[]) {
-
-    String contentString = new String(content, StandardCharsets.UTF_8);
-    String[] lines = contentString.split("\\n");
-    lines[2] = lines[2].substring(0, lines[2].indexOf("width=") - 1);
-    lines[5] = lines[5].substring(0, lines[5].indexOf("viewBox=") - 1);
-    lines[6] = lines[6].substring(lines[6].indexOf("preserveAspectRatio=") - 1);
-
-    return String.join(System.lineSeparator(), lines).getBytes();
-  }
-
   public void compareModel(
       FragmentMatch fragmentMatch,
       StructureModelEntity structureModelEntity,
@@ -139,11 +267,9 @@ public class TargetModelsComparsionService {
 
     try {
       structureModelEntity.setSecondaryStructureVisualizationSVG(
-          removeSvgViewBox(
-              SVGHelper.export(
-                  SecondaryStructureVisualizer.visualize(
-                      fragmentMatch, AngleDeltaMapper.getInstance()),
-                  Format.SVG)));
+          SVGHelper.export(
+              SecondaryStructureVisualizer.visualize(fragmentMatch, AngleDeltaMapper.getInstance()),
+              Format.SVG));
     } catch (Exception el) {
       el.printStackTrace();
     }
@@ -186,13 +312,17 @@ public class TargetModelsComparsionService {
   }
 
   private static ImmutablePdbCompactFragment renamedInstance(
-      final StructureSelection selection, final int i) {
+      final StructureSelection selection, boolean isModel, final int i) {
     final List<PdbCompactFragment> compactFragments = selection.getCompactFragments();
     final PdbCompactFragment compactFragment = compactFragments.get(i);
     final String name =
-        compactFragments.size() == 1
-            ? selection.getName()
-            : String.format("%s %s", selection.getName(), compactFragment.name());
+        isModel
+            ? (compactFragments.size() == 1
+                ? selection.getName() + "_model"
+                : String.format("%s %s", selection.getName() + "_model", compactFragment.name()))
+            : (compactFragments.size() == 1
+                ? selection.getName()
+                : String.format("%s %s", selection.getName(), compactFragment.name()));
     return ImmutablePdbCompactFragment.copyOf(compactFragment).withName(name);
   }
 
@@ -201,9 +331,9 @@ public class TargetModelsComparsionService {
       List<StructureSelection> models,
       List<MasterTorsionAngleType> angleTypes,
       final int i) {
-    final PdbCompactFragment targetFragment = renamedInstance(target, i);
+    final PdbCompactFragment targetFragment = renamedInstance(target, false, i);
     final List<PdbCompactFragment> modelFragments =
-        models.stream().map(model -> renamedInstance(model, i)).collect(Collectors.toList());
+        models.stream().map(model -> renamedInstance(model, true, i)).collect(Collectors.toList());
     return ImmutableMCQ.of(MoleculeType.RNA)
         .withAngleTypes(angleTypes)
         .compareModels(targetFragment, modelFragments);

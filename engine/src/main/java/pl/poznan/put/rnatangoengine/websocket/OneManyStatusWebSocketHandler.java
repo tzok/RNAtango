@@ -80,7 +80,7 @@ public class OneManyStatusWebSocketHandler extends TextWebSocketHandler {
                       .toJson(
                           ImmutableStatusResponse.builder()
                               .status(_oneManyResultEntity.getStatus())
-                              .resultUrl("/single/" + incoming.hashId() + "/result")
+                              .resultUrl("/one-many/" + incoming.hashId() + "/result")
                               .build())));
           session.close(CloseStatus.NORMAL);
           break;

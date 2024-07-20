@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.database.repository;
 
+import java.sql.Date;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,4 +11,8 @@ public interface OneManyRepository extends JpaRepository<OneManyResultEntity, Lo
   OneManyResultEntity getById(Long id);
 
   OneManyResultEntity getByHashId(UUID hashId);
+
+  void deleteByHashId(UUID hashId);
+
+  void deleteByRemoveAfterBefore(Date date);
 }

@@ -30,6 +30,8 @@ public class ExportAngleNameToAngle {
         return "eta-prim";
       case THETA_PRIM:
         return "theta-prim";
+      case P:
+        return "P";
     }
     return null;
   }
@@ -58,6 +60,8 @@ public class ExportAngleNameToAngle {
         return Angle.ETA_PRIM;
       case "theta-prim":
         return Angle.THETA_PRIM;
+      case "P":
+        return Angle.P;
     }
     return null;
   }
