@@ -22,9 +22,7 @@ public class ResidueTorsionAngleEntity {
   protected Long id;
 
   private String name;
-
   private int number;
-
   private String icode;
 
   private Double alpha;
@@ -39,8 +37,8 @@ public class ResidueTorsionAngleEntity {
   private Double eta_prim;
   private Double theta_prim;
 
-  @ManyToMany(mappedBy = "residuesTorsionAngleEntities", fetch = FetchType.EAGER)
-  List<ChainTorsionAngleEntity> chainsTorsionAngleEntites;
+  private Double mcq;
+  private String dotBracketSymbol;
 
   public ResidueTorsionAngleEntity() {}
 
@@ -48,6 +46,8 @@ public class ResidueTorsionAngleEntity {
     this.name = name;
     this.number = number;
     this.icode = icode;
+    this.mcq = 0.0;
+    this.dotBracketSymbol = ".";
   }
 
   public List<AngleValue> getAllAngleValues() {
@@ -71,13 +71,52 @@ public class ResidueTorsionAngleEntity {
     return angleValues;
   }
 
+  public List<AngleValue> getAnglesValues(List<Angle> angles) {
+    ExportAngleNameToAngle exportAngleNameToAngle = new ExportAngleNameToAngle();
+
+    List<AngleValue> angleValues =
+        MoleculeType.RNA.allAngleTypes().stream()
+            .map(
+                (angleName) -> {
+                  if (angles.contains(exportAngleNameToAngle.parse(angleName.exportName()))
+                      && exportAngleNameToAngle.parse(angleName.exportName()) != null) {
+                    return ImmutableAngleValue.builder()
+                        .value(getAngle(exportAngleNameToAngle.parse(angleName.exportName())))
+                        .angle(exportAngleNameToAngle.parse(angleName.exportName()))
+                        .build();
+                  } else {
+                    return null;
+                  }
+                })
+            .collect(Collectors.toList());
+    angleValues.removeAll(Collections.singleton(null));
+    return angleValues;
+  }
+
   public Residue getConvertedToResidueImmutable() {
     return ImmutableResidue.builder()
         .icode(this.icode)
         .name(this.name)
         .number(this.number)
         .addAllTorsionAngles(this.getAllAngleValues())
+        .dotBracketSymbol(dotBracketSymbol)
         .build();
+  }
+
+  public void setMcqValue(Double mcqValue) {
+    this.mcq = mcqValue;
+  }
+
+  public Double getMcqValue() {
+    return this.mcq;
+  }
+
+  public void setDotBracketSymbol(String symbol) {
+    this.dotBracketSymbol = symbol;
+  }
+
+  public String getDotBracketSymbol() {
+    return this.dotBracketSymbol;
   }
 
   public String getName() {

@@ -19,6 +19,7 @@ import pl.poznan.put.rnatangoengine.database.definitions.ResidueTorsionAngleEnti
 import pl.poznan.put.rnatangoengine.database.definitions.ScenarioEntities.SingleResultEntity;
 import pl.poznan.put.rnatangoengine.database.definitions.SelectionEntity;
 import pl.poznan.put.rnatangoengine.database.repository.ChainTorsionAngleRepository;
+import pl.poznan.put.rnatangoengine.database.repository.FileRepository;
 import pl.poznan.put.rnatangoengine.database.repository.ResidueTorsionAngleRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SelectionRepository;
 import pl.poznan.put.rnatangoengine.database.repository.SingleResultRepository;
@@ -34,6 +35,7 @@ public class SingleProcessing {
 
   @Autowired SelectionRepository selectionRepository;
   @Autowired StructureProcessingService structureProcessingService;
+  @Autowired FileRepository fileRepository;
 
   public SingleProcessing() {}
 
@@ -119,7 +121,10 @@ public class SingleProcessing {
           structure.getContainDiscontinuousScopes());
       singleRepository.save(singleResultEntity);
       tempFile.deleteOnExit();
-
+      try {
+        fileRepository.deleteByHashId(UUID.fromString(singleResultEntity.getFileId()));
+      } catch (Exception e) {
+      }
     } catch (IOException e) {
       singleResultEntity.setStatus(Status.FAILED);
       singleResultEntity.setErrorLog(e.getStackTrace().toString());

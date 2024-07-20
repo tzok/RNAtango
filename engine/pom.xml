@@ -29,7 +29,7 @@
 			<artifactId>value</artifactId>
 			<version>2.9.3</version>
 			<scope>provided</scope>
-		</dependency>
+    </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -80,7 +80,20 @@
 			<version>1.8.2</version>
 			<scope>system</scope>
 			<systemPath>/opt/mcq4structures/mcq-core/target/mcq-core-1.8.2.jar</systemPath>
-    	</dependency>
+      <!-- <systemPath>/mnt/disk/Projekty/mcq4structures/mcq-core/target/mcq-core-1.8.2.jar</systemPath> -->
+	</dependency>
+	<dependency>
+        	<groupId>com.github.tzok</groupId>
+        	<artifactId>varna-tz</artifactId>
+        	<version>1.2.1</version>
+			<scope>system</scope>
+			<systemPath>/opt/varna-tz/target/varna-tz-1.2.1.jar</systemPath>
+     	</dependency>
+		<dependency>
+        <groupId>org.biojava</groupId>
+        <artifactId>jcolorbrewer</artifactId>
+        <version>5.2</version>
+      </dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

@@ -5,8 +5,6 @@ import com.google.gson.Gson;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
@@ -21,7 +19,6 @@ import pl.poznan.put.rnatangoengine.dto.StatusInput;
 @Service
 public class SingleStatusWebSocketHandler extends TextWebSocketHandler {
   @Autowired SingleResultRepository singleRepository;
-  private static final Logger LOGGER = LoggerFactory.getLogger(TextWebSocketHandler.class);
   private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
   @Override
@@ -69,39 +66,44 @@ public class SingleStatusWebSocketHandler extends TextWebSocketHandler {
       session.close(CloseStatus.NOT_ACCEPTABLE);
       return;
     }
-    SingleResultEntity _singleResultEntity = getTaskStatus(session, incoming.hashId());
+    try {
+      SingleResultEntity _singleResultEntity = getTaskStatus(session, incoming.hashId());
 
-    switch (_singleResultEntity.getStatus()) {
-      case SUCCESS:
-        session.sendMessage(
-            new TextMessage(
-                new Gson()
-                    .toJson(
-                        ImmutableStatusResponse.builder()
-                            .status(_singleResultEntity.getStatus())
-                            .resultUrl("/single/" + incoming.hashId() + "/result")
-                            .build())));
-        break;
+      switch (_singleResultEntity.getStatus()) {
+        case SUCCESS:
+          session.sendMessage(
+              new TextMessage(
+                  new Gson()
+                      .toJson(
+                          ImmutableStatusResponse.builder()
+                              .status(_singleResultEntity.getStatus())
+                              .resultUrl("/single/" + incoming.hashId() + "/result")
+                              .build())));
+          session.close(CloseStatus.NORMAL);
+          break;
 
-      case FAILED:
-        session.sendMessage(
-            new TextMessage(
-                new Gson()
-                    .toJson(
-                        ImmutableStatusResponse.builder()
-                            .error(_singleResultEntity.getUserErrorLog())
-                            .build())));
-        session.close(CloseStatus.NORMAL);
-        break;
+        case FAILED:
+          session.sendMessage(
+              new TextMessage(
+                  new Gson()
+                      .toJson(
+                          ImmutableStatusResponse.builder()
+                              .error(_singleResultEntity.getUserErrorLog())
+                              .build())));
+          session.close(CloseStatus.NORMAL);
+          break;
 
-      default:
-        session.sendMessage(
-            new TextMessage(
-                new Gson()
-                    .toJson(
-                        ImmutableStatusResponse.builder()
-                            .status(_singleResultEntity.getStatus())
-                            .build())));
+        default:
+          session.sendMessage(
+              new TextMessage(
+                  new Gson()
+                      .toJson(
+                          ImmutableStatusResponse.builder()
+                              .status(_singleResultEntity.getStatus())
+                              .build())));
+      }
+    } catch (Exception e) {
+      session.sendMessage(new TextMessage("Error during sending message"));
     }
   }
 }
