@@ -22,19 +22,19 @@ WORKDIR /opt/
 RUN git clone https://github.com/tzok/mcq4structures/
 RUN git clone https://github.com/tzok/varna-tz
 WORKDIR /opt/mcq4structures 
-RUN echo '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg
-        xmlns:dc="http://purl.org/dc/elements/1.1/"
-        xmlns:cc="http://creativecommons.org/ns#"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-        xmlns="http://www.w3.org/2000/svg"
-        id="svg4938"
-        version="1.1"
-        viewBox="0 0 17.85704 27.001228"
-        height="27.001228mm"
-        width="17.85704mm"
-        sodipodi:docname="mcq-legend.svg"
+RUN echo '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg \n\
+        xmlns:dc="http://purl.org/dc/elements/1.1/" \n\
+        xmlns:cc="http://creativecommons.org/ns#" \n\
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" \n\
+        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" \n\
+        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" \n\
+        xmlns="http://www.w3.org/2000/svg" \n\
+        id="svg4938" \n\
+        version="1.1" \n\
+        viewBox="0 0 17.85704 27.001228" \n\
+        height="27.001228mm" \n\
+        width="17.85704mm" \n\
+        sodipodi:docname="mcq-legend.svg" \n\
         inkscape:version="0.92.4 5da689c313, 2019-01-14"></svg>' > /opt/mcq4structures/mcq-core/src/main/resources/mcq-legend.svg
 RUN mvn install
 WORKDIR /opt/varna-tz 
