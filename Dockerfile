@@ -22,7 +22,7 @@ WORKDIR /opt/
 RUN git clone https://github.com/tzok/mcq4structures/
 RUN git clone https://github.com/tzok/varna-tz
 WORKDIR /opt/mcq4structures 
-RUN echo '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg \n\
+RUN echo $'<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg \n\
         xmlns:dc="http://purl.org/dc/elements/1.1/" \n\
         xmlns:cc="http://creativecommons.org/ns#" \n\
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" \n\
