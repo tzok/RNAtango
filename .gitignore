@@ -2,4 +2,4 @@
 ssl/
 logs/
 frontend/
-nginx/conf/nginx.conf
+**/conf/nginx.conf

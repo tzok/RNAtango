@@ -98,7 +98,7 @@ public class OneManyResultEntity {
   }
 
   public double getProcessingProgess() {
-    return this.progress / this.models.size();
+    return this.progress / (double) this.models.size();
   }
 
   public void setThreshold(Double treshold) {
