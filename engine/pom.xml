@@ -57,19 +57,19 @@
     <dependency>
         <groupId>org.apache.xmlgraphics</groupId>
         <artifactId>batik-dom</artifactId>
-        <version>1.7</version>
+        <version>1.17</version>
     </dependency>
     <!-- Apache Batik SVG DOM -->
     <dependency>
         <groupId>org.apache.xmlgraphics</groupId>
         <artifactId>batik-svg-dom</artifactId>
-        <version>1.7</version>
+        <version>1.17</version>
     </dependency>
     <!-- Apache Batik Util -->
     <dependency>
         <groupId>org.apache.xmlgraphics</groupId>
         <artifactId>batik-util</artifactId>
-        <version>1.7</version>
+        <version>1.17</version>
     </dependency>
 	  <dependency>
                         <groupId>org.biojava</groupId>
