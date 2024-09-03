@@ -103,6 +103,7 @@ public class OneManyStatusWebSocketHandler extends TextWebSocketHandler {
                       .toJson(
                           ImmutableStatusResponse.builder()
                               .status(_oneManyResultEntity.getStatus())
+                              .progress(_oneManyResultEntity.getProcessingProgess())
                               .build())));
       }
     } catch (Exception e) {

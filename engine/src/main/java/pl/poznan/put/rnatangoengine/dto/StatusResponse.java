@@ -14,5 +14,7 @@ public interface StatusResponse {
 
   Optional<String> resultUrl();
 
+  Optional<Double> progress();
+
   Optional<String> error();
 }

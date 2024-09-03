@@ -39,6 +39,8 @@ public class OneManyResultEntity {
   private String finalSequence;
   private String finalStructure;
 
+  private double progress;
+
   @Convert(converter = AngleListConverter.class)
   private List<Angle> anglesToAnalyze;
 
@@ -62,6 +64,7 @@ public class OneManyResultEntity {
     this.discontinuousResiduesSequence = false;
     this.errorLog = "";
     this.userErrorLog = "";
+    this.progress = 0;
     this.webPushSubscriptions = new ArrayList<>();
 
     this.models = new ArrayList<>();
@@ -84,6 +87,18 @@ public class OneManyResultEntity {
 
   public List<Angle> getAnglesToAnalyze() {
     return this.anglesToAnalyze;
+  }
+
+  public void incrementProgress() {
+    this.progress += 1;
+  }
+
+  public double getProgressValue() {
+    return this.progress;
+  }
+
+  public double getProcessingProgess() {
+    return this.progress / this.models.size();
   }
 
   public void setThreshold(Double treshold) {

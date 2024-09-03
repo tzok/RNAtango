@@ -68,6 +68,8 @@ public class OneManyProcessing {
             targetModelsComparsionService.lcs(
                 target, models.get(i), oneManyResultEntity.getThreshold()));
         structureModelRepository.saveAndFlush(model);
+        oneManyResultEntity.incrementProgress();
+        oneManyRepository.saveAndFlush(oneManyResultEntity);
       }
 
       oneManyResultEntity.setFinalSequence(target.getFilteredSequence());

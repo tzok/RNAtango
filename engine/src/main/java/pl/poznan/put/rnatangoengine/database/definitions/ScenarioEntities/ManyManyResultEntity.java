@@ -141,6 +141,17 @@ public class ManyManyResultEntity {
     setErrorLog(sw.toString());
   }
 
+  public double getProcessingProgess() {
+    int successes = 0;
+    for (OneManyResultEntity oneManyResultEntity : this.oneManyCompares) {
+      if (oneManyResultEntity.getStatus() == Status.SUCCESS) {
+        successes += oneManyResultEntity.getProgressValue();
+      }
+    }
+
+    return successes / (this.models.size() * (this.models.size() - 1));
+  }
+
   public void setUserErrorLog(String userErrorLog) {
     this.userErrorLog = userErrorLog;
   }
