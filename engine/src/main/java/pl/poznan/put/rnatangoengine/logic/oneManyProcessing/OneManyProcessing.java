@@ -61,12 +61,13 @@ public class OneManyProcessing {
               target, models, oneManyResultEntity.getAnglesToAnalyze());
 
       oneManyResultEntity = oneManyRepository.getByHashId(hashId);
-      models = oneManyResultEntity.getModels();
       for (int i = 0; i < models.size(); i++) {
-        StructureModelEntity model = models.get(i);
+        StructureModelEntity model = oneManyResultEntity.getModels().get(i);
         model.setLcsResult(
             targetModelsComparsionService.lcs(
-                target, models.get(i), oneManyResultEntity.getThreshold()));
+                target,
+                oneManyResultEntity.getModels().get(i),
+                oneManyResultEntity.getThreshold()));
         structureModelRepository.saveAndFlush(model);
         oneManyResultEntity.incrementProgress();
         oneManyResultEntity = oneManyRepository.saveAndFlush(oneManyResultEntity);
