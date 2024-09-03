@@ -2,19 +2,28 @@ package pl.poznan.put.rnatangoengine.logic;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
+import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.batik.util.XMLResourceDescriptor;
 import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.geometry.CalcPoint;
 import org.biojava.nbio.structure.geometry.SuperPositions;
 import org.biojava.nbio.structure.io.CifFileReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.svg.SVGDocument;
+import org.w3c.dom.svg.SVGRect;
+import org.w3c.dom.svg.SVGSVGElement;
 import pl.poznan.put.comparison.ImmutableMCQ;
 import pl.poznan.put.comparison.local.ModelsComparisonResult;
 import pl.poznan.put.comparison.mapping.AngleDeltaMapper;
@@ -265,11 +274,39 @@ public class TargetModelsComparsionService {
               String.valueOf(dotBracket.structure().charAt(k))));
     }
 
-    try {
+    try (InputStream inputStream =
+        new ByteArrayInputStream(
+            SVGHelper.export(
+                SecondaryStructureVisualizer.visualize(
+                    fragmentMatch, AngleDeltaMapper.getInstance()),
+                Format.SVG))) {
+      // Parse the byte array into an SVG document
+      String parser = XMLResourceDescriptor.getXMLParserClassName();
+      SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(parser);
+      SVGDocument document = factory.createSVGDocument("", inputStream);
+
+      // Get the root SVG element
+      SVGSVGElement svgRoot = document.getRootElement();
+
+      // Calculate the bounding box
+      SVGRect boundingBox = svgRoot.getBBox();
+      String viewBox =
+          boundingBox.getX()
+              + " "
+              + boundingBox.getY()
+              + " "
+              + boundingBox.getWidth()
+              + " "
+              + boundingBox.getHeight();
+      svgRoot.setAttribute("viewBox", viewBox);
+      SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
+
+      Path svgFile = Files.createTempFile(structureModelEntity.getHashId().toString(), ".svg");
+
+      svgGenerator.stream(svgFile.toAbsolutePath().toString(), true /* Use CSS for styles */);
+
       structureModelEntity.setSecondaryStructureVisualizationSVG(
-          SVGHelper.export(
-              SecondaryStructureVisualizer.visualize(fragmentMatch, AngleDeltaMapper.getInstance()),
-              Format.SVG));
+          Files.readString(svgFile).getBytes());
     } catch (Exception el) {
       el.printStackTrace();
     }

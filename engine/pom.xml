@@ -46,6 +46,31 @@
         <artifactId>biojava-core</artifactId>
         <version>6.1.0</version>
       </dependency>
+	    <!-- Apache Batik Core -->
+		
+    <dependency>
+        <groupId>org.apache.xmlgraphics</groupId>
+        <artifactId>batik-transcoder</artifactId>
+        <version>1.17</version>
+    </dependency>
+    <!-- Apache Batik DOM -->
+    <dependency>
+        <groupId>org.apache.xmlgraphics</groupId>
+        <artifactId>batik-dom</artifactId>
+        <version>1.7</version>
+    </dependency>
+    <!-- Apache Batik SVG DOM -->
+    <dependency>
+        <groupId>org.apache.xmlgraphics</groupId>
+        <artifactId>batik-svg-dom</artifactId>
+        <version>1.7</version>
+    </dependency>
+    <!-- Apache Batik Util -->
+    <dependency>
+        <groupId>org.apache.xmlgraphics</groupId>
+        <artifactId>batik-util</artifactId>
+        <version>1.7</version>
+    </dependency>
 	  <dependency>
                         <groupId>org.biojava</groupId>
                         <artifactId>biojava-structure</artifactId>
