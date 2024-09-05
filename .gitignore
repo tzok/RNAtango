@@ -2,3 +2,4 @@
 ssl/
 logs/
 **/conf/nginx.conf
+frontend/

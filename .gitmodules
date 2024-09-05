@@ -1,0 +1,3 @@
+[submodule "rnatango-frontend"]
+	path = rnatango-frontend
+	url = https://github.com/matrament/rnatango

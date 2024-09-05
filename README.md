@@ -1,4 +1,4 @@
-<center><img style="background-color:white; border-radius:4px;" src="./logornatango.svg" alt="logo"></center>
+<div align="center"><img  src="./logornatango.svg" alt="logo"></div>
 <br/>
 
 [RNAtango](https://rnatango.cs.put.poznan.pl) is a web server to study 3D RNA structures through torsion angles. Depending on the selected scenario, users can explore the distribution of torsion angles in a single RNA structure or its fragment, compare the RNA model(s) with the native structure, or perform a comparative analysis in a set of models. The comparison procedure applies MCQ and LCS-TA metrics to assess RNA angular similarity.
