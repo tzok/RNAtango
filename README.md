@@ -17,6 +17,7 @@ VAPID_PRIVATE_KEY=""
 
 To deploy server instance it is necessary to install [docker](https://www.docker.com/) with compose plugin. Then in parent directory run:
 ```bash
+git submodule update --init
 docker-compose up --build
 ```
 ## Swagger API documentation
