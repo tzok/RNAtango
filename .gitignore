@@ -1,5 +1,4 @@
 .env
 ssl/
 logs/
-frontend/
 **/conf/nginx.conf

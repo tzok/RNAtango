@@ -4,7 +4,7 @@ services:
     depends_on:
       - db
       - rabbit
-    restart: "no"
+    restart: always
     entrypoint: bash /opt/rnatango/docker-entrypoint.sh
     env_file:
       - ./.env
