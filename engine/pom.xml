@@ -13,7 +13,7 @@
 	</parent>
 	<groupId>pl.poznan.put</groupId>
 	<artifactId>rnatango-engine</artifactId>
-	<version>1.0.0-RELEASE</version>
+	<version>1.0.1-RELEASE</version>
 	<name>rnatango-engine</name>
 	<description>RNAtango engine</description>
 	<properties>
