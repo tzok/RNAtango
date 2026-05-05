@@ -36,7 +36,7 @@ services:
       - ./.env
 
   db:
-    image: postgres:latest
+    image: postgres:16-alpine
     restart: always
     env_file:
       - ./.env

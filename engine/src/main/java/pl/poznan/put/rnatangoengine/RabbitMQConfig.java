@@ -45,11 +45,7 @@ public class RabbitMQConfig {
   @Value("${rabbitmq.reply.timeout}")
   private Integer replyTimeout;
 
-  @Value("${rabbitmq.concurrent.consumers}")
-  private Integer concurrentConsumers;
 
-  @Value("${rabbitmq.max.concurrent.consumers}")
-  private Integer maxConcurrentConsumers;
 
   @Bean
   public Queue queue() {

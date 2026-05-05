@@ -1,0 +1,31 @@
+.git
+.gitmodules
+**/.git
+
+# Build artifacts
+**/target
+**/node_modules
+frontend/
+
+# IDE
+.idea
+*.iml
+
+# Environment & config
+.env
+**/conf/nginx.conf
+
+# Docker files (not needed inside image)
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Logs & SSL
+logs/
+ssl/
+
+# Documentation
+*.md
+
+# Aider
+.aider*

@@ -10,12 +10,12 @@ WORKDIR /opt/rnatango
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
-# Layer 2: Clone and build external dependencies (rarely change)
-ADD https://github.com/tzok/varna-tz.git /tmp/varna-tz
-RUN mvn -f /tmp/varna-tz/pom.xml install -DskipTests
+# Layer 2: Build external dependencies from pinned tarballs (rarely change)
+ADD https://github.com/tzok/varna-tz/archive/refs/tags/1.2.1.tar.gz /tmp/
+RUN mvn -f /tmp/varna-tz-1.2.1/pom.xml install -DskipTests -q
 
-ADD https://github.com/tzok/mcq4structures.git /tmp/mcq4structures
-RUN mvn -f /tmp/mcq4structures/pom.xml install -DskipTests
+ADD https://github.com/tzok/mcq4structures/archive/refs/tags/1.8.5.tar.gz /tmp/
+RUN mvn -f /tmp/mcq4structures-1.8.5/pom.xml install -DskipTests -q
 
 # Layer 3: Maven dependencies (rarely change)
 COPY engine/pom.xml engine/
@@ -23,7 +23,7 @@ RUN mvn dependency:go-offline -f engine/pom.xml
 
 # Layer 4: Node.js dependencies (rarely change)
 COPY rnatango-frontend/package*.json rnatango-frontend/
-RUN cd rnatango-frontend && npm install
+RUN cd rnatango-frontend && npm ci
 
 # Layer 5: Application source code (changes frequently)
 COPY . .
