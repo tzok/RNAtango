@@ -20,6 +20,43 @@ To deploy server instance it is necessary to install [docker](https://www.docker
 git submodule update --init
 docker-compose up --build
 ```
+## Development
+
+### Run a development instance
+
+The production `docker-compose.yml` serves an optimised static export of the frontend behind nginx, which makes debugging difficult (React errors are minified).
+
+To run with live-reload and full error messages, start the **dev profile**:
+
+```bash
+docker compose --profile dev up --build db rabbit maxit web frontend-dev
+```
+
+This does the following:
+- Runs the backend (`web`) with its port `8080` exposed to the host.
+- Runs a `frontend-dev` container that binds `./rnatango-frontend` and launches `next dev` on port `3000`.
+- Sets `NEXT_PUBLIC_SERVER_URL=http://localhost:8080/api` and `NEXT_PUBLIC_SERVER_WEB_SOCKET_URL=ws://localhost:8080/api/ws` so the dev frontend talks to the local backend directly (bypassing nginx).
+
+Then open [http://localhost:3000](http://localhost:3000). Changes to frontend source are reflected instantly.
+
+### Debugging common issues
+
+#### Minified React error
+
+If you see `Error #418` (or other minified error numbers) in the browser console, it means a hydration mismatch was caught in production. A hydration mismatch happens when the server-rendered HTML does not match the first client render.
+
+**Fix:** Use the dev profile above — `next dev` shows the full plain-text error and a stack trace. The most common cause in this project is render-time branching on `useMediaQuery()` (responsive design hooks), which produces different DOM trees on server vs client. The fix is to use CSS media queries instead (see `Header.tsx` for the pattern).
+
+#### CORS errors
+
+When running the frontend outside Docker (plain `npm run dev` on the host), the backend must be reachable. Either:
+- Add `ports: ["8080:8080"]` to the `web` service (already present in the dev override), or
+- Use the full stack behind nginx at `http://localhost/api`.
+
+#### RabbitMQ noise in tests
+
+Backend tests log non-fatal `Failed to check/redeclare auto-delete queue(s)` errors because RabbitMQ is not running during unit tests. These can be ignored.
+
 ## Swagger API documentation
 RNAtango serves access to [API declaration](https://rnatango.cs.put.poznan.pl/api/swagger-ui/index.html) for personal use.
 ## Websocket
