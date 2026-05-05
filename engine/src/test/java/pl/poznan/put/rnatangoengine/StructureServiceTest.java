@@ -17,18 +17,18 @@ public class StructureServiceTest {
   @Test
   public void givenStructure1ffk_whenAsked_thenXray() throws Exception {
 
-    assertEquals(structureProcessingService.getStructureMolecule("1ffk"), Molecule.XRAY);
+    assertEquals(Molecule.XRAY, structureProcessingService.getStructureMolecule("1ffk"));
   }
 
   @Test
   public void givenStructure8COO_whenAsked_thenXray() throws Exception {
 
-    assertEquals(structureProcessingService.getStructureMolecule("8COO"), Molecule.NMR);
+    assertEquals(Molecule.NMR, structureProcessingService.getStructureMolecule("8COO"));
   }
 
   @Test
   public void givenStructure8JIV_whenAsked_thenXray() throws Exception {
 
-    assertEquals(structureProcessingService.getStructureMolecule("8JIV"), Molecule.EM);
+    assertEquals(Molecule.EM, structureProcessingService.getStructureMolecule("8JIV"));
   }
 }

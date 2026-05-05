@@ -1,6 +1,6 @@
-FROM nginx:1.18
+FROM nginx:trixie
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y certbot python-certbot-nginx bash cron 
+RUN apt-get install -y certbot python3-certbot-nginx bash cron
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY custom_50x.html /usr/share/nginx/html/

@@ -1,5 +1,6 @@
 package pl.poznan.put.rnatangoengine.logic;
 
+import java.awt.geom.Rectangle2D;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -9,6 +10,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
+import org.apache.batik.util.SVGConstants;
 import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.geometry.CalcPoint;
 import org.biojava.nbio.structure.geometry.SuperPositions;
@@ -16,7 +18,6 @@ import org.biojava.nbio.structure.io.CifFileReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.svg.SVGDocument;
-import org.w3c.dom.svg.SVGRect;
 import org.w3c.dom.svg.SVGSVGElement;
 import pl.poznan.put.comparison.ImmutableMCQ;
 import pl.poznan.put.comparison.local.ModelsComparisonResult;
@@ -162,12 +163,11 @@ public class TargetModelsComparsionService {
                             .filter((atom) -> atom.getName().equals("P"))
                             .map((atom) -> atom.getCoordsAsPoint3d()))
                 .collect(Collectors.toList());
-        final Point3d[] pointsTarget = new Point3d[targetPoints.size()];
-        final Point3d[] pointsModel = new Point3d[modelPoints.size()];
-        for (int i = 0, size = targetPoints.size(); i < size; i++) {
+        int pointCount = Math.min(targetPoints.size(), modelPoints.size());
+        final Point3d[] pointsTarget = new Point3d[pointCount];
+        final Point3d[] pointsModel = new Point3d[pointCount];
+        for (int i = 0; i < pointCount; i++) {
           pointsTarget[i] = new Point3d(targetPoints.get(i));
-        }
-        for (int i = 0, size = targetPoints.size(); i < size; i++) {
           pointsModel[i] = new Point3d(modelPoints.get(i));
         }
         Matrix4d modelMatrix = SuperPositions.superposeAndTransform(pointsTarget, pointsModel);
@@ -273,20 +273,23 @@ public class TargetModelsComparsionService {
       SVGDocument document =
           SecondaryStructureVisualizer.visualize(fragmentMatch, AngleDeltaMapper.getInstance());
 
-      // Get the root SVG element
-      SVGSVGElement svgRoot = document.getRootElement();
-
-      // Calculate the bounding box
-      SVGRect boundingBox = svgRoot.getBBox();
-      String viewBox =
-          boundingBox.getX()
-              + " "
-              + boundingBox.getY()
-              + " "
-              + boundingBox.getWidth()
-              + " "
-              + boundingBox.getHeight();
-      svgRoot.setAttribute("viewBox", viewBox);
+      Rectangle2D boundingBox = SVGHelper.calculateBoundingBox(document);
+      if (boundingBox != null && boundingBox.getWidth() > 0 && boundingBox.getHeight() > 0) {
+        SVGSVGElement rootElement = document.getRootElement();
+        rootElement.setAttributeNS(
+            null,
+            SVGConstants.SVG_VIEW_BOX_ATTRIBUTE,
+            String.format(
+                "%s %s %s %s",
+                boundingBox.getMinX(),
+                boundingBox.getMinY(),
+                boundingBox.getWidth(),
+                boundingBox.getHeight()));
+        rootElement.setAttributeNS(
+            null, SVGConstants.SVG_WIDTH_ATTRIBUTE, Double.toString(boundingBox.getWidth()));
+        rootElement.setAttributeNS(
+            null, SVGConstants.SVG_HEIGHT_ATTRIBUTE, Double.toString(boundingBox.getHeight()));
+      }
 
       structureModelEntity.setSecondaryStructureVisualizationSVG(
           SVGHelper.export(document, Format.SVG));

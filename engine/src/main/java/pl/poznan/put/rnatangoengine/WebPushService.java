@@ -35,25 +35,42 @@ public class WebPushService {
   @Autowired OneManyRepository oneManyRepository;
   @Autowired ManyManyRepository manyManyRepository;
 
-  @Value("${vapid.public.key}")
+  @Value("${vapid.public.key:}")
   private String publicKey;
 
-  @Value("${vapid.private.key}")
+  @Value("${vapid.private.key:}")
   private String privateKey;
 
   private PushService pushService;
+  private boolean enabled;
 
   @PostConstruct
-  private void init() throws GeneralSecurityException {
-    Security.addProvider(new BouncyCastleProvider());
-    pushService = new PushService(publicKey, privateKey);
+  private void init() {
+    if (publicKey == null || publicKey.isBlank() || privateKey == null || privateKey.isBlank()) {
+      enabled = false;
+      return;
+    }
+    try {
+      Security.addProvider(new BouncyCastleProvider());
+      pushService = new PushService(publicKey, privateKey);
+      enabled = true;
+    } catch (GeneralSecurityException e) {
+      enabled = false;
+    }
+  }
+
+  private void requireEnabled() {
+    if (!enabled) {
+      throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Web Push is disabled");
+    }
   }
 
   public String getPublicKey() {
-    return publicKey;
+    return enabled ? publicKey : null;
   }
 
   public void subscribeSingle(Subscription subscription, String taskId) {
+    requireEnabled();
     SingleResultEntity _singleResultEntity =
         singleResultRepository.getByHashId(UUID.fromString(taskId));
     if (Objects.equals(_singleResultEntity, null)) {
@@ -69,6 +86,7 @@ public class WebPushService {
   }
 
   public void subscribeOneMany(Subscription subscription, String taskId) {
+    requireEnabled();
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
     if (Objects.equals(_oneManyResultEntity, null)) {
@@ -84,6 +102,7 @@ public class WebPushService {
   }
 
   public void subscribeManyMany(Subscription subscription, String taskId) {
+    requireEnabled();
     ManyManyResultEntity _manyManyResultEntity =
         manyManyRepository.getByHashId(UUID.fromString(taskId));
     if (Objects.equals(_manyManyResultEntity, null)) {
@@ -99,6 +118,7 @@ public class WebPushService {
   }
 
   public void unSubscribeSingle(String endpoint, String taskId) {
+    requireEnabled();
     SingleResultEntity _singleResultEntity =
         singleResultRepository.getByHashId(UUID.fromString(taskId));
     if (Objects.equals(_singleResultEntity, null)) {
@@ -114,6 +134,7 @@ public class WebPushService {
   }
 
   public void unSubscribeOneMany(String endpoint, String taskId) {
+    requireEnabled();
     OneManyResultEntity _oneManyResultEntity =
         oneManyRepository.getByHashId(UUID.fromString(taskId));
     if (Objects.equals(_oneManyResultEntity, null)) {
@@ -129,6 +150,7 @@ public class WebPushService {
   }
 
   public void unSubscribeManyMany(String endpoint, String taskId) {
+    requireEnabled();
     ManyManyResultEntity _manyManyResultEntity =
         manyManyRepository.getByHashId(UUID.fromString(taskId));
     if (Objects.equals(_manyManyResultEntity, null)) {
@@ -143,6 +165,7 @@ public class WebPushService {
   }
 
   public void sendNotification(Subscription subscription, String messageJson) {
+    if (!enabled) return;
     try {
       pushService.send(new Notification(subscription, messageJson));
     } catch (GeneralSecurityException
@@ -155,6 +178,7 @@ public class WebPushService {
   }
 
   public void sendNotificationToClient(UUID clientId, String message) {
+    if (!enabled) return;
     WebPushSubscription subscription = webPushRepository.getByHashId(clientId);
     if (subscription != null) {
       try {
@@ -177,23 +201,22 @@ public class WebPushService {
   }
 
   public void sendNotificationToClient(WebPushSubscription subscription, String message) {
-    if (subscription != null) {
-      try {
-        PushService pushService = new PushService();
-        pushService.setPublicKey(publicKey);
-        pushService.setPrivateKey(privateKey);
+    if (!enabled || subscription == null) return;
+    try {
+      PushService pushService = new PushService();
+      pushService.setPublicKey(publicKey);
+      pushService.setPrivateKey(privateKey);
 
-        Notification notification =
-            new Notification(
-                subscription.getEndpoint(),
-                subscription.getP256dh(),
-                subscription.getAuth(),
-                message);
+      Notification notification =
+          new Notification(
+              subscription.getEndpoint(),
+              subscription.getP256dh(),
+              subscription.getAuth(),
+              message);
 
-        pushService.send(notification);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+      pushService.send(notification);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 }
