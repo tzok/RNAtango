@@ -5,17 +5,11 @@ services:
       - db
       - rabbit
     restart: always
-    entrypoint: bash /opt/rnatango/docker-entrypoint.sh
     env_file:
       - ./.env
-    ports:
-      - 8080:8080
-    networks:
-      - web_network
-      - db_network
-      - rabbit_network
     volumes:
-      - .:/opt/rnatango
+      - frontend:/shared/frontend
+
   nginx:
     build:
       context: ./nginx
@@ -29,22 +23,18 @@ services:
       - ./ssl:/etc/letsencrypt/
       - ./nginx/conf/:/etc/nginx/conf.d/
       - ./logs/nginx:/logs
-      - ./frontend:/usr/share/nginx/html
-    networks:
-      - web_network
+      - frontend:/usr/share/nginx/html
+
   maxit:
     image: tzok/maxit:server
     restart: always
-    networks:
-      - web_network
+
   rabbit:
     image: rabbitmq:3.11-alpine
     restart: always
     env_file:
       - ./.env
-    networks:
-      - db_network
-      - rabbit_network
+
   db:
     image: postgres:latest
     restart: always
@@ -52,16 +42,7 @@ services:
       - ./.env
     volumes:
       - pgdata:/var/lib/postgresql/data/
-    networks:
-      - db_network
+
 volumes:
-  workdir:
   pgdata:
-  pgadmin-data:
-networks:
-  web_network:
-    driver: bridge
-  db_network:
-    driver: bridge
-  rabbit_network:
-    driver: bridge
+  frontend:
