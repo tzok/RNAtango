@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import pl.poznan.put.pdb.PdbAtomLine;
 import pl.poznan.put.pdb.analysis.CifModel;
@@ -203,27 +204,31 @@ public class Structure {
         }
       }
     }
-    this.filteredContent =
+    CifModel filteredModel =
         ImmutableDefaultCifModel.of(
-                pdbModelFiltered.header(),
-                pdbModelFiltered.experimentalData(),
-                pdbModelFiltered.resolution(),
-                pdbModelFiltered.modelNumber(),
-                resultAtoms,
-                pdbModelFiltered.modifiedResidues(),
-                pdbModelFiltered.missingResidues(),
-                pdbModelFiltered.title(),
-                pdbModelFiltered.chainTerminatedAfter(),
-                pdbModelFiltered.basePairs())
-            .toCif();
-    final CifParser parser = new CifParser();
-    structureModels = parser.parse(this.filteredContent);
+            pdbModelFiltered.header(),
+            pdbModelFiltered.experimentalData(),
+            pdbModelFiltered.resolution(),
+            pdbModelFiltered.modelNumber(),
+            resultAtoms,
+            pdbModelFiltered.modifiedResidues(),
+            pdbModelFiltered.missingResidues(),
+            pdbModelFiltered.title(),
+            pdbModelFiltered.chainTerminatedAfter(),
+            pdbModelFiltered.basePairs());
+    Locale savedLocale = Locale.getDefault();
+    Locale.setDefault(Locale.US);
+    try {
+      this.filteredContent = filteredModel.toCif();
+    } finally {
+      Locale.setDefault(savedLocale);
+    }
+    this.structureModels = List.<CifModel>of(filteredModel);
     return filteredContent;
   }
 
   /**
    * @return String mmCIF file body, filtering using relative positions
-   * @throws IOException
    */
   public String filterParseCif(List<Selection> selections) throws IOException {
     this.continuousSequences = new StructureSequences("1");
@@ -315,28 +320,32 @@ public class Structure {
                 + chain.residueIdentifiers().size());
       }
     }
-    this.filteredContent =
+    CifModel filteredModel =
         ImmutableDefaultCifModel.of(
-                pdbModelFiltered.header(),
-                pdbModelFiltered.experimentalData(),
-                pdbModelFiltered.resolution(),
-                pdbModelFiltered.modelNumber(),
-                resultAtoms,
-                pdbModelFiltered.modifiedResidues(),
-                pdbModelFiltered.missingResidues(),
-                pdbModelFiltered.title(),
-                pdbModelFiltered.chainTerminatedAfter(),
-                pdbModelFiltered.basePairs())
-            .toCif();
-    final CifParser parser = new CifParser();
-    structureModels = parser.parse(this.filteredContent);
+            pdbModelFiltered.header(),
+            pdbModelFiltered.experimentalData(),
+            pdbModelFiltered.resolution(),
+            pdbModelFiltered.modelNumber(),
+            resultAtoms,
+            pdbModelFiltered.modifiedResidues(),
+            pdbModelFiltered.missingResidues(),
+            pdbModelFiltered.title(),
+            pdbModelFiltered.chainTerminatedAfter(),
+            pdbModelFiltered.basePairs());
+    Locale savedLocale = Locale.getDefault();
+    Locale.setDefault(Locale.US);
+    try {
+      this.filteredContent = filteredModel.toCif();
+    } finally {
+      Locale.setDefault(savedLocale);
+    }
+    this.structureModels = List.<CifModel>of(filteredModel);
 
     return filteredContent;
   }
 
   /**
    * @return String mmCIF file body, filtering using auth positions
-   * @throws IOException
    */
   public String filterParseCif(String model, String chain) throws IOException {
     this.continuousSequences = new StructureSequences("1");
@@ -368,21 +377,26 @@ public class Structure {
         sequenceResidues.clear();
       }
     }
-    this.filteredContent =
+    CifModel filteredModel =
         ImmutableDefaultCifModel.of(
-                pdbModelFiltered.header(),
-                pdbModelFiltered.experimentalData(),
-                pdbModelFiltered.resolution(),
-                pdbModelFiltered.modelNumber(),
-                resultAtoms,
-                pdbModelFiltered.modifiedResidues(),
-                pdbModelFiltered.missingResidues(),
-                pdbModelFiltered.title(),
-                pdbModelFiltered.chainTerminatedAfter(),
-                pdbModelFiltered.basePairs())
-            .toCif();
-    final CifParser parser = new CifParser();
-    structureModels = parser.parse(this.filteredContent);
+            pdbModelFiltered.header(),
+            pdbModelFiltered.experimentalData(),
+            pdbModelFiltered.resolution(),
+            pdbModelFiltered.modelNumber(),
+            resultAtoms,
+            pdbModelFiltered.modifiedResidues(),
+            pdbModelFiltered.missingResidues(),
+            pdbModelFiltered.title(),
+            pdbModelFiltered.chainTerminatedAfter(),
+            pdbModelFiltered.basePairs());
+    Locale savedLocale = Locale.getDefault();
+    Locale.setDefault(Locale.US);
+    try {
+      this.filteredContent = filteredModel.toCif();
+    } finally {
+      Locale.setDefault(savedLocale);
+    }
+    this.structureModels = List.<CifModel>of(filteredModel);
 
     return filteredContent;
   }

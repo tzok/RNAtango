@@ -1,6 +1,7 @@
 package pl.poznan.put.rnatangoengine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +45,7 @@ public class SingleScenarioTests {
         singleRepository.saveAndFlush(new SingleResultEntity(selections, "1ffk"));
     singleProcessing.startTask(_singleResultEntity.getHashId());
     SingleResultEntity result = singleRepository.getByHashId(_singleResultEntity.getHashId());
-    assertEquals(result.getErrorLog(), null);
+    assertNull(result.getErrorLog());
     assertEquals(result.getChainTorsionAngles().size(), 1);
     assertEquals(result.getChainTorsionAngles().get(0).getResiduesTorsionAngles().size(), 6);
   }

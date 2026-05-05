@@ -19,7 +19,6 @@
   <properties>
     <start.class>pl.poznan.put.rnatangoengine.RnatangoEngineApplication</start.class>
     <java.version>17</java.version>
-    <spotless.skip>true</spotless.skip>
   </properties>
   <dependencies>
   <dependency>

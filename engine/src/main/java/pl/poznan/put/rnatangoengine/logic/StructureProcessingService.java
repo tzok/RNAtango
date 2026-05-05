@@ -226,9 +226,15 @@ public class StructureProcessingService {
       HttpURLConnection con = (HttpURLConnection) url.openConnection();
       con.setDoOutput(true);
       con.setRequestMethod("POST");
+      con.setRequestProperty("Content-Type", "application/json");
+      con.setRequestProperty("Accept", "application/json");
       try (OutputStream os = con.getOutputStream()) {
         byte[] input = query.getBytes("utf-8");
         os.write(input, 0, input.length);
+      }
+
+      if (con.getResponseCode() != 200) {
+        return Molecule.NA;
       }
 
       try (BufferedReader br =
