@@ -12,10 +12,14 @@ RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 # Layer 2: Build external dependencies from pinned tarballs (rarely change)
 ADD https://github.com/tzok/varna-tz/archive/refs/tags/1.2.1.tar.gz /tmp/
-RUN mvn -f /tmp/varna-tz-1.2.1/pom.xml install -DskipTests -q
+RUN tar xzf /tmp/1.2.1.tar.gz -C /tmp \
+    && mvn -f /tmp/varna-tz-1.2.1/pom.xml install -DskipTests -q \
+    && rm /tmp/1.2.1.tar.gz
 
 ADD https://github.com/tzok/mcq4structures/archive/refs/tags/1.8.5.tar.gz /tmp/
-RUN mvn -f /tmp/mcq4structures-1.8.5/pom.xml install -DskipTests -q
+RUN tar xzf /tmp/1.8.5.tar.gz -C /tmp \
+    && mvn -f /tmp/mcq4structures-1.8.5/pom.xml install -DskipTests -q \
+    && rm /tmp/1.8.5.tar.gz
 
 # Layer 3: Maven dependencies (rarely change)
 COPY engine/pom.xml engine/
