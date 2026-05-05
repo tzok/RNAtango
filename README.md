@@ -32,10 +32,10 @@ docker compose up --build
 
 The production `docker-compose.yml` serves an optimised static export of the frontend behind nginx, which makes debugging difficult (React errors are minified).
 
-To run with live-reload and full error messages, start the **dev profile**:
+To run with live-reload and full error messages, use the dev compose file:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up --build db rabbit maxit web frontend-dev
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build db rabbit maxit web frontend-dev
 ```
 
 This does the following:
