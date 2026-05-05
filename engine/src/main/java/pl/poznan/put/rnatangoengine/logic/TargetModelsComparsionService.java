@@ -278,15 +278,17 @@ public class TargetModelsComparsionService {
 
       // Calculate the bounding box
       SVGRect boundingBox = svgRoot.getBBox();
-      String viewBox =
-          boundingBox.getX()
-              + " "
-              + boundingBox.getY()
-              + " "
-              + boundingBox.getWidth()
-              + " "
-              + boundingBox.getHeight();
-      svgRoot.setAttribute("viewBox", viewBox);
+      if (boundingBox != null) {
+        String viewBox =
+            boundingBox.getX()
+                + " "
+                + boundingBox.getY()
+                + " "
+                + boundingBox.getWidth()
+                + " "
+                + boundingBox.getHeight();
+        svgRoot.setAttribute("viewBox", viewBox);
+      }
 
       structureModelEntity.setSecondaryStructureVisualizationSVG(
           SVGHelper.export(document, Format.SVG));
