@@ -1,7 +1,7 @@
 FROM maven:3.9-eclipse-temurin-17
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip nodejs npm fonts-dejavu \
+    python3 python3-pip nodejs npm \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/rnatango
@@ -18,7 +18,6 @@ RUN tar xzf /tmp/1.2.1.tar.gz -C /tmp \
 
 ADD https://github.com/tzok/mcq4structures/archive/refs/tags/1.8.5.tar.gz /tmp/
 RUN tar xzf /tmp/1.8.5.tar.gz -C /tmp \
-    && echo '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 17.85704 27.001228" width="17.85704mm" height="27.001228mm"></svg>' > /tmp/mcq4structures-1.8.5/mcq-core/src/main/resources/mcq-legend.svg \
     && mvn -f /tmp/mcq4structures-1.8.5/pom.xml install -DskipTests -q \
     && rm /tmp/1.8.5.tar.gz
 
