@@ -102,3 +102,7 @@ If task does not exist or there was an error during processing, they return obje
   "reason": "<error>"
 }
 ```
+
+## Funding
+
+This work was supported by the National Science Centre, Poland (Narodowe Centrum Nauki) under grant No. 2023/51/D/ST6/01207, "Exploring Multiple Loop Motifs in RNA Structures".
