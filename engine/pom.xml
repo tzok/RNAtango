@@ -7,7 +7,7 @@
 <parent>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-parent</artifactId>
-  <version>3.1.2</version>
+  <version>4.1.2</version>
   <relativePath/>
   <!-- lookup parent from repository -->
 </parent>
@@ -23,7 +23,7 @@
   <dependencies>
   <dependency>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
+    <artifactId>spring-boot-starter-webmvc</artifactId>
   </dependency>
   <dependency>
     <groupId>org.immutables</groupId>
@@ -34,6 +34,11 @@
   <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webmvc-test</artifactId>
     <scope>test</scope>
   </dependency>
   <dependency>
@@ -92,7 +97,6 @@
   <dependency>
     <groupId>jakarta.persistence</groupId>
     <artifactId>jakarta.persistence-api</artifactId>
-    <version>3.1.0</version>
   </dependency>
   <dependency>
     <groupId>com.rabbitmq</groupId>
@@ -102,12 +106,10 @@
   <dependency>
     <groupId>org.springframework.amqp</groupId>
     <artifactId>spring-amqp</artifactId>
-    <version>3.1.0</version>
   </dependency>
   <dependency>
     <groupId>org.springframework.amqp</groupId>
     <artifactId>spring-rabbit</artifactId>
-    <version>3.1.0</version>
   </dependency> 
   <dependency>
     <groupId>pl.poznan.put</groupId>
@@ -122,7 +124,16 @@
   <dependency>
     <groupId>nl.martijndwars</groupId>
     <artifactId>web-push</artifactId>
-    <version>5.1.1</version>
+    <version>5.1.2</version>
+  </dependency>
+  <dependency>
+    <groupId>org.bitbucket.b_c</groupId>
+    <artifactId>jose4j</artifactId>
+    <version>0.7.9</version>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpasyncclient</artifactId>
   </dependency>
   <dependency>
     <groupId>org.bouncycastle</groupId>
@@ -147,17 +158,15 @@
   <dependency>
     <groupId>org.springdoc</groupId>
     <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    <version>2.2.0</version>
+    <version>3.2.0</version>
   </dependency>
   <dependency>
     <groupId>org.springframework</groupId>
     <artifactId>spring-websocket</artifactId>
-    <version>7.0.10</version>
   </dependency>
   <dependency>
     <groupId>org.springframework</groupId>
     <artifactId>spring-messaging</artifactId>
-    <version>6.0.13</version>
   </dependency>
 </dependencies>
 <build>
