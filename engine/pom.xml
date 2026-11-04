@@ -87,12 +87,12 @@
   <dependency>
     <groupId>pl.poznan.put</groupId>
     <artifactId>BioCommons</artifactId>
-    <version>3.1.9</version>
+    <version>3.2.1</version>
   </dependency>
   <dependency>
     <groupId>jakarta.persistence</groupId>
     <artifactId>jakarta.persistence-api</artifactId>
-    <version>3.1.0</version>
+    <version>3.2.0</version>
   </dependency>
   <dependency>
     <groupId>com.rabbitmq</groupId>
@@ -122,7 +122,7 @@
   <dependency>
     <groupId>nl.martijndwars</groupId>
     <artifactId>web-push</artifactId>
-    <version>5.1.1</version>
+    <version>5.1.2</version>
   </dependency>
   <dependency>
     <groupId>org.bouncycastle</groupId>
