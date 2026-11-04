@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-17
+FROM maven:3.9-eclipse-temurin-26
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip nodejs npm \
