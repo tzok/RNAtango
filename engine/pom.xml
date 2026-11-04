@@ -107,7 +107,7 @@
   <dependency>
     <groupId>org.springframework.amqp</groupId>
     <artifactId>spring-rabbit</artifactId>
-    <version>3.1.0</version>
+    <version>4.1.2</version>
   </dependency> 
   <dependency>
     <groupId>pl.poznan.put</groupId>
