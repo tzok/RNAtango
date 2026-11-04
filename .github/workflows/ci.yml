@@ -29,6 +29,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Install external dependencies
+        run: |
+          curl -sL https://github.com/tzok/varna-tz/archive/refs/tags/1.2.1.tar.gz | tar xz -C /tmp
+          mvn -B -f /tmp/varna-tz-1.2.1/pom.xml install -DskipTests -q
+          curl -sL https://github.com/tzok/mcq4structures/archive/refs/tags/1.8.5.tar.gz | tar xz -C /tmp
+          mvn -B -f /tmp/mcq4structures-1.8.5/pom.xml install -DskipTests -q
+
       - name: Build with Maven
         run: mvn -B package --file engine/pom.xml
 
