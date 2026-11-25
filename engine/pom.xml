@@ -7,7 +7,7 @@
 <parent>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-parent</artifactId>
-  <version>4.1.2</version>
+  <version>4.2.0</version>
   <relativePath/>
   <!-- lookup parent from repository -->
 </parent>
@@ -101,7 +101,7 @@
   <dependency>
     <groupId>com.rabbitmq</groupId>
     <artifactId>amqp-client</artifactId>
-    <version>5.37.1</version>
+    <version>5.38.0</version>
   </dependency>
   <dependency>
     <groupId>org.springframework.amqp</groupId>
@@ -158,7 +158,7 @@
   <dependency>
     <groupId>org.springdoc</groupId>
     <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1</version>
   </dependency>
   <dependency>
     <groupId>org.springframework</groupId>
