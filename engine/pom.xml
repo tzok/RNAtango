@@ -19,6 +19,8 @@
   <properties>
     <start.class>pl.poznan.put.rnatangoengine.RnatangoEngineApplication</start.class>
     <java.version>17</java.version>
+    <!-- JDK 23+ disables implicit annotation processing (Immutables, Lombok) -->
+    <maven.compiler.proc>full</maven.compiler.proc>
   </properties>
   <dependencies>
   <dependency>
@@ -144,11 +146,6 @@
     <groupId>org.projectlombok</groupId>
     <artifactId>lombok</artifactId>
     <version>1.18.48</version>
-  </dependency>
-  <dependency>
-    <groupId>pl.poznan.put</groupId>
-    <artifactId>varna-tz</artifactId>
-    <version>1.2.1</version>
   </dependency>
   <dependency>
     <groupId>org.biojava</groupId>
